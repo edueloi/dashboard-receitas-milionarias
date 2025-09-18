@@ -40,7 +40,7 @@ function SignInSplit() {
 
     setLoading(true);
     try {
-      const response = await api.post("api/users/login", { email, senha: password });
+      const response = await api.post("/users/login", { email, senha: password });
       const { token } = response.data;
 
       toast.success("Login bem-sucedido! Redirecionando...");
