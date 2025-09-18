@@ -69,10 +69,24 @@ function SignInSplit() {
           alignItems: "center",
           justifyContent: "center",
           backgroundColor: "background.paper",
+          // Oculta a imagem em telas menores que 'md' e a centraliza verticalmente
+          // em telas maiores.
+          "@media (max-width: 900px)": {
+            display: "flex", // Mantém o formulário visível em telas pequenas
+            justifyContent: "center",
+            alignItems: "center",
+          },
         }}
       >
         <MDBox p={3} width="100%" maxWidth={450}>
-          <Card sx={{ p: 4 }}>
+          <Card
+            sx={{
+              p: 4,
+              boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.37)", // Sombra mais elegante
+              backdropFilter: "blur(10px)",
+              WebkitBackdropFilter: "blur(10px)",
+            }}
+          >
             {/* Header com Logo e título neutro */}
             <MDBox
               display="flex"
@@ -153,7 +167,7 @@ function SignInSplit() {
                 <MDBox mt={4} mb={1}>
                   <MDButton
                     variant="contained"
-                    color="success"
+                    color="success" // Mantém a cor original ou altere para uma cor personalizada
                     fullWidth
                     onClick={handleSignIn}
                     disabled={loading}
@@ -163,6 +177,10 @@ function SignInSplit() {
                       fontWeight: "bold",
                       fontSize: "1rem",
                       textTransform: "none",
+                      backgroundColor: "#1b5e20", // Cor verde que combina com a logo
+                      "&:hover": {
+                        backgroundColor: "#2e7d32", // Verde mais escuro no hover
+                      },
                     }}
                   >
                     {loading ? <CircularProgress size={24} color="inherit" /> : "Entrar"}
@@ -179,9 +197,13 @@ function SignInSplit() {
                       variant="button"
                       fontWeight="medium"
                       sx={{
-                        color: "#1b5e20",
-                        "&:hover": { color: "#2e7d32" },
+                        color: "#1b5e20", // Cor verde que combina com a logo
+                        "&:hover": {
+                          color: "#2e7d32", // Verde mais escuro no hover
+                          textDecoration: "underline",
+                        },
                         textDecoration: "none",
+                        transition: "color 0.3s ease-in-out", // Adiciona uma transição suave
                       }}
                     >
                       Cadastre-se
@@ -198,13 +220,15 @@ function SignInSplit() {
       <Grid
         item
         xs={false}
-        sm={4}
-        md={7}
+        sm={false} // Oculta a imagem em telas muito pequenas
+        md={7} // Exibe a imagem em telas 'md' e maiores
         sx={{
           backgroundImage: `url(${bgImage})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
           position: "relative",
+          // Oculta completamente em telas pequenas
+          display: { xs: "none", md: "block" },
         }}
       >
         {/* Overlay com Texto */}

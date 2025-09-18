@@ -280,7 +280,7 @@ function EditarReceita() {
                   <MDBox mt={2} mb={2}>
                     <MDTypography variant="body2">Imagem Atual:</MDTypography>
                     <img
-                      src={`http://localhost:3001/${imagemPreview}`}
+                      src={`${process.env.REACT_APP_API_URL.replace("/api", "")}/${imagemPreview}`}
                       alt="Imagem da Receita"
                       style={{ maxWidth: "300px", height: "auto", borderRadius: "8px" }}
                     />
