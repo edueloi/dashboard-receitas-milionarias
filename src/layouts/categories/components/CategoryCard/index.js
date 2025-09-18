@@ -65,7 +65,6 @@ CategoryCard.propTypes = {
   category: PropTypes.shape({
     name: PropTypes.string.isRequired,
     image: PropTypes.string.isRequired,
-    recipeCount: PropTypes.number.isRequired, // Keep for data consistency, though not displayed
   }).isRequired,
 };
 

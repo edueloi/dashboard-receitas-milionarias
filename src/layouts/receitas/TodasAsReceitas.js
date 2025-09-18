@@ -52,21 +52,32 @@ function TodasAsReceitas() {
     setFilteredRecipes(filtered);
   }, [searchTerm, allRecipes]);
 
-  const mapRecipeData = (recipe) => ({
-    id: recipe.id,
-    name: recipe.titulo,
-    image: recipe.url_imagem_principal || "/static/images/cards/contemplative-reptile.jpg", // Placeholder image
-    category: recipe.categoria?.nome || "Sem Categoria",
-    description: recipe.resumo,
-    author: {
-      name: recipe.autor?.nome || "Autor Desconhecido",
-      avatar: recipe.autor?.avatar_url || "/static/images/avatar/1.jpg", // Placeholder avatar
-    },
-    time: `${recipe.tempo_preparo_min} min`,
-    difficulty: recipe.dificuldade,
-    rating: recipe.rating || 0, // Default to 0 if not provided by backend
-    votes: recipe.votes || 0, // Default to 0 if not provided by backend
-  });
+  const mapRecipeData = (recipe) => {
+    // Remove 'api' do final da URL base se estiver presente
+    const baseUrl = process.env.REACT_APP_API_URL.endsWith("/api")
+      ? process.env.REACT_APP_API_URL.slice(0, -3)
+      : process.env.REACT_APP_API_URL;
+
+    const imageUrl = recipe.imagem_url
+      ? `${baseUrl}${recipe.imagem_url.replace(/\\/g, "/")}`
+      : "/static/images/cards/contemplative-reptile.jpg";
+
+    return {
+      id: recipe.id,
+      name: recipe.titulo,
+      image: imageUrl,
+      category: recipe.categoria?.nome || "Sem Categoria",
+      description: recipe.resumo,
+      author: {
+        name: recipe.autor?.nome || "Autor Desconhecido",
+        avatar: recipe.autor?.avatar_url || "/static/images/avatar/1.jpg",
+      },
+      time: `${recipe.tempo_preparo_min} min`,
+      difficulty: recipe.dificuldade,
+      rating: recipe.rating || 0,
+      votes: recipe.votes || 0,
+    };
+  };
 
   return (
     <DashboardLayout>

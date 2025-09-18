@@ -113,16 +113,26 @@ function MinhasReceitas() {
     setFilteredRecipes(filtered);
   }, [searchTerm, categoryFilter, statusFilter, allUserRecipes]);
 
-  const mapRecipeData = (recipe) => ({
-    id: recipe.id,
-    name: recipe.titulo,
-    image: recipe.url_imagem_principal || "/static/images/cards/contemplative-reptile.jpg", // Placeholder
-    category: recipe.categoria?.nome || "Sem Categoria",
-    description: recipe.resumo,
-    status: recipe.status || "draft", // Default status
-    time: `${recipe.tempo_preparo_min || 0} min`,
-    difficulty: recipe.dificuldade || "Fácil",
-  });
+  const mapRecipeData = (recipe) => {
+    const baseUrl = process.env.REACT_APP_API_URL.endsWith("/api")
+      ? process.env.REACT_APP_API_URL.slice(0, -3)
+      : process.env.REACT_APP_API_URL;
+
+    const imageUrl = recipe.imagem_url
+      ? `${baseUrl}${recipe.imagem_url.replace(/\\/g, "/")}`
+      : "/static/images/cards/contemplative-reptile.jpg";
+
+    return {
+      id: recipe.id,
+      name: recipe.titulo,
+      image: imageUrl, // Corrigido
+      category: recipe.categoria?.nome || "Sem Categoria",
+      description: recipe.resumo,
+      status: recipe.status || "draft",
+      time: `${recipe.tempo_preparo_min || 0} min`,
+      difficulty: recipe.dificuldade || "Fácil",
+    };
+  };
 
   const handleDelete = async (id) => {
     if (window.confirm("Tem certeza que deseja excluir esta receita? Esta ação é irreversível.")) {
