@@ -168,7 +168,7 @@ function DetalhesReceita() {
   }
 
   const recipeImage = getFullImageUrl(recipe.imagem_url);
-  const authorAvatar = getFullImageUrl(recipe.criador?.avatar_url);
+  const authorAvatar = getFullImageUrl(recipe.criador?.foto_perfil_url);
 
   return (
     <DashboardLayout>
@@ -350,7 +350,7 @@ function DetalhesReceita() {
                     {recipe.criador?.nome}
                   </MDTypography>
                   <MDTypography variant="body2" sx={{ color: colorPalette.cinza }}>
-                    Chef de Cozinha
+                    Chef
                   </MDTypography>
                 </MDBox>
               </MDBox>
