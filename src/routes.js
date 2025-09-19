@@ -9,6 +9,7 @@ import MinhasReceitas from "layouts/receitas";
 import TodasAsReceitas from "layouts/receitas/TodasAsReceitas";
 import DetalhesReceita from "layouts/receitas/DetalhesReceita";
 import Categories from "layouts/categories";
+import EditarCategoria from "layouts/categories/EditarCategoria"; // Importa o novo componente
 import AdicionarReceita from "layouts/receitas/AdicionarReceita";
 import EditarReceita from "layouts/receitas/EditarReceita";
 import Relatorios from "layouts/relatorios";
@@ -21,8 +22,6 @@ import AuthLayout from "layouts/authentication/AuthLayout"; // Importa o contêi
 
 const routes = [
   // --- ROTAS PÚBLICAS (sem sidebar) ---
-  // Este objeto agrupa todas as rotas de autenticação sob o AuthLayout.
-  // O AuthLayout é um contêiner simples que apenas renderiza o componente filho.
   {
     path: "/authentication",
     element: <AuthLayout />,
@@ -41,7 +40,6 @@ const routes = [
   },
 
   // --- ROTAS PRIVADAS (com sidebar) ---
-  // Estas rotas serão renderizadas dentro do layout do Dashboard, com o menu lateral.
   {
     type: "collapse",
     name: "Painel Principal",
@@ -114,18 +112,16 @@ const routes = [
     route: "/configuracoes",
     component: <Configuracoes />,
   },
-  // A rota de logout é especial. A lógica de clique é tratada no componente Sidenav.
   {
     type: "collapse",
     name: "Sair",
     key: "logout",
     icon: <Icon fontSize="small">logout</Icon>,
-    route: "/authentication/sign-in", // A rota é um placeholder
-    component: <SignInSplit />, // O componente também
+    route: "/authentication/sign-in",
+    component: <SignInSplit />,
   },
 
-  // --- ROTAS SEM ITEM NO MENU LATERAL (Ex: páginas de edição) ---
-  // Estas rotas são privadas mas não aparecem como um item clicável no Sidenav.
+  // --- ROTAS SEM ITEM NO MENU LATERAL ---
   {
     route: "/receitas/adicionar",
     component: <AdicionarReceita />,
@@ -133,6 +129,10 @@ const routes = [
   {
     route: "/receitas/editar/:id",
     component: <EditarReceita />,
+  },
+  {
+    route: "/categories/editar/:id", // Nova rota de edição
+    component: <EditarCategoria />,
   },
   {
     key: "detalhes-receita",

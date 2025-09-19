@@ -6,7 +6,6 @@ import { debounce } from "lodash";
 
 // @mui material components
 import Card from "@mui/material/Card";
-import Grid from "@mui/material/Grid";
 import Icon from "@mui/material/Icon";
 import { CircularProgress, Modal, TextField, Box, Tabs, Tab } from "@mui/material";
 
@@ -19,9 +18,10 @@ import MDInput from "components/MDInput";
 // Material Dashboard 2 React example components
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
+import DataTable from "examples/Tables/DataTable";
 
 // Data & Components
-import CategoryCard from "./components/CategoryCard";
+import categoriesTableData from "./data/categoriesTableData";
 import TagCard from "./components/TagCard";
 
 const style = {
@@ -37,7 +37,7 @@ const style = {
 };
 
 function Categories() {
-  const { user } = useAuth();
+  const { uiPermissions } = useAuth();
   const [tabValue, setTabValue] = useState(0);
 
   const [categories, setCategories] = useState([]);
@@ -50,12 +50,19 @@ function Categories() {
   const [tagSearch, setTagSearch] = useState("");
 
   const [loading, setLoading] = useState(true);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [modalType, setModalType] = useState("category"); // 'category' or 'tag'
 
+  // State for create/edit modal
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalType, setModalType] = useState("category");
   const [newItemName, setNewItemName] = useState("");
   const [newItemDescription, setNewItemDescription] = useState("");
   const [newCategoryImage, setNewCategoryImage] = useState(null);
+
+  // State for delete confirmation modal
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+
+  const isAdmin = uiPermissions.includes("admin");
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
@@ -80,20 +87,11 @@ function Categories() {
   const fetchAndSetData = async () => {
     try {
       setLoading(true);
-      const [catRes, tagRes, prefRes] = await Promise.all([
-        api.get("/categories"),
-        api.get("/tags"),
-        api.get("/users/me/preferences"),
-      ]);
+      const [catRes, tagRes] = await Promise.all([api.get("/categories"), api.get("/tags")]);
       setCategories(catRes.data);
       setFilteredCategories(catRes.data);
       setTags(tagRes.data);
       setFilteredTags(tagRes.data);
-
-      if (prefRes.data) {
-        setCategorySearch(prefRes.data.categorySearch || "");
-        setTagSearch(prefRes.data.tagSearch || "");
-      }
     } catch (error) {
       console.error("Erro ao buscar dados:", error);
       toast.error("Não foi possível carregar os dados.");
@@ -162,22 +160,53 @@ function Categories() {
     }
   };
 
-  const mapCategoryData = (category) => {
-    let imageUrl = "/static/images/cards/contemplative-reptile.jpg"; // Default image
+  // Opens the delete confirmation modal
+  const handleDelete = (item) => {
+    setItemToDelete(item);
+    setDeleteModalOpen(true);
+  };
 
-    if (category.imagem_url) {
-      if (category.imagem_url.startsWith("http")) {
-        imageUrl = category.imagem_url; // It's already an absolute URL
+  // Closes the delete confirmation modal
+  const handleCloseDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setItemToDelete(null);
+  };
+
+  // Executes the deletion
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
+
+    try {
+      await api.delete(`/categories/${itemToDelete.id}`);
+      toast.success(`Categoria "${itemToDelete.name}" excluída com sucesso!`);
+      fetchAndSetData(); // Refresh data
+    } catch (error) {
+      console.error("Erro ao excluir categoria:", error);
+      if (error.response && error.response.status === 409) {
+        const message =
+          error.response.data?.message ||
+          "Não é possível deletar esta categoria porque existem receitas associadas a ela.";
+        toast.error(message);
       } else {
-        // It's a relative path, so construct the full URL
-        const baseUrl = process.env.REACT_APP_API_URL.endsWith("/api")
-          ? process.env.REACT_APP_API_URL.slice(0, -3)
-          : process.env.REACT_APP_API_URL;
-        imageUrl = `${baseUrl}${category.imagem_url.replaceAll("/", "/")}`;
+        toast.error("Não foi possível excluir a categoria.");
       }
+    } finally {
+      handleCloseDeleteModal();
     }
+  };
 
+  const mapCategoryData = (category) => {
+    let imageUrl = "/static/images/cards/contemplative-reptile.jpg";
+    if (category.imagem_url) {
+      const baseUrl = process.env.REACT_APP_API_URL.endsWith("/api")
+        ? process.env.REACT_APP_API_URL.slice(0, -3)
+        : process.env.REACT_APP_API_URL;
+      imageUrl = category.imagem_url.startsWith("http")
+        ? category.imagem_url
+        : `${baseUrl}${category.imagem_url.replaceAll("/", "/")}`;
+    }
     return {
+      ...category,
       id: category.id,
       name: category.nome,
       description: category.descricao,
@@ -185,7 +214,11 @@ function Categories() {
     };
   };
 
-  const canManage = user && user.permissao !== "afiliado" && user.permissao !== "afiliado pro";
+  const { columns, rows } = categoriesTableData(
+    filteredCategories.map(mapCategoryData),
+    isAdmin,
+    handleDelete
+  );
 
   return (
     <DashboardLayout>
@@ -206,8 +239,9 @@ function Categories() {
                     variant="outlined"
                     value={categorySearch}
                     onChange={(e) => setCategorySearch(e.target.value)}
+                    sx={{ width: "250px" }}
                   />
-                  {canManage && (
+                  {isAdmin && (
                     <MDButton
                       variant="gradient"
                       color="success"
@@ -219,15 +253,18 @@ function Categories() {
                   )}
                 </MDBox>
                 {loading ? (
-                  <CircularProgress />
+                  <MDBox display="flex" justifyContent="center" p={5}>
+                    <CircularProgress />
+                  </MDBox>
                 ) : (
-                  <Grid container spacing={3}>
-                    {filteredCategories.map((cat) => (
-                      <Grid item xs={12} sm={6} md={4} lg={3} key={cat.id}>
-                        <CategoryCard category={mapCategoryData(cat)} />
-                      </Grid>
-                    ))}
-                  </Grid>
+                  <DataTable
+                    table={{ columns, rows }}
+                    isSorted={false}
+                    entriesPerPage
+                    showTotalEntries
+                    canSearch={false}
+                    pagination={{ variant: "gradient", color: "success" }}
+                  />
                 )}
               </MDBox>
             )}
@@ -241,7 +278,7 @@ function Categories() {
                     value={tagSearch}
                     onChange={(e) => setTagSearch(e.target.value)}
                   />
-                  {canManage && (
+                  {isAdmin && (
                     <MDButton
                       variant="gradient"
                       color="success"
@@ -255,13 +292,11 @@ function Categories() {
                 {loading ? (
                   <CircularProgress />
                 ) : (
-                  <Grid container spacing={2}>
+                  <MDBox display="flex" flexWrap="wrap" gap={2}>
                     {filteredTags.map((tag) => (
-                      <Grid item key={tag.id}>
-                        <TagCard tag={tag} />
-                      </Grid>
+                      <TagCard tag={tag} key={tag.id} />
                     ))}
-                  </Grid>
+                  </MDBox>
                 )}
               </MDBox>
             )}
@@ -269,6 +304,7 @@ function Categories() {
         </Card>
       </MDBox>
 
+      {/* Create/Edit Modal */}
       <Modal open={modalOpen} onClose={handleModalClose}>
         <Box sx={style}>
           <MDTypography variant="h6">
@@ -310,6 +346,27 @@ function Categories() {
             </MDButton>
             <MDButton variant="gradient" color="success" onClick={handleCreateItem}>
               Salvar
+            </MDButton>
+          </MDBox>
+        </Box>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal open={deleteModalOpen} onClose={handleCloseDeleteModal}>
+        <Box sx={style}>
+          <MDTypography variant="h5" fontWeight="medium">
+            Confirmar Exclusão
+          </MDTypography>
+          <MDTypography variant="body2" color="text" mt={2} mb={3}>
+            Tem certeza que deseja excluir a categoria &quot;<b>{itemToDelete?.name}</b>&quot;? Esta
+            ação é irreversível.
+          </MDTypography>
+          <MDBox display="flex" justifyContent="flex-end">
+            <MDButton color="secondary" onClick={handleCloseDeleteModal} sx={{ mr: 1 }}>
+              Cancelar
+            </MDButton>
+            <MDButton variant="gradient" color="error" onClick={confirmDelete}>
+              Deletar
             </MDButton>
           </MDBox>
         </Box>
