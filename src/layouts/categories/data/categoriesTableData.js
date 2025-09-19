@@ -31,7 +31,14 @@ function categoriesTableData(categories, isAdmin, onDelete) {
 
   const rows = categories.map((category) => {
     const row = {
-      categoria: <Category image={category.image} name={category.name} />,
+      categoria: (
+        <Link
+          to={`/todas-as-receitas?category=${encodeURIComponent(category.name)}`}
+          style={{ textDecoration: "none" }}
+        >
+          <Category image={category.image} name={category.name} />
+        </Link>
+      ),
       descricao: (
         <MDTypography variant="caption" color="text" fontWeight="medium">
           {category.description || "N/A"}

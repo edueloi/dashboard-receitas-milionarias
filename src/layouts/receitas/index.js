@@ -6,6 +6,7 @@ import { useAuth } from "../../context/AuthContext";
 
 // @mui material components
 import Card from "@mui/material/Card";
+import Grid from "@mui/material/Grid";
 import Icon from "@mui/material/Icon";
 import {
   CircularProgress,
@@ -16,6 +17,10 @@ import {
   MenuItem,
   Autocomplete,
   Chip,
+  ToggleButtonGroup,
+  ToggleButton,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 
 // Material Dashboard 2 React components
@@ -30,6 +35,16 @@ import DataTable from "examples/Tables/DataTable";
 
 // Data and components
 import recipesTableData from "./data/recipesTableData";
+import UserRecipeCard from "./components/UserRecipeCard";
+import PublicRecipeCard from "./components/PublicRecipeCard";
+
+// Paleta de Cores
+const colorPalette = {
+  dourado: "#C9A635",
+  verdeEscuro: "#1C3B32",
+  branco: "#FFFFFF",
+  cinza: "#444444",
+};
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
@@ -40,11 +55,15 @@ function MinhasReceitas() {
   const navigate = useNavigate();
   const query = useQuery();
 
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
   const [allUserRecipes, setAllUserRecipes] = useState([]);
   const [filteredRecipes, setFilteredRecipes] = useState([]);
   const [listaCategorias, setListaCategorias] = useState([]);
   const [listaTags, setListaTags] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [view, setView] = useState("card"); // 'card' or 'table'
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState("");
@@ -73,7 +92,7 @@ function MinhasReceitas() {
 
         setAllUserRecipes(userRecipes);
         setFilteredRecipes(userRecipes);
-        setListaCategorias(categoriesRes.data);
+        setListaCategorias([{ id: "Todos", nome: "Todos" }, ...categoriesRes.data]);
         setListaTags(tagsRes.data);
       } catch (error) {
         console.error("Erro ao buscar dados iniciais:", error);
@@ -110,21 +129,32 @@ function MinhasReceitas() {
   }, [searchTerm, categoryFilter, tagsFilter, allUserRecipes]);
 
   const mapRecipeData = (recipe) => {
-    let imageUrl = "/static/images/default-recipe.jpg";
-    if (recipe.imagem_url) {
-      if (recipe.imagem_url.startsWith("http")) {
-        imageUrl = recipe.imagem_url;
-      } else {
-        const baseUrl = (process.env.REACT_APP_API_URL || "").endsWith("/api")
-          ? process.env.REACT_APP_API_URL.slice(0, -3)
-          : process.env.REACT_APP_API_URL || "";
-        const cleanBaseUrl = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
-        const imagePath = recipe.imagem_url.replace(/\\/g, "/");
-        const cleanImagePath = imagePath.startsWith("/") ? imagePath.slice(1) : imagePath;
-        imageUrl = `${cleanBaseUrl}/${cleanImagePath}`;
-      }
-    }
-    return { ...recipe, name: recipe.titulo, image: imageUrl };
+    const rootUrl = new URL(process.env.REACT_APP_API_URL || window.location.origin).origin;
+
+    const getFullImageUrl = (path) => {
+      if (!path) return null;
+      if (path.startsWith("http")) return path;
+      const cleanPath = path.replace(/\\/g, "/").replace(/^\//, "");
+      return `${rootUrl}/${cleanPath}`;
+    };
+
+    const imageUrl = getFullImageUrl(recipe.imagem_url) || "/static/images/default-recipe.jpg";
+    const authorAvatarUrl = getFullImageUrl(recipe.criador?.avatar_url);
+
+    return {
+      id: String(recipe.id),
+      name: recipe.titulo,
+      image: imageUrl,
+      description: recipe.resumo,
+      author: {
+        name: recipe.criador?.nome || "Autor Desconhecido",
+        avatar: authorAvatarUrl,
+      },
+      rating: recipe.avaliacao_media || 0,
+      votes: recipe.total_avaliacoes || 0,
+      tags: recipe.tags || [],
+      category: recipe.categoria?.nome || "Sem Categoria",
+    };
   };
 
   const handleEdit = (id) => {
@@ -155,13 +185,30 @@ function MinhasReceitas() {
     <DashboardLayout>
       <DashboardNavbar />
       <MDBox pt={6} pb={3}>
-        <MDBox display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-          <MDTypography variant="h4" fontWeight="medium">
+        {/* Cabeçalho da página */}
+        <MDBox
+          display="flex"
+          flexDirection={isMobile ? "column" : "row"}
+          justifyContent="space-between"
+          alignItems={isMobile ? "flex-start" : "center"}
+          mb={3}
+        >
+          <MDTypography
+            variant="h4"
+            fontWeight="bold"
+            sx={{ color: colorPalette.verdeEscuro, mb: isMobile ? 1 : 0 }}
+          >
             Minhas Receitas
           </MDTypography>
           <MDButton
             variant="gradient"
-            color="success"
+            sx={{
+              backgroundColor: colorPalette.dourado,
+              color: colorPalette.branco,
+              "&:hover": {
+                backgroundColor: colorPalette.verdeEscuro,
+              },
+            }}
             onClick={() => navigate("/receitas/adicionar")}
           >
             <Icon sx={{ mr: 1 }}>add</Icon>
@@ -169,6 +216,7 @@ function MinhasReceitas() {
           </MDButton>
         </MDBox>
 
+        {/* Card de Filtros */}
         <Card sx={{ p: 2 }}>
           <MDBox
             display="flex"
@@ -176,55 +224,109 @@ function MinhasReceitas() {
             justifyContent="space-between"
             alignItems="center"
             p={1}
+            sx={{ flexDirection: isMobile ? "column" : "row" }}
           >
-            <MDBox sx={{ minWidth: 250, m: 1 }}>
-              <TextField
-                fullWidth
-                variant="outlined"
-                label="Buscar pelo nome..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+            {/* Filtros */}
+            <MDBox
+              display="flex"
+              flexWrap="wrap"
+              alignItems="center"
+              flexGrow={1}
+              sx={{ flexDirection: isMobile ? "column" : "row" }}
+            >
+              <MDBox sx={{ minWidth: 250, m: 1, width: isMobile ? "100%" : "auto" }}>
+                <TextField
+                  fullWidth
+                  variant="outlined"
+                  label="Buscar pelo nome..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  sx={{ "& .MuiOutlinedInput-root": { color: colorPalette.cinza } }}
+                />
+              </MDBox>
+              <MDBox sx={{ minWidth: 200, m: 1, width: isMobile ? "100%" : "auto" }}>
+                <Autocomplete
+                  disablePortal
+                  options={listaCategorias}
+                  getOptionLabel={(option) => option.nome}
+                  value={listaCategorias.find((cat) => cat.nome === categoryFilter) || null}
+                  onChange={(event, newValue) => {
+                    setCategoryFilter(newValue ? newValue.nome : "Todos");
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      variant="outlined"
+                      label="Categoria"
+                      placeholder="Filtrar por categoria"
+                      sx={{ "& .MuiOutlinedInput-root": { color: colorPalette.cinza } }}
+                    />
+                  )}
+                  sx={{ "& .MuiOutlinedInput-root": { color: colorPalette.cinza } }}
+                />
+              </MDBox>
+              <MDBox sx={{ minWidth: 300, m: 1, width: isMobile ? "100%" : "auto" }}>
+                <Autocomplete
+                  multiple
+                  options={listaTags}
+                  getOptionLabel={(option) => option.nome}
+                  value={tagsFilter}
+                  onChange={(event, newValue) => setTagsFilter(newValue)}
+                  renderTags={(value, getTagProps) =>
+                    value.map((option, index) => (
+                      <Chip
+                        key={option.id}
+                        label={option.nome}
+                        sx={{ backgroundColor: colorPalette.dourado, color: colorPalette.branco }}
+                        {...getTagProps({ index })}
+                      />
+                    ))
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      variant="outlined"
+                      label="Tags"
+                      placeholder="Filtrar por tags"
+                      sx={{ "& .MuiOutlinedInput-root": { color: colorPalette.cinza } }}
+                    />
+                  )}
+                />
+              </MDBox>
             </MDBox>
-            <MDBox sx={{ minWidth: 200, m: 1 }}>
-              <FormControl fullWidth>
-                <InputLabel>Categoria</InputLabel>
-                <Select
-                  value={categoryFilter}
-                  label="Categoria"
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                  sx={{ height: 44 }}
-                >
-                  <MenuItem value="Todos">Todos</MenuItem>
-                  {listaCategorias.map((cat) => (
-                    <MenuItem key={cat.id} value={cat.nome}>
-                      {cat.nome}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </MDBox>
-            <MDBox sx={{ minWidth: 300, m: 1 }}>
-              <Autocomplete
-                multiple
-                options={listaTags}
-                getOptionLabel={(option) => option.nome}
-                value={tagsFilter}
-                onChange={(event, newValue) => setTagsFilter(newValue)}
-                renderTags={(value, getTagProps) =>
-                  value.map((option, index) => (
-                    <Chip key={option.id} label={option.nome} {...getTagProps({ index })} />
-                  ))
-                }
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    variant="outlined"
-                    label="Tags"
-                    placeholder="Filtrar por tags"
-                  />
-                )}
-              />
+            {/* Alternância de Visualização */}
+            <MDBox sx={{ m: 1, width: isMobile ? "100%" : "auto" }}>
+              <ToggleButtonGroup
+                sx={{
+                  "& .MuiToggleButtonGroup-grouped": {
+                    border: `1px solid ${colorPalette.cinza} !important`,
+                    color: colorPalette.cinza,
+                    "&.Mui-selected": {
+                      backgroundColor: colorPalette.dourado,
+                      color: colorPalette.branco,
+                      "&:hover": {
+                        backgroundColor: colorPalette.dourado,
+                      },
+                    },
+                    "&:not(.Mui-selected)": {
+                      "&:hover": {
+                        backgroundColor: "rgba(0,0,0,0.04)",
+                      },
+                    },
+                  },
+                  width: isMobile ? "100%" : "auto",
+                }}
+                value={view}
+                exclusive
+                onChange={(e, newView) => newView && setView(newView)}
+              >
+                <ToggleButton value="card" sx={{ width: isMobile ? "50%" : "auto" }}>
+                  <Icon>grid_view</Icon>
+                </ToggleButton>
+                <ToggleButton value="table" sx={{ width: isMobile ? "50%" : "auto" }}>
+                  <Icon>table_rows</Icon>
+                </ToggleButton>
+              </ToggleButtonGroup>
             </MDBox>
           </MDBox>
         </Card>
@@ -233,9 +335,10 @@ function MinhasReceitas() {
           <Card>
             {loading ? (
               <MDBox display="flex" justifyContent="center" p={5}>
-                <CircularProgress color="success" />
+                <CircularProgress sx={{ color: colorPalette.dourado }} />
               </MDBox>
-            ) : (
+            ) : // Condicional para renderizar o DataTable ou o Grid de Cards
+            view === "table" ? (
               <DataTable
                 table={{ columns, rows }}
                 isSorted={false}
@@ -243,6 +346,18 @@ function MinhasReceitas() {
                 showTotalEntries
                 pagination={{ variant: "gradient", color: "success" }}
               />
+            ) : (
+              <Grid container spacing={3}>
+                {filteredRecipes.map((recipe) => (
+                  <Grid item xs={12} sm={6} md={4} lg={3} key={recipe.id}>
+                    <UserRecipeCard
+                      recipe={mapRecipeData(recipe)}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                    />
+                  </Grid>
+                ))}
+              </Grid>
             )}
           </Card>
         </MDBox>

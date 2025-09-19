@@ -1,22 +1,28 @@
 import PropTypes from "prop-types";
+import { Link } from "react-router-dom";
 
 // @mui material components
-import Card from "@mui/material/Card";
 import Chip from "@mui/material/Chip";
-
-// Material Dashboard 2 React components
-import MDBox from "components/MDBox";
-import MDTypography from "components/MDTypography";
 
 function TagCard({ tag }) {
   const { nome } = tag;
 
   return (
-    <Card>
-      <MDBox p={2}>
-        <Chip label={nome} />
-      </MDBox>
-    </Card>
+    <Link
+      to={`/todas-as-receitas?tag=${encodeURIComponent(nome)}`}
+      style={{ textDecoration: "none" }}
+    >
+      <Chip
+        label={nome}
+        variant="outlined"
+        sx={{
+          cursor: "pointer",
+          "&:hover": {
+            backgroundColor: "action.hover",
+          },
+        }}
+      />
+    </Link>
   );
 }
 

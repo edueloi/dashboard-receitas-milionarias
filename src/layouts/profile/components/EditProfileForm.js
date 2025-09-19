@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
@@ -8,12 +8,15 @@ import MDInput from "components/MDInput";
 import MDButton from "components/MDButton";
 import api from "services/api";
 import toast from "react-hot-toast";
+import MDAvatar from "components/MDAvatar";
 
 function EditProfileForm({ userData, onSave, onCancel }) {
   const [formData, setFormData] = useState({});
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
-    // Popula o formulário com os dados existentes do usuário
     if (userData) {
       setFormData({
         nome: userData.nome || "",
@@ -30,6 +33,9 @@ function EditProfileForm({ userData, onSave, onCancel }) {
         profissao: userData.profissao || "",
         escolaridade: userData.escolaridade || "",
       });
+      if (userData.foto_perfil_url) {
+        setPreviewUrl(`${process.env.REACT_APP_API_URL}${userData.foto_perfil_url}`);
+      }
     }
   }, [userData]);
 
@@ -38,21 +44,78 @@ function EditProfileForm({ userData, onSave, onCancel }) {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSaveChanges = async () => {
+    const data = new FormData();
+
+    // Adiciona apenas os campos que foram alterados
+    Object.keys(formData).forEach((key) => {
+      if (formData[key] !== userData[key]) {
+        data.append(key, formData[key]);
+      }
+    });
+
+    if (selectedFile) {
+      data.append("foto_perfil", selectedFile);
+    }
+
+    // Verifica se há algo para atualizar
+    if (data.entries().next().done && !selectedFile) {
+      toast("Nenhuma alteração para salvar.");
+      onCancel(); // Fecha o formulário se nada mudou
+      return;
+    }
+
     try {
-      const response = await api.put("/users/me", formData);
+      const response = await api.put("/users/me", data, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
       toast.success("Perfil atualizado com sucesso!");
-      onSave(response.data); // Atualiza o estado no componente pai com os novos dados
+      onSave(response.data);
     } catch (error) {
       console.error("Erro ao atualizar o perfil:", error);
-      toast.error("Não foi possível atualizar o perfil. Tente novamente.");
+      toast.error(
+        error.response?.data?.error || "Não foi possível atualizar o perfil. Tente novamente."
+      );
     }
   };
 
   return (
     <Card>
-      <MDBox p={3}>
+      <MDBox p={3} display="flex" justifyContent="space-between" alignItems="center">
         <MDTypography variant="h5">Editar Perfil</MDTypography>
+        <MDBox display="flex" alignItems="center">
+          <MDAvatar src={previewUrl} alt="Avatar" size="xl" shadow="sm" />
+          <MDButton
+            variant="outlined"
+            color="info"
+            size="small"
+            sx={{ ml: 2 }}
+            onClick={() => fileInputRef.current.click()}
+          >
+            Trocar Foto
+          </MDButton>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            style={{ display: "none" }}
+            accept="image/*"
+          />
+        </MDBox>
       </MDBox>
       <MDBox component="form" p={3} pt={0}>
         <Grid container spacing={3}>
