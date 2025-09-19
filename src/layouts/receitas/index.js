@@ -61,7 +61,7 @@ function MinhasReceitas() {
           api.get("/categories"),
         ]);
 
-        const userRecipes = recipes.data.filter(
+        const userRecipes = recipesRes.data.filter(
           (recipe) => recipe.criador?.codigo_afiliado_proprio === user.codigo_afiliado_proprio
         );
         setAllUserRecipes(userRecipes);

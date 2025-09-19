@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import api from "services/api";
 import toast from "react-hot-toast";
-import { useAuth } from "../../context/AuthContext";
 
 // @mui material components
 import Grid from "@mui/material/Grid";
@@ -11,14 +10,11 @@ import Icon from "@mui/material/Icon";
 import Avatar from "@mui/material/Avatar";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
-import TextField from "@mui/material/TextField";
-import Tooltip from "@mui/material/Tooltip";
 import CircularProgress from "@mui/material/CircularProgress";
 
 // Material Dashboard 2 React components
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
-import MDButton from "components/MDButton";
 
 // Material Dashboard 2 React example components
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
@@ -26,30 +22,19 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 
 // Components
 import ImageCarousel from "./components/ImageCarousel";
-import Rating from "./components/Rating";
 
 function DetalhesReceita() {
   const { id } = useParams();
-  const { user } = useAuth();
   const [recipe, setRecipe] = useState(null);
-  const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
-  const [newRating, setNewRating] = useState(0);
-  const [newComment, setNewComment] = useState("");
-  const [commentImage, setCommentImage] = useState(null);
 
   useEffect(() => {
     const fetchRecipeDetails = async () => {
       try {
         setLoading(true);
-        const [recipeRes, commentsRes] = await Promise.all([
-          api.get(`/recipes/${id}`),
-          api.get(`/recipes/${id}/comments`),
-        ]);
+        const recipeRes = await api.get(`/recipes/${id}`);
         setRecipe(recipeRes.data);
-        setComments(commentsRes.data);
-        // Here you would also check if the recipe is in the user's favorites
         // For now, we'll just set it to false.
         setIsFavorite(false);
       } catch (error) {
@@ -87,40 +72,6 @@ function DetalhesReceita() {
     } else {
       navigator.clipboard.writeText(window.location.href);
       toast.success("Link da receita copiado para a área de transferência!");
-    }
-  };
-
-  const handleCommentImageChange = (e) => {
-    setCommentImage(e.target.files[0]);
-  };
-
-  const handleCommentSubmit = async () => {
-    if (newRating === 0 || newComment.trim() === "") {
-      toast.error("Por favor, adicione uma avaliação e um comentário.");
-      return;
-    }
-
-    const formData = new FormData();
-    const payload = { texto: newComment, avaliacao: newRating };
-    formData.append("data", JSON.stringify(payload));
-    if (commentImage) {
-      formData.append("imagem", commentImage);
-    }
-
-    try {
-      const response = await api.post(`/recipes/${id}/comments`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      setComments([response.data, ...comments]);
-      setNewComment("");
-      setNewRating(0);
-      setCommentImage(null);
-      toast.success("Comentário enviado com sucesso!");
-    } catch (error) {
-      console.error("Erro ao enviar comentário:", error);
-      toast.error("Não foi possível enviar seu comentário.");
     }
   };
 
@@ -255,62 +206,6 @@ function DetalhesReceita() {
                 </MDBox>
               ))}
             </MDBox>
-
-            <Divider sx={{ my: 3 }} />
-
-            <MDTypography variant="h5" fontWeight="medium" mb={2}>
-              Comentários
-            </MDTypography>
-            {comments.map((comment) => (
-              <MDBox key={comment.id} display="flex" mb={2.5}>
-                <Avatar src={comment.autor.avatar_url} alt={comment.autor.nome} sx={{ mr: 2 }} />
-                <MDBox display="flex" flexDirection="column">
-                  <MDTypography variant="button" fontWeight="bold">
-                    {comment.autor.nome}
-                  </MDTypography>
-                  <MDTypography variant="caption" color="text" mb={0.5}>
-                    {new Date(comment.criado_em).toLocaleDateString()}
-                  </MDTypography>
-                  <MDTypography variant="body2">{comment.texto}</MDTypography>
-                </MDBox>
-              </MDBox>
-            ))}
-
-            {user && (
-              <MDBox mt={4}>
-                <MDTypography variant="h6">Deixe sua avaliação</MDTypography>
-                <Rating value={newRating} onChange={setNewRating} />
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={4}
-                  variant="outlined"
-                  label="Escreva seu comentário..."
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  sx={{ mt: 2 }}
-                />
-                <MDBox display="flex" alignItems="center" mt={2}>
-                  <MDButton
-                    variant="contained"
-                    color="success"
-                    onClick={handleCommentSubmit}
-                    sx={{ mr: 2 }}
-                  >
-                    Enviar Comentário
-                  </MDButton>
-                  <MDButton component="label" variant="outlined" color="secondary">
-                    <Icon>attach_file</Icon>&nbsp; Anexar Foto
-                    <input
-                      type="file"
-                      hidden
-                      accept="image/*"
-                      onChange={handleCommentImageChange}
-                    />
-                  </MDButton>
-                </MDBox>
-              </MDBox>
-            )}
           </MDBox>
         </Card>
       </MDBox>

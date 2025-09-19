@@ -22,7 +22,7 @@ import topAffiliatesData from "./data/topAffiliatesData";
 import { useAuth } from "../../context/AuthContext";
 
 function Dashboard() {
-  const { user } = useAuth();
+  const { user, uiPermissions } = useAuth(); // Obter permissões
   const [totalRecipesCount, setTotalRecipesCount] = useState(0);
   const [totalUsersCount, setTotalUsersCount] = useState(0);
   const [loadingCounts, setLoadingCounts] = useState(true);
@@ -31,21 +31,30 @@ function Dashboard() {
     const fetchCounts = async () => {
       try {
         setLoadingCounts(true);
-        const [recipesRes, usersRes] = await Promise.all([
-          api.get("/recipes"),
-          api.get("/users"), // Assuming an admin endpoint /users exists
-        ]);
+        // A contagem de receitas é pública para usuários logados
+        const recipesRes = await api.get("/recipes");
         setTotalRecipesCount(recipesRes.data.length);
-        setTotalUsersCount(usersRes.data.length);
+
+        // A contagem de usuários é apenas para administradores
+        if (uiPermissions.includes("admin")) {
+          const usersRes = await api.get("/users");
+          setTotalUsersCount(usersRes.data.length);
+        }
       } catch (error) {
         console.error("Erro ao buscar contagens para o dashboard:", error);
-        toast.error("Erro ao carregar dados de contagem.");
+        // Evita exibir erro para acessos negados que são esperados
+        if (error.response?.status !== 403) {
+          toast.error("Erro ao carregar dados de contagem.");
+        }
       } finally {
         setLoadingCounts(false);
       }
     };
-    fetchCounts();
-  }, []);
+
+    if (user) {
+      fetchCounts();
+    }
+  }, [user, uiPermissions]); // Depende de user e uiPermissions
 
   // Lógica para o card de Plano Atual
   let daysRemaining = "N/A";
@@ -113,22 +122,27 @@ function Dashboard() {
               )}
             </MDBox>
           </Grid>
-          <Grid item xs={12} md={6} lg={3}>
-            <MDBox mb={1.5}>
-              {loadingCounts ? (
-                <MDBox display="flex" justifyContent="center" alignItems="center" height="100%">
-                  <CircularProgress color="success" size={20} />
-                </MDBox>
-              ) : (
-                <ComplexStatisticsCard
-                  icon="people_alt"
-                  title="Total de Usuários"
-                  count={totalUsersCount}
-                  percentage={{ color: "success", amount: "", label: "" }}
-                />
-              )}
-            </MDBox>
-          </Grid>
+
+          {/* Card de Total de Usuários - Apenas para Admin */}
+          {uiPermissions.includes("admin") && (
+            <Grid item xs={12} md={6} lg={3}>
+              <MDBox mb={1.5}>
+                {loadingCounts ? (
+                  <MDBox display="flex" justifyContent="center" alignItems="center" height="100%">
+                    <CircularProgress color="success" size={20} />
+                  </MDBox>
+                ) : (
+                  <ComplexStatisticsCard
+                    icon="people_alt"
+                    title="Total de Usuários"
+                    count={totalUsersCount}
+                    percentage={{ color: "success", amount: "", label: "" }}
+                  />
+                )}
+              </MDBox>
+            </Grid>
+          )}
+
           <Grid item xs={12} md={6} lg={3}>
             <MDBox mb={1.5}>
               <ComplexStatisticsCard
