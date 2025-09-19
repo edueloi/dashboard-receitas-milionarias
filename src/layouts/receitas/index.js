@@ -61,7 +61,7 @@ function MinhasReceitas() {
           api.get("/categories"),
         ]);
 
-        const userRecipes = recipesRes.data.filter(
+        const userRecipes = recipes.data.filter(
           (recipe) => recipe.criador?.codigo_afiliado_proprio === user.codigo_afiliado_proprio
         );
         setAllUserRecipes(userRecipes);
@@ -123,7 +123,7 @@ function MinhasReceitas() {
       : "/static/images/cards/contemplative-reptile.jpg";
 
     return {
-      id: recipe.id,
+      id: String(recipe.id),
       name: recipe.titulo,
       image: imageUrl, // Corrigido
       category: recipe.categoria?.nome || "Sem Categoria",

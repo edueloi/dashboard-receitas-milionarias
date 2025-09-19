@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "services/api";
 import toast from "react-hot-toast";
-import { useAuth } from "../../context/AuthContext";
 
 // @mui material components
 import Grid from "@mui/material/Grid";
@@ -11,7 +10,6 @@ import Autocomplete from "@mui/material/Autocomplete";
 import Switch from "@mui/material/Switch";
 import Icon from "@mui/material/Icon";
 import IconButton from "@mui/material/IconButton";
-import Tooltip from "@mui/material/Tooltip";
 
 // Material Dashboard 2 React components
 import MDBox from "components/MDBox";
@@ -25,10 +23,9 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 
 function AdicionarReceita() {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [listaCategorias, setListaCategorias] = useState([]);
   const [listaTags, setListaTags] = useState([]);
-  const [imagem, setImagem] = useState(null); // Estado para a imagem
+  const [imagem, setImagem] = useState(null);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -39,7 +36,7 @@ function AdicionarReceita() {
     tags: [],
     ingredients: [{ groupTitle: "Ingredientes", items: [{ itemText: "" }] }],
     instructions: [{ stepText: "" }],
-    status: "pendente", // Adiciona o status padrão
+    status: "pendente",
   });
 
   useEffect(() => {
@@ -68,7 +65,7 @@ function AdicionarReceita() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleIngredientGroupTitleChange = (groupIndex, event) => {
+  const handleIngredientGroupChange = (groupIndex, event) => {
     const newIngredients = [...formData.ingredients];
     newIngredients[groupIndex].groupTitle = event.target.value;
     setFormData({ ...formData, ingredients: newIngredients });
@@ -77,7 +74,7 @@ function AdicionarReceita() {
   const handleAddIngredientGroup = () => {
     setFormData((prev) => ({
       ...prev,
-      ingredients: [...prev.ingredients, { groupTitle: "Novo Grupo", items: [{ itemText: "" }] }],
+      ingredients: [...prev.ingredients, { groupTitle: "", items: [{ itemText: "" }] }],
     }));
   };
 
@@ -88,7 +85,7 @@ function AdicionarReceita() {
 
   const handleIngredientChange = (groupIndex, itemIndex, event) => {
     const newIngredients = [...formData.ingredients];
-    newIngredients[groupIndex].items[itemIndex][event.target.name] = event.target.value;
+    newIngredients[groupIndex].items[itemIndex].itemText = event.target.value;
     setFormData({ ...formData, ingredients: newIngredients });
   };
 
@@ -109,7 +106,7 @@ function AdicionarReceita() {
   const handleInstructionChange = (index, event) => {
     const newInstructions = formData.instructions.map((instruction, i) => {
       if (index === i) {
-        return { ...instruction, [event.target.name]: event.target.value };
+        return { ...instruction, stepText: event.target.value };
       }
       return instruction;
     });
@@ -135,7 +132,6 @@ function AdicionarReceita() {
 
   const handleSubmit = async () => {
     const form = new FormData();
-
     const payload = {
       titulo: formData.title,
       resumo: formData.summary,
@@ -155,11 +151,10 @@ function AdicionarReceita() {
         ordem: index + 1,
       })),
       tags: formData.tags.map((tag) => tag.id),
-      status: formData.status, // Adiciona o status ao payload
+      status: formData.status,
     };
 
     form.append("data", JSON.stringify(payload));
-
     if (imagem) {
       form.append("imagem", imagem);
     }
@@ -182,44 +177,54 @@ function AdicionarReceita() {
     <DashboardLayout>
       <DashboardNavbar />
       <MDBox pt={6} pb={3}>
-        <Card>
-          <MDBox p={3}>
-            <MDTypography variant="h5">Adicionar Nova Receita</MDTypography>
-          </MDBox>
-          <MDBox component="form" role="form" p={3}>
-            <Grid container spacing={3}>
-              <Grid item xs={12}>
-                <MDTypography variant="h6">Informações Básicas</MDTypography>
-              </Grid>
-              <Grid item xs={12} md={8}>
-                <MDInput
-                  name="title"
-                  label="Nome da Receita"
-                  fullWidth
-                  onChange={handleInputChange}
-                />
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Autocomplete
-                  options={listaCategorias}
-                  getOptionLabel={(option) => option.nome || ""}
-                  onChange={(e, newValue) => handleAutocompleteChange("category", newValue)}
-                  renderInput={(params) => <MDInput {...params} label="Categoria" />}
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <MDInput
-                  name="summary"
-                  label="Descrição Curta (Resumo)"
-                  multiline
-                  rows={3}
-                  fullWidth
-                  onChange={handleInputChange}
-                />
-              </Grid>
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <Card>
+              <MDBox p={3}>
+                <MDTypography variant="h5">Adicionar Nova Receita</MDTypography>
+              </MDBox>
+            </Card>
+          </Grid>
 
-              {/* Campo de upload de imagem */}
-              <Grid item xs={12}>
+          <Grid item xs={12}>
+            <Card>
+              <MDBox p={3}>
+                <MDTypography variant="h6">Informações Básicas</MDTypography>
+                <Grid container spacing={3} mt={1}>
+                  <Grid item xs={12} md={8}>
+                    <MDInput
+                      name="title"
+                      label="Nome da Receita"
+                      fullWidth
+                      onChange={handleInputChange}
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <Autocomplete
+                      options={listaCategorias}
+                      getOptionLabel={(option) => option.nome || ""}
+                      onChange={(e, newValue) => handleAutocompleteChange("category", newValue)}
+                      renderInput={(params) => <MDInput {...params} label="Categoria" />}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <MDInput
+                      name="summary"
+                      label="Descrição Curta (Resumo)"
+                      multiline
+                      rows={3}
+                      fullWidth
+                      onChange={handleInputChange}
+                    />
+                  </Grid>
+                </Grid>
+              </MDBox>
+            </Card>
+          </Grid>
+
+          <Grid item xs={12}>
+            <Card>
+              <MDBox p={3}>
                 <MDTypography variant="h6">Imagem Principal</MDTypography>
                 <MDInput
                   type="file"
@@ -227,10 +232,13 @@ function AdicionarReceita() {
                   onChange={handleImageChange}
                   inputProps={{ accept: "image/*" }}
                 />
-              </Grid>
+              </MDBox>
+            </Card>
+          </Grid>
 
-              {/* Opção para status da receita */}
-              <Grid item xs={12} mt={2}>
+          <Grid item xs={12}>
+            <Card>
+              <MDBox p={3}>
                 <MDTypography variant="h6">Status da Receita</MDTypography>
                 <MDBox display="flex" alignItems="center" mt={1}>
                   <Switch checked={formData.status === "ativo"} onChange={handleStatusChange} />
@@ -238,42 +246,54 @@ function AdicionarReceita() {
                     {formData.status === "ativo" ? "Ativa" : "Pendente"}
                   </MDTypography>
                 </MDBox>
-              </Grid>
+              </MDBox>
+            </Card>
+          </Grid>
 
-              <Grid item xs={12} mt={2}>
+          <Grid item xs={12}>
+            <Card>
+              <MDBox p={3}>
                 <MDTypography variant="h6">Detalhes do Preparo</MDTypography>
-              </Grid>
-              <Grid item xs={12} md={4}>
-                <Autocomplete
-                  options={["Fácil", "Médio", "Difícil"]}
-                  value={formData.difficulty}
-                  onChange={(e, newValue) => handleAutocompleteChange("difficulty", newValue)}
-                  renderInput={(params) => <MDInput {...params} label="Dificuldade" />}
-                />
-              </Grid>
-              <Grid item xs={12} md={3}>
-                <MDInput
-                  name="prepTimeMin"
-                  type="number"
-                  label="Preparo (min)"
-                  fullWidth
-                  onChange={handleInputChange}
-                />
-              </Grid>
+                <Grid container spacing={3} mt={1}>
+                  <Grid item xs={12} md={4}>
+                    <Autocomplete
+                      options={["Fácil", "Médio", "Difícil"]}
+                      value={formData.difficulty}
+                      onChange={(e, newValue) => handleAutocompleteChange("difficulty", newValue)}
+                      renderInput={(params) => <MDInput {...params} label="Dificuldade" />}
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={3}>
+                    <MDInput
+                      name="prepTimeMin"
+                      type="number"
+                      label="Preparo (min)"
+                      fullWidth
+                      onChange={handleInputChange}
+                    />
+                  </Grid>
+                </Grid>
+              </MDBox>
+            </Card>
+          </Grid>
 
-              <Grid item xs={12} mt={2}>
+          <Grid item xs={12}>
+            <Card>
+              <MDBox p={3}>
                 <MDTypography variant="h6">Ingredientes</MDTypography>
-              </Grid>
-
-              {formData.ingredients.map((group, groupIndex) => (
-                <Grid item xs={12} key={groupIndex}>
-                  <MDBox p={2} sx={{ border: "1px solid #ddd", borderRadius: "8px" }}>
+                {formData.ingredients.map((group, groupIndex) => (
+                  <MDBox
+                    key={groupIndex}
+                    mt={2}
+                    p={2}
+                    sx={{ border: "1px solid #ddd", borderRadius: "8px" }}
+                  >
                     <MDBox display="flex" justifyContent="space-between" alignItems="center" mb={2}>
                       <MDInput
                         name="groupTitle"
-                        label={`Título do Grupo #${groupIndex + 1}`}
+                        label={`Grupo #${groupIndex + 1}`}
                         value={group.groupTitle}
-                        onChange={(e) => handleIngredientGroupTitleChange(groupIndex, e)}
+                        onChange={(e) => handleIngredientGroupChange(groupIndex, e)}
                         variant="standard"
                         sx={{ flexGrow: 1, mr: 2 }}
                       />
@@ -281,15 +301,13 @@ function AdicionarReceita() {
                         <IconButton
                           onClick={() => handleRemoveIngredientGroup(groupIndex)}
                           color="error"
-                          title="Remover Grupo"
                         >
                           <Icon>delete_forever</Icon>
                         </IconButton>
                       )}
                     </MDBox>
-
                     {group.items.map((item, itemIndex) => (
-                      <Grid container spacing={2} key={itemIndex} alignItems="center" mb={1}>
+                      <Grid container spacing={1} key={itemIndex} alignItems="center" mb={1}>
                         <Grid item xs={11}>
                           <MDInput
                             name="itemText"
@@ -304,7 +322,6 @@ function AdicionarReceita() {
                             <IconButton
                               onClick={() => handleRemoveIngredient(groupIndex, itemIndex)}
                               color="error"
-                              title="Remover Ingrediente"
                             >
                               <Icon>delete</Icon>
                             </IconButton>
@@ -316,59 +333,65 @@ function AdicionarReceita() {
                       onClick={() => handleAddIngredient(groupIndex)}
                       color="info"
                       size="small"
-                      variant="text"
                     >
                       <Icon>add</Icon>&nbsp;Adicionar Ingrediente
                     </MDButton>
                   </MDBox>
-                </Grid>
-              ))}
-
-              <Grid item xs={12}>
-                <MDButton onClick={handleAddIngredientGroup} color="primary" variant="outlined">
-                  <Icon>add</Icon>&nbsp;Adicionar Grupo de Ingredientes
+                ))}
+                <MDButton
+                  onClick={handleAddIngredientGroup}
+                  color="primary"
+                  variant="outlined"
+                  sx={{ mt: 2 }}
+                >
+                  <Icon>add</Icon>&nbsp;Adicionar Grupo
                 </MDButton>
-              </Grid>
+              </MDBox>
+            </Card>
+          </Grid>
 
-              <Grid item xs={12} mt={2}>
+          <Grid item xs={12}>
+            <Card>
+              <MDBox p={3}>
                 <MDTypography variant="h6">Modo de Preparo</MDTypography>
-              </Grid>
-              {formData.instructions.map((instruction, index) => (
-                <Grid container item xs={12} spacing={2} key={index} alignItems="center">
-                  <Grid item xs={11}>
-                    <MDInput
-                      name="stepText"
-                      label={`Passo #${index + 1}`}
-                      fullWidth
-                      multiline
-                      rows={2}
-                      value={instruction.stepText}
-                      onChange={(e) => handleInstructionChange(index, e)}
-                    />
+                {formData.instructions.map((instruction, index) => (
+                  <Grid container item xs={12} spacing={1} key={index} alignItems="center" mt={1}>
+                    <Grid item xs={11}>
+                      <MDInput
+                        name="stepText"
+                        label={`Passo #${index + 1}`}
+                        fullWidth
+                        multiline
+                        rows={2}
+                        value={instruction.stepText}
+                        onChange={(e) => handleInstructionChange(index, e)}
+                      />
+                    </Grid>
+                    <Grid item xs={1}>
+                      {formData.instructions.length > 1 && (
+                        <IconButton onClick={() => handleRemoveInstruction(index)} color="error">
+                          <Icon>delete</Icon>
+                        </IconButton>
+                      )}
+                    </Grid>
                   </Grid>
-                  <Grid item xs={1}>
-                    {formData.instructions.length > 1 && (
-                      <IconButton
-                        onClick={() => handleRemoveInstruction(index)}
-                        color="error"
-                        title="Remover Passo"
-                      >
-                        <Icon>delete</Icon>
-                      </IconButton>
-                    )}
-                  </Grid>
-                </Grid>
-              ))}
-              <Grid item xs={12}>
-                <MDButton onClick={handleAddInstruction} color="info" variant="outlined">
+                ))}
+                <MDButton
+                  onClick={handleAddInstruction}
+                  color="info"
+                  variant="outlined"
+                  sx={{ mt: 2 }}
+                >
                   <Icon>add</Icon>&nbsp;Adicionar Passo
                 </MDButton>
-              </Grid>
+              </MDBox>
+            </Card>
+          </Grid>
 
-              <Grid item xs={12} mt={2}>
+          <Grid item xs={12}>
+            <Card>
+              <MDBox p={3}>
                 <MDTypography variant="h6">Tags</MDTypography>
-              </Grid>
-              <Grid item xs={12}>
                 <Autocomplete
                   multiple
                   options={listaTags}
@@ -379,9 +402,12 @@ function AdicionarReceita() {
                   }}
                   renderInput={(params) => <MDInput {...params} variant="standard" label="Tags" />}
                 />
-              </Grid>
-            </Grid>
-            <MDBox mt={4} mb={1} display="flex" justifyContent="flex-end">
+              </MDBox>
+            </Card>
+          </Grid>
+
+          <Grid item xs={12}>
+            <MDBox mt={3} display="flex" justifyContent="flex-end">
               <MDButton variant="text" color="dark" onClick={() => navigate("/receitas")}>
                 Cancelar
               </MDButton>
@@ -389,8 +415,8 @@ function AdicionarReceita() {
                 Salvar Receita
               </MDButton>
             </MDBox>
-          </MDBox>
-        </Card>
+          </Grid>
+        </Grid>
       </MDBox>
     </DashboardLayout>
   );
