@@ -1,5 +1,6 @@
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
+import { slugify } from "utils/slugify";
 
 // @mui material components
 import Card from "@mui/material/Card";
@@ -14,7 +15,7 @@ function PublicRecipeCard({ recipe }) {
   const { id, name, image, description, author, rating, votes } = recipe;
 
   return (
-    <Link to={`/receita/${id}`} style={{ textDecoration: "none" }}>
+    <Link to={`/receita/${id}-${slugify(name)}`} style={{ textDecoration: "none" }}>
       <Card
         sx={{
           height: "100%",
@@ -65,7 +66,6 @@ PublicRecipeCard.propTypes = {
     name: PropTypes.string.isRequired,
     image: PropTypes.string.isRequired,
     description: PropTypes.string.isRequired,
-    prepTime: PropTypes.string.isRequired,
     author: PropTypes.shape({
       name: PropTypes.string.isRequired,
       avatar: PropTypes.string,

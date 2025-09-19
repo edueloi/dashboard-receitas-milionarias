@@ -9,7 +9,7 @@ import MinhasReceitas from "layouts/receitas";
 import TodasAsReceitas from "layouts/receitas/TodasAsReceitas";
 import DetalhesReceita from "layouts/receitas/DetalhesReceita";
 import Categories from "layouts/categories";
-import EditarCategoria from "layouts/categories/EditarCategoria"; // Importa o novo componente
+import EditarCategoria from "layouts/categories/EditarCategoria";
 import AdicionarReceita from "layouts/receitas/AdicionarReceita";
 import EditarReceita from "layouts/receitas/EditarReceita";
 import Relatorios from "layouts/relatorios";
@@ -18,7 +18,7 @@ import AdminPanel from "layouts/admin";
 // --- Autenticação ---
 import SignInSplit from "layouts/authentication/sign-in";
 import SignUpWizard from "layouts/authentication/sign-up/SignUpWizard";
-import AuthLayout from "layouts/authentication/AuthLayout"; // Importa o contêiner correto
+import AuthLayout from "layouts/authentication/AuthLayout";
 
 const routes = [
   // --- ROTAS PÚBLICAS (sem sidebar) ---
@@ -123,20 +123,23 @@ const routes = [
 
   // --- ROTAS SEM ITEM NO MENU LATERAL ---
   {
+    key: "adicionar-receita",
     route: "/receitas/adicionar",
     component: <AdicionarReceita />,
   },
   {
+    key: "editar-receita",
     route: "/receitas/editar/:id",
     component: <EditarReceita />,
   },
   {
-    route: "/categories/editar/:id", // Nova rota de edição
+    key: "editar-categoria",
+    route: "/categories/editar/:id",
     component: <EditarCategoria />,
   },
   {
     key: "detalhes-receita",
-    route: "/receita/:id",
+    route: "/receita/:slug",
     component: <DetalhesReceita />,
   },
 ];

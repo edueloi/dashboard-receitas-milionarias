@@ -8,32 +8,33 @@ const AuthContext = createContext(null);
 export const useAuth = () => useContext(AuthContext);
 
 // --- Lógica de Permissões da UI ---
-const getPermissionsForRole = (role) => {
-  const allRoutes = new Set([
+const getPermissionsForRole = (roleName) => {
+  // Rotas base para todos os usuários logados
+  const baseRoutes = new Set([
     "dashboard",
     "todas-as-receitas",
-    "receitas",
     "categories",
-    "relatorios",
     "carteira",
     "profile",
-    "admin",
     "configuracoes",
+    "detalhes-receita",
   ]);
 
-  if (role === "admin") {
-    return Array.from(allRoutes); // Admin pode tudo
+  // Todos, exceto afiliados, podem criar e gerenciar suas próprias receitas
+  if (roleName !== "afiliado" && roleName !== "afiliado_pro") {
+    baseRoutes.add("receitas");
+    baseRoutes.add("adicionar-receita");
+    baseRoutes.add("editar-receita");
   }
 
-  // Remove relatórios para todos, exceto admin
-  allRoutes.delete("relatorios");
-  allRoutes.delete("admin"); // Apenas admin pode ver o painel de admin
-
-  if (role === "afiliado" || role === "afiliado pro") {
-    allRoutes.delete("receitas"); // Afiliados não veem "Minhas Receitas"
+  // Apenas Admins podem ver páginas de admin e editar categorias
+  if (roleName === "admin") {
+    baseRoutes.add("relatorios");
+    baseRoutes.add("admin");
+    baseRoutes.add("editar-categoria");
   }
 
-  return Array.from(allRoutes);
+  return Array.from(baseRoutes);
 };
 
 export const AuthProvider = ({ children }) => {
@@ -47,14 +48,14 @@ export const AuthProvider = ({ children }) => {
     delete api.defaults.headers.common["Authorization"];
     setUser(null);
     setIsAuthenticated(false);
-    setUiPermissions([]); // Limpa as permissões no logout
+    setUiPermissions([]);
   }, []);
 
   const processUserData = (userData) => {
     if (userData && userData.status && userData.status.toLowerCase() === "ativo") {
       setUser(userData);
       setIsAuthenticated(true);
-      // Define as permissões da UI com base no cargo do usuário
+      // Usa a string de permissão diretamente da API
       const permissions = getPermissionsForRole(userData.permissao);
       setUiPermissions(permissions);
       return true;
@@ -115,7 +116,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     logout,
-    uiPermissions, // Expõe as permissões no contexto
+    uiPermissions,
   };
 
   return <AuthContext.Provider value={authContextValue}>{children}</AuthContext.Provider>;

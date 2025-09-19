@@ -213,13 +213,11 @@ function Categories() {
   const mapCategoryData = (category) => {
     let imageUrl = "/static/images/cards/contemplative-reptile.jpg";
     if (category.imagem_url) {
-      const baseUrl = process.env.REACT_APP_API_URL.endsWith("/api")
-        ? process.env.REACT_APP_API_URL.slice(0, -3)
-        : process.env.REACT_APP_API_URL;
-      imageUrl = category.imagem_url.startsWith("http")
-        ? category.imagem_url
-        : `${baseUrl}${category.imagem_url.replaceAll("/", "/")}`;
+      const rootUrl = new URL(process.env.REACT_APP_API_URL || window.location.origin).origin;
+      const cleanPath = category.imagem_url.replace(/\\/g, "/").replace(/^\//, "");
+      imageUrl = `${rootUrl}/${cleanPath}`;
     }
+
     return {
       ...category,
       id: category.id,

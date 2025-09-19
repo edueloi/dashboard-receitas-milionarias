@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import api from "services/api";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
@@ -7,15 +7,16 @@ import { useAuth } from "../../context/AuthContext";
 // @mui material components
 import Card from "@mui/material/Card";
 import Icon from "@mui/material/Icon";
-import Grid from "@mui/material/Grid";
-import TextField from "@mui/material/TextField";
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
-import ToggleButton from "@mui/material/ToggleButton";
-import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
-import { CircularProgress } from "@mui/material";
+import {
+  CircularProgress,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Autocomplete,
+  Chip,
+} from "@mui/material";
 
 // Material Dashboard 2 React components
 import MDBox from "components/MDBox";
@@ -25,73 +26,66 @@ import MDButton from "components/MDButton";
 // Material Dashboard 2 React example components
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
+import DataTable from "examples/Tables/DataTable";
 
 // Data and components
-import RecipeCard from "./components/RecipeCard";
+import recipesTableData from "./data/recipesTableData";
 
-// A custom hook to get query params
 function useQuery() {
   return new URLSearchParams(useLocation().search);
 }
 
 function MinhasReceitas() {
-  const { user } = useAuth();
+  const { user, uiPermissions } = useAuth();
+  const navigate = useNavigate();
+  const query = useQuery();
+
   const [allUserRecipes, setAllUserRecipes] = useState([]);
   const [filteredRecipes, setFilteredRecipes] = useState([]);
   const [listaCategorias, setListaCategorias] = useState([]);
+  const [listaTags, setListaTags] = useState([]);
   const [loading, setLoading] = useState(true);
-  const query = useQuery();
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("Todos");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [tagsFilter, setTagsFilter] = useState([]);
+
+  const isAdmin = uiPermissions.includes("admin");
 
   useEffect(() => {
-    const fetchUserRecipesAndCategories = async () => {
-      if (!user || !user.codigo_afiliado_proprio) {
+    const fetchInitialData = async () => {
+      if (!user?.codigo_afiliado_proprio) {
         setLoading(false);
         return;
       }
-
       try {
         setLoading(true);
-        const [recipesRes, categoriesRes] = await Promise.all([
-          api.get("/recipes"),
+        const [recipesRes, categoriesRes, tagsRes] = await Promise.all([
+          api.get("/recipes?populate=categoria,tags,criador"),
           api.get("/categories"),
+          api.get("/tags"),
         ]);
 
         const userRecipes = recipesRes.data.filter(
           (recipe) => recipe.criador?.codigo_afiliado_proprio === user.codigo_afiliado_proprio
         );
+
         setAllUserRecipes(userRecipes);
         setFilteredRecipes(userRecipes);
         setListaCategorias(categoriesRes.data);
+        setListaTags(tagsRes.data);
       } catch (error) {
-        console.error("Erro ao buscar receitas ou categorias:", error);
-        toast.error("Não foi possível carregar suas receitas ou categorias.");
+        console.error("Erro ao buscar dados iniciais:", error);
+        toast.error("Não foi possível carregar suas receitas, categorias ou tags.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUserRecipesAndCategories();
-  }, [user]); // Depende do objeto user
+    fetchInitialData();
+  }, [user]);
 
-  // Effect to set category from URL param
-  useEffect(() => {
-    const categoryFromUrl = query.get("category");
-    if (categoryFromUrl) {
-      const foundCategory = listaCategorias.find(
-        (cat) => cat.nome === decodeURIComponent(categoryFromUrl)
-      );
-      if (foundCategory) {
-        setCategoryFilter(foundCategory.nome);
-      }
-    }
-  }, [listaCategorias]); // Runs when categories are loaded
-
-  // Effect to apply filters
   useEffect(() => {
     let filtered = allUserRecipes;
 
@@ -105,33 +99,36 @@ function MinhasReceitas() {
       filtered = filtered.filter((recipe) => recipe.categoria?.nome === categoryFilter);
     }
 
-    if (statusFilter !== "all") {
-      // Assuming 'status' field exists in backend recipe data
-      filtered = filtered.filter((recipe) => recipe.status === statusFilter);
+    if (tagsFilter.length > 0) {
+      const tagNames = tagsFilter.map((t) => t.nome);
+      filtered = filtered.filter((recipe) =>
+        recipe.tags?.some((tag) => tagNames.includes(tag.nome))
+      );
     }
 
     setFilteredRecipes(filtered);
-  }, [searchTerm, categoryFilter, statusFilter, allUserRecipes]);
+  }, [searchTerm, categoryFilter, tagsFilter, allUserRecipes]);
 
   const mapRecipeData = (recipe) => {
-    const baseUrl = process.env.REACT_APP_API_URL.endsWith("/api")
-      ? process.env.REACT_APP_API_URL.slice(0, -3)
-      : process.env.REACT_APP_API_URL;
+    let imageUrl = "/static/images/default-recipe.jpg";
+    if (recipe.imagem_url) {
+      if (recipe.imagem_url.startsWith("http")) {
+        imageUrl = recipe.imagem_url;
+      } else {
+        const baseUrl = (process.env.REACT_APP_API_URL || "").endsWith("/api")
+          ? process.env.REACT_APP_API_URL.slice(0, -3)
+          : process.env.REACT_APP_API_URL || "";
+        const cleanBaseUrl = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
+        const imagePath = recipe.imagem_url.replace(/\\/g, "/");
+        const cleanImagePath = imagePath.startsWith("/") ? imagePath.slice(1) : imagePath;
+        imageUrl = `${cleanBaseUrl}/${cleanImagePath}`;
+      }
+    }
+    return { ...recipe, name: recipe.titulo, image: imageUrl };
+  };
 
-    const imageUrl = recipe.imagem_url
-      ? `${baseUrl}${recipe.imagem_url.replace(/\\/g, "/")}`
-      : "/static/images/cards/contemplative-reptile.jpg";
-
-    return {
-      id: String(recipe.id),
-      name: recipe.titulo,
-      image: imageUrl, // Corrigido
-      category: recipe.categoria?.nome || "Sem Categoria",
-      description: recipe.resumo,
-      status: recipe.status || "draft",
-      time: `${recipe.tempo_preparo_min || 0} min`,
-      difficulty: recipe.dificuldade || "Fácil",
-    };
+  const handleEdit = (id) => {
+    navigate(`/receitas/editar/${id}`);
   };
 
   const handleDelete = async (id) => {
@@ -139,9 +136,7 @@ function MinhasReceitas() {
       try {
         await api.delete(`/recipes/${id}`);
         toast.success("Receita excluída com sucesso!");
-        // Remove from both allUserRecipes and filteredRecipes
         setAllUserRecipes((prev) => prev.filter((r) => r.id !== id));
-        setFilteredRecipes((prev) => prev.filter((r) => r.id !== id));
       } catch (error) {
         console.error("Erro ao excluir receita:", error);
         toast.error("Não foi possível excluir a receita.");
@@ -149,36 +144,38 @@ function MinhasReceitas() {
     }
   };
 
+  const { columns, rows } = recipesTableData(
+    filteredRecipes.map(mapRecipeData),
+    isAdmin,
+    handleDelete,
+    handleEdit
+  );
+
   return (
     <DashboardLayout>
       <DashboardNavbar />
       <MDBox pt={6} pb={3}>
-        <Card sx={{ mb: 4 }}>
-          <MDBox p={3} display="flex" justifyContent="space-between" alignItems="center">
-            <MDBox>
-              <MDTypography variant="h5" fontWeight="medium">
-                Minhas Receitas
-              </MDTypography>
-              <MDTypography variant="body2" color="text">
-                Gerencie e organize todas as suas criações culinárias.
-              </MDTypography>
-            </MDBox>
-            <Link to="/receitas/adicionar">
-              <MDButton variant="gradient" color="success">
-                <Icon sx={{ mr: 1 }}>add</Icon>
-                Adicionar Nova Receita
-              </MDButton>
-            </Link>
-          </MDBox>
-        </Card>
+        <MDBox display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          <MDTypography variant="h4" fontWeight="medium">
+            Minhas Receitas
+          </MDTypography>
+          <MDButton
+            variant="gradient"
+            color="success"
+            onClick={() => navigate("/receitas/adicionar")}
+          >
+            <Icon sx={{ mr: 1 }}>add</Icon>
+            Adicionar Nova Receita
+          </MDButton>
+        </MDBox>
 
-        <Card sx={{ mb: 4 }}>
+        <Card sx={{ p: 2 }}>
           <MDBox
-            p={2}
             display="flex"
             flexWrap="wrap"
-            justifyContent="space-around"
+            justifyContent="space-between"
             alignItems="center"
+            p={1}
           >
             <MDBox sx={{ minWidth: 250, m: 1 }}>
               <TextField
@@ -207,42 +204,48 @@ function MinhasReceitas() {
                 </Select>
               </FormControl>
             </MDBox>
-            <MDBox m={1}>
-              <ToggleButtonGroup
-                color="success"
-                value={statusFilter}
-                exclusive
-                onChange={(e, newValue) => newValue && setStatusFilter(newValue)}
-              >
-                <ToggleButton value="all">Todos</ToggleButton>
-                <ToggleButton value="active">Ativas</ToggleButton>
-                <ToggleButton value="paused">Pausadas</ToggleButton>
-              </ToggleButtonGroup>
+            <MDBox sx={{ minWidth: 300, m: 1 }}>
+              <Autocomplete
+                multiple
+                options={listaTags}
+                getOptionLabel={(option) => option.nome}
+                value={tagsFilter}
+                onChange={(event, newValue) => setTagsFilter(newValue)}
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => (
+                    <Chip key={option.id} label={option.nome} {...getTagProps({ index })} />
+                  ))
+                }
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    variant="outlined"
+                    label="Tags"
+                    placeholder="Filtrar por tags"
+                  />
+                )}
+              />
             </MDBox>
           </MDBox>
         </Card>
 
-        {loading ? (
-          <MDBox display="flex" justifyContent="center" alignItems="center" mt={5}>
-            <CircularProgress color="success" />
-          </MDBox>
-        ) : (
-          <Grid container spacing={4}>
-            {filteredRecipes.length > 0 ? (
-              filteredRecipes.map((recipe) => (
-                <Grid item xs={12} sm={6} md={4} lg={3} key={recipe.id}>
-                  <RecipeCard recipe={mapRecipeData(recipe)} onDelete={handleDelete} />
-                </Grid>
-              ))
+        <MDBox mt={3}>
+          <Card>
+            {loading ? (
+              <MDBox display="flex" justifyContent="center" p={5}>
+                <CircularProgress color="success" />
+              </MDBox>
             ) : (
-              <Grid item xs={12}>
-                <MDTypography variant="h6" color="text" align="center" sx={{ mt: 4 }}>
-                  Nenhuma receita encontrada com os filtros aplicados.
-                </MDTypography>
-              </Grid>
+              <DataTable
+                table={{ columns, rows }}
+                isSorted={false}
+                entriesPerPage
+                showTotalEntries
+                pagination={{ variant: "gradient", color: "success" }}
+              />
             )}
-          </Grid>
-        )}
+          </Card>
+        </MDBox>
       </MDBox>
     </DashboardLayout>
   );

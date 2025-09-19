@@ -1,21 +1,24 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "services/api";
 import toast from "react-hot-toast";
+import { useAuth } from "../../context/AuthContext";
 
 // @mui material components
 import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
-import TextField from "@mui/material/TextField";
 import Icon from "@mui/material/Icon";
 import {
   CircularProgress,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Autocomplete,
   Chip,
-  Box,
-  Button,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
+  ToggleButtonGroup,
+  ToggleButton,
 } from "@mui/material";
 
 // Material Dashboard 2 React components
@@ -25,264 +28,236 @@ import MDTypography from "components/MDTypography";
 // Material Dashboard 2 React example components
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
+import DataTable from "examples/Tables/DataTable";
 
 // Data and components
+import recipesTableData from "./data/recipesTableData";
 import PublicRecipeCard from "./components/PublicRecipeCard";
-import PublicRecipeList from "./components/PublicRecipeList"; // Novo componente para visualização em lista
 
 function TodasAsReceitas() {
+  const { uiPermissions } = useAuth();
+  const navigate = useNavigate();
+
   const [allRecipes, setAllRecipes] = useState([]);
   const [filteredRecipes, setFilteredRecipes] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [listaCategorias, setListaCategorias] = useState([]);
+  const [listaTags, setListaTags] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [categories, setCategories] = useState([]);
-  const [selectedCategory, setSelectedCategory] = useState("Todas");
-  const [tags, setTags] = useState([]);
-  const [selectedTags, setSelectedTags] = useState([]);
-  const [viewMode, setViewMode] = useState("grid"); // 'grid' ou 'list'
+  const [view, setView] = useState("card"); // 'card' or 'table'
+
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("Todos");
+  const [tagsFilter, setTagsFilter] = useState([]);
+
+  const isAdmin = uiPermissions.includes("admin");
 
   useEffect(() => {
-    const fetchRecipesAndFilters = async () => {
+    const fetchInitialData = async () => {
       try {
         setLoading(true);
-        const recipesResponse = await api.get("/recipes");
-        const fetchedRecipes = recipesResponse.data;
-        setAllRecipes(fetchedRecipes);
+        const [recipesRes, categoriesRes, tagsRes] = await Promise.all([
+          api.get("/recipes?populate=categoria,tags,criador"),
+          api.get("/categories"),
+          api.get("/tags"),
+        ]);
 
-        const uniqueCategories = [
-          "Todas",
-          ...new Set(fetchedRecipes.map((recipe) => recipe.categoria?.nome).filter(Boolean)),
-        ];
-        setCategories(uniqueCategories);
-
-        const uniqueTags = [...new Set(fetchedRecipes.flatMap((recipe) => recipe.tags || []))];
-        setTags(uniqueTags);
+        setAllRecipes(recipesRes.data);
+        setFilteredRecipes(recipesRes.data);
+        setListaCategorias(categoriesRes.data);
+        setListaTags(tagsRes.data);
       } catch (error) {
-        console.error("Erro ao buscar dados:", error);
-        toast.error("Não foi possível carregar as receitas.");
+        console.error("Erro ao buscar dados iniciais:", error);
+        toast.error("Não foi possível carregar os dados.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchRecipesAndFilters();
+    fetchInitialData();
   }, []);
 
   useEffect(() => {
-    let currentFiltered = allRecipes;
+    let filtered = allRecipes;
 
-    // Filtra por categoria
-    if (selectedCategory !== "Todas") {
-      currentFiltered = currentFiltered.filter(
-        (recipe) => recipe.categoria?.nome === selectedCategory
-      );
-    }
-
-    // Filtra por tags selecionadas
-    if (selectedTags.length > 0) {
-      currentFiltered = currentFiltered.filter((recipe) =>
-        selectedTags.every((tag) => (recipe.tags || []).includes(tag))
-      );
-    }
-
-    // Filtra pelo termo de busca
     if (searchTerm) {
-      currentFiltered = currentFiltered.filter((recipe) =>
+      filtered = filtered.filter((recipe) =>
         recipe.titulo.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-    setFilteredRecipes(currentFiltered);
-  }, [searchTerm, selectedCategory, selectedTags, allRecipes]);
+    if (categoryFilter !== "Todos") {
+      filtered = filtered.filter((recipe) => recipe.categoria?.nome === categoryFilter);
+    }
 
-  const handleTagClick = (tag) => {
-    setSelectedTags((prevTags) =>
-      prevTags.includes(tag) ? prevTags.filter((t) => t !== tag) : [...prevTags, tag]
-    );
-  };
+    if (tagsFilter.length > 0) {
+      const tagNames = tagsFilter.map((t) => t.nome);
+      filtered = filtered.filter((recipe) =>
+        recipe.tags?.some((tag) => tagNames.includes(tag.nome))
+      );
+    }
+
+    setFilteredRecipes(filtered);
+  }, [searchTerm, categoryFilter, tagsFilter, allRecipes]);
 
   const mapRecipeData = (recipe) => {
-    const baseUrl = process.env.REACT_APP_API_URL.endsWith("/api")
-      ? process.env.REACT_APP_API_URL.slice(0, -3)
-      : process.env.REACT_APP_API_URL;
+    const rootUrl = new URL(process.env.REACT_APP_API_URL || window.location.origin).origin;
 
-    const imageUrl = recipe.imagem_url
-      ? `${baseUrl}${recipe.imagem_url.replace(/\\/g, "/")}`
-      : "/static/images/cards/contemplative-reptile.jpg";
+    const getFullImageUrl = (path) => {
+      if (!path) return null;
+      if (path.startsWith("http")) return path;
+      const cleanPath = path.replace(/\\/g, "/").replace(/^\//, "");
+      return `${rootUrl}/${cleanPath}`;
+    };
+
+    const imageUrl = getFullImageUrl(recipe.imagem_url) || "/static/images/default-recipe.jpg";
+    const authorAvatarUrl = getFullImageUrl(recipe.criador?.avatar_url);
 
     return {
       id: String(recipe.id),
       name: recipe.titulo,
       image: imageUrl,
-      category: recipe.categoria?.nome || "Sem Categoria",
       description: recipe.resumo,
       author: {
-        name: recipe.autor?.nome || "Autor Desconhecido",
-        avatar: recipe.autor?.avatar_url || "/static/images/avatar/1.jpg",
+        name: recipe.criador?.nome || "Autor Desconhecido",
+        avatar: authorAvatarUrl,
       },
-      time: `${recipe.tempo_preparo_min} min`,
-      difficulty: recipe.dificuldade,
-      rating: recipe.rating || 0,
-      votes: recipe.votes || 0,
+      rating: recipe.avaliacao_media || 0,
+      votes: recipe.total_avaliacoes || 0,
       tags: recipe.tags || [],
+      category: recipe.categoria?.nome || "Sem Categoria",
     };
   };
+
+  const handleEdit = (id) => {
+    navigate(`/receitas/editar/${id}`);
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Tem certeza que deseja excluir esta receita? Esta ação é irreversível.")) {
+      try {
+        await api.delete(`/recipes/${id}`);
+        toast.success("Receita excluída com sucesso!");
+        setAllRecipes((prev) => prev.filter((r) => r.id !== id));
+      } catch (error) {
+        console.error("Erro ao excluir receita:", error);
+        toast.error("Não foi possível excluir a receita.");
+      }
+    }
+  };
+
+  const { columns, rows } = recipesTableData(
+    filteredRecipes.map(mapRecipeData),
+    isAdmin,
+    handleDelete,
+    handleEdit
+  );
 
   return (
     <DashboardLayout>
       <DashboardNavbar />
       <MDBox pt={6} pb={3}>
-        <Card
-          sx={{
-            mb: 4,
-            backgroundImage: "linear-gradient(195deg, #4CAF50, #8BC34A)",
-            boxShadow: "none",
-          }}
-        >
-          <MDBox p={3} display="flex" flexDirection="column" alignItems="center">
-            <MDTypography variant="h3" fontWeight="bold" color="white" sx={{ mb: 1 }}>
-              Explore Nossas Receitas 🧑‍🍳
-            </MDTypography>
-            <MDTypography variant="body2" color="white" sx={{ mb: 3 }}>
-              Encontre a inspiração perfeita para sua próxima refeição.
-            </MDTypography>
-            <MDBox sx={{ width: "100%", maxWidth: 600 }}>
+        <MDTypography variant="h4" fontWeight="medium" mb={3}>
+          Todas as Receitas
+        </MDTypography>
+
+        <Card sx={{ p: 2, mb: 3 }}>
+          <MDBox
+            display="flex"
+            flexWrap="wrap"
+            justifyContent="space-between"
+            alignItems="center"
+            p={1}
+          >
+            <MDBox sx={{ minWidth: 250, m: 1 }}>
               <TextField
                 fullWidth
                 variant="outlined"
-                placeholder="O que você quer cozinhar hoje?"
+                label="Buscar pelo nome..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                sx={{
-                  backgroundColor: "rgba(255, 255, 255, 0.9)",
-                  borderRadius: "8px",
-                  "& .MuiOutlinedInput-root": {
-                    "& fieldset": { borderColor: "transparent" },
-                    "&:hover fieldset": { borderColor: "#fff" },
-                    "&.Mui-focused fieldset": { borderColor: "#fff" },
-                  },
-                }}
-                InputProps={{
-                  startAdornment: <Icon sx={{ mr: 1, color: "black" }}>search</Icon>,
-                }}
               />
+            </MDBox>
+            <MDBox sx={{ minWidth: 200, m: 1 }}>
+              <FormControl fullWidth>
+                <InputLabel>Categoria</InputLabel>
+                <Select
+                  value={categoryFilter}
+                  label="Categoria"
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  sx={{ height: 44 }}
+                >
+                  <MenuItem value="Todos">Todos</MenuItem>
+                  {listaCategorias.map((cat) => (
+                    <MenuItem key={cat.id} value={cat.nome}>
+                      {cat.nome}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </MDBox>
+            <MDBox sx={{ minWidth: 300, m: 1 }}>
+              <Autocomplete
+                multiple
+                options={listaTags}
+                getOptionLabel={(option) => option.nome}
+                value={tagsFilter}
+                onChange={(event, newValue) => setTagsFilter(newValue)}
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => (
+                    <Chip key={option.id} label={option.nome} {...getTagProps({ index })} />
+                  ))
+                }
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    variant="outlined"
+                    label="Tags"
+                    placeholder="Filtrar por tags"
+                  />
+                )}
+              />
+            </MDBox>
+            <MDBox sx={{ m: 1 }}>
+              <ToggleButtonGroup
+                color="success"
+                value={view}
+                exclusive
+                onChange={(e, newView) => newView && setView(newView)}
+              >
+                <ToggleButton value="card">
+                  <Icon>grid_view</Icon>
+                </ToggleButton>
+                <ToggleButton value="table">
+                  <Icon>table_rows</Icon>
+                </ToggleButton>
+              </ToggleButtonGroup>
             </MDBox>
           </MDBox>
         </Card>
 
-        {/* --- Filtros de Categoria e Tags --- */}
-        <Box mb={4} sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <MDBox
-            sx={{
-              overflowX: "auto",
-              whiteSpace: "nowrap",
-              "&::-webkit-scrollbar": { display: "none" },
-              msOverflowStyle: "none",
-              scrollbarWidth: "none",
-            }}
-          >
-            <MDTypography variant="h6" fontWeight="medium" mb={1}>
-              Categorias:
-            </MDTypography>
-            <MDBox display="flex" gap={1} justifyContent="flex-start" p={1}>
-              {categories.map((category) => (
-                <Chip
-                  key={category}
-                  label={category}
-                  onClick={() => setSelectedCategory(category)}
-                  color={selectedCategory === category ? "success" : "default"}
-                  variant={selectedCategory === category ? "filled" : "outlined"}
-                  sx={{
-                    fontWeight: "bold",
-                    cursor: "pointer",
-                    transition: "transform 0.2s",
-                    "&:hover": { transform: "scale(1.05)" },
-                  }}
-                />
-              ))}
-            </MDBox>
-          </MDBox>
-          <MDBox
-            sx={{
-              overflowX: "auto",
-              whiteSpace: "nowrap",
-              "&::-webkit-scrollbar": { display: "none" },
-              msOverflowStyle: "none",
-              scrollbarWidth: "none",
-            }}
-          >
-            <MDTypography variant="h6" fontWeight="medium" mb={1}>
-              Tags:
-            </MDTypography>
-            <MDBox display="flex" gap={1} justifyContent="flex-start" p={1}>
-              {tags.map((tag) => (
-                <Chip
-                  key={tag}
-                  label={tag}
-                  onClick={() => handleTagClick(tag)}
-                  color={selectedTags.includes(tag) ? "primary" : "default"}
-                  variant={selectedTags.includes(tag) ? "filled" : "outlined"}
-                  sx={{
-                    fontWeight: "bold",
-                    cursor: "pointer",
-                    transition: "transform 0.2s",
-                    "&:hover": { transform: "scale(1.05)" },
-                  }}
-                />
-              ))}
-            </MDBox>
-          </MDBox>
-        </Box>
-
-        {/* --- Opções de Visualização --- */}
-        <MDBox display="flex" justifyContent="flex-end" mb={2} pr={2}>
-          <Button
-            onClick={() => setViewMode("grid")}
-            startIcon={<Icon>grid_view</Icon>}
-            sx={{ color: viewMode === "grid" ? "primary.main" : "text.primary" }}
-          >
-            Cards
-          </Button>
-          <Button
-            onClick={() => setViewMode("list")}
-            startIcon={<Icon>format_list_bulleted</Icon>}
-            sx={{ color: viewMode === "list" ? "primary.main" : "text.primary" }}
-          >
-            Lista
-          </Button>
-        </MDBox>
-
-        {/* --- Exibição das Receitas --- */}
         {loading ? (
-          <MDBox display="flex" justifyContent="center" alignItems="center" mt={5}>
+          <MDBox display="flex" justifyContent="center" p={5}>
             <CircularProgress color="success" />
           </MDBox>
+        ) : view === "table" ? (
+          <Card>
+            <DataTable
+              table={{ columns, rows }}
+              isSorted={false}
+              entriesPerPage
+              showTotalEntries
+              pagination={{ variant: "gradient", color: "success" }}
+            />
+          </Card>
         ) : (
-          <>
-            {filteredRecipes.length > 0 ? (
-              viewMode === "grid" ? (
-                <Grid container spacing={4}>
-                  {filteredRecipes.map((recipe) => (
-                    <Grid item xs={12} sm={6} md={4} lg={3} key={recipe.id}>
-                      <PublicRecipeCard recipe={mapRecipeData(recipe)} />
-                    </Grid>
-                  ))}
-                </Grid>
-              ) : (
-                <List>
-                  {filteredRecipes.map((recipe) => (
-                    <PublicRecipeList key={recipe.id} recipe={mapRecipeData(recipe)} />
-                  ))}
-                </List>
-              )
-            ) : (
-              <Grid item xs={12}>
-                <MDTypography variant="h6" color="text" align="center" sx={{ mt: 4 }}>
-                  Nenhuma receita encontrada. Tente uma busca ou filtro diferente!
-                </MDTypography>
+          <Grid container spacing={3}>
+            {filteredRecipes.map((recipe) => (
+              <Grid item xs={12} sm={6} md={4} lg={3} key={recipe.id}>
+                <PublicRecipeCard recipe={mapRecipeData(recipe)} />
               </Grid>
-            )}
-          </>
+            ))}
+          </Grid>
         )}
       </MDBox>
     </DashboardLayout>

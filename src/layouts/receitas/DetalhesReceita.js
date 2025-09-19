@@ -24,10 +24,18 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import ImageCarousel from "./components/ImageCarousel";
 
 function DetalhesReceita() {
-  const { id } = useParams();
+  const { slug } = useParams();
+  const [id, setId] = useState(null);
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
+
+  useEffect(() => {
+    if (slug) {
+      const parsedId = slug.split("-")[0];
+      setId(parsedId);
+    }
+  }, [slug]);
 
   useEffect(() => {
     const fetchRecipeDetails = async () => {
@@ -35,7 +43,7 @@ function DetalhesReceita() {
         setLoading(true);
         const recipeRes = await api.get(`/recipes/${id}`);
         setRecipe(recipeRes.data);
-        // For now, we'll just set it to false.
+        // Here you would also check if the recipe is in the user's favorites
         setIsFavorite(false);
       } catch (error) {
         console.error("Erro ao buscar detalhes da receita:", error);
@@ -45,12 +53,13 @@ function DetalhesReceita() {
       }
     };
 
-    fetchRecipeDetails();
+    if (id) {
+      fetchRecipeDetails();
+    }
   }, [id]);
 
   const handleToggleFavorite = async () => {
     try {
-      // This is a placeholder. Replace with your actual favorite endpoint.
       await api.post(`/users/me/favorites`, { recipeId: id });
       setIsFavorite(!isFavorite);
       toast.success(
@@ -75,6 +84,14 @@ function DetalhesReceita() {
     }
   };
 
+  const getFullImageUrl = (path) => {
+    if (!path) return null;
+    if (path.startsWith("http")) return path;
+    const rootUrl = new URL(process.env.REACT_APP_API_URL || window.location.origin).origin;
+    const cleanPath = path.replace(/\\/g, "/").replace(/^\//, "");
+    return `${rootUrl}/${cleanPath}`;
+  };
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -96,6 +113,9 @@ function DetalhesReceita() {
       </DashboardLayout>
     );
   }
+
+  const recipeImage = getFullImageUrl(recipe.imagem_url);
+  const authorAvatar = getFullImageUrl(recipe.criador?.avatar_url);
 
   return (
     <DashboardLayout>
@@ -131,13 +151,13 @@ function DetalhesReceita() {
 
         <Grid container spacing={3} mt={0.5}>
           <Grid item xs={12} lg={7}>
-            <ImageCarousel images={recipe.imagens || [recipe.imagem_url]} />
+            <ImageCarousel images={[recipeImage]} />
           </Grid>
           <Grid item xs={12} lg={5}>
             <Card sx={{ height: "100%", p: 2 }}>
               <MDBox display="flex" alignItems="center" mb={2}>
                 <Avatar
-                  src={recipe.criador?.avatar_url}
+                  src={authorAvatar}
                   alt={recipe.criador?.nome}
                   sx={{ width: 74, height: 74, mr: 2 }}
                 />
@@ -167,7 +187,7 @@ function DetalhesReceita() {
                     {recipe.avaliacao_media?.toFixed(1) || "N/A"}
                   </MDTypography>
                   <MDTypography variant="caption" color="text">
-                    ({recipe.total_avaliacoes} votos)
+                    ({recipe.total_avaliacoes || 0} votos)
                   </MDTypography>
                 </MDBox>
               </MDBox>
