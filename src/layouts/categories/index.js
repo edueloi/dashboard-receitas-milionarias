@@ -6,8 +6,18 @@ import { debounce } from "lodash";
 
 // @mui material components
 import Card from "@mui/material/Card";
+import Grid from "@mui/material/Grid";
 import Icon from "@mui/material/Icon";
-import { CircularProgress, Modal, TextField, Box, Tabs, Tab } from "@mui/material";
+import {
+  CircularProgress,
+  Modal,
+  TextField,
+  Box,
+  Tabs,
+  Tab,
+  ToggleButtonGroup,
+  ToggleButton,
+} from "@mui/material";
 
 // Material Dashboard 2 React components
 import MDBox from "components/MDBox";
@@ -22,6 +32,7 @@ import DataTable from "examples/Tables/DataTable";
 
 // Data & Components
 import categoriesTableData from "./data/categoriesTableData";
+import CategoryCard from "./components/CategoryCard";
 import TagCard from "./components/TagCard";
 
 const style = {
@@ -39,6 +50,7 @@ const style = {
 function Categories() {
   const { uiPermissions } = useAuth();
   const [tabValue, setTabValue] = useState(0);
+  const [view, setView] = useState("table"); // 'table' or 'card'
 
   const [categories, setCategories] = useState([]);
   const [tags, setTags] = useState([]);
@@ -66,6 +78,12 @@ function Categories() {
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
+  };
+
+  const handleViewChange = (event, newView) => {
+    if (newView !== null) {
+      setView(newView);
+    }
   };
 
   const handleModalOpen = (type) => {
@@ -160,26 +178,23 @@ function Categories() {
     }
   };
 
-  // Opens the delete confirmation modal
   const handleDelete = (item) => {
     setItemToDelete(item);
     setDeleteModalOpen(true);
   };
 
-  // Closes the delete confirmation modal
   const handleCloseDeleteModal = () => {
     setDeleteModalOpen(false);
     setItemToDelete(null);
   };
 
-  // Executes the deletion
   const confirmDelete = async () => {
     if (!itemToDelete) return;
 
     try {
       await api.delete(`/categories/${itemToDelete.id}`);
       toast.success(`Categoria "${itemToDelete.name}" excluída com sucesso!`);
-      fetchAndSetData(); // Refresh data
+      fetchAndSetData();
     } catch (error) {
       console.error("Erro ao excluir categoria:", error);
       if (error.response && error.response.status === 409) {
@@ -241,22 +256,38 @@ function Categories() {
                     onChange={(e) => setCategorySearch(e.target.value)}
                     sx={{ width: "250px" }}
                   />
-                  {isAdmin && (
-                    <MDButton
-                      variant="gradient"
+                  <MDBox display="flex" alignItems="center">
+                    <ToggleButtonGroup
                       color="success"
-                      onClick={() => handleModalOpen("category")}
+                      value={view}
+                      exclusive
+                      onChange={handleViewChange}
+                      sx={{ mr: 2 }}
                     >
-                      <Icon sx={{ mr: 1 }}>add</Icon>
-                      Nova Categoria
-                    </MDButton>
-                  )}
+                      <ToggleButton value="table">
+                        <Icon>table_rows</Icon>
+                      </ToggleButton>
+                      <ToggleButton value="card">
+                        <Icon>grid_view</Icon>
+                      </ToggleButton>
+                    </ToggleButtonGroup>
+                    {isAdmin && (
+                      <MDButton
+                        variant="gradient"
+                        color="success"
+                        onClick={() => handleModalOpen("category")}
+                      >
+                        <Icon sx={{ mr: 1 }}>add</Icon>
+                        Nova Categoria
+                      </MDButton>
+                    )}
+                  </MDBox>
                 </MDBox>
                 {loading ? (
                   <MDBox display="flex" justifyContent="center" p={5}>
                     <CircularProgress />
                   </MDBox>
-                ) : (
+                ) : view === "table" ? (
                   <DataTable
                     table={{ columns, rows }}
                     isSorted={false}
@@ -265,6 +296,18 @@ function Categories() {
                     canSearch={false}
                     pagination={{ variant: "gradient", color: "success" }}
                   />
+                ) : (
+                  <Grid container spacing={3}>
+                    {filteredCategories.map((cat) => (
+                      <Grid item xs={12} sm={6} md={4} lg={3} key={cat.id}>
+                        <CategoryCard
+                          category={mapCategoryData(cat)}
+                          isAdmin={isAdmin}
+                          onDelete={handleDelete}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
                 )}
               </MDBox>
             )}

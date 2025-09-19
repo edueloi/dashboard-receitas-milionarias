@@ -2,15 +2,6 @@
 =========================================================
 * Material Dashboard 2 React - v2.2.0
 =========================================================
-
-* Product Page: https://www.creative-tim.com/product/material-dashboard-react
-* Copyright 2023 Creative Tim (https://www.creative-tim.com)
-
-Coded by www.creative-tim.com
-
- =========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
 import { useMemo, useEffect, useState } from "react";
@@ -163,14 +154,14 @@ function DataTable({
                 renderInput={(params) => <MDInput {...params} />}
               />
               <MDTypography variant="caption" color="secondary">
-                &nbsp;&nbsp;entries per page
+                &nbsp;&nbsp;entradas por página
               </MDTypography>
             </MDBox>
           )}
           {canSearch && (
             <MDBox width="12rem" ml="auto">
               <MDInput
-                placeholder="Search..."
+                placeholder="Buscar..."
                 value={search}
                 size="small"
                 fullWidth
@@ -232,7 +223,7 @@ function DataTable({
         {showTotalEntries && (
           <MDBox mb={{ xs: 3, sm: 0 }}>
             <MDTypography variant="button" color="secondary" fontWeight="regular">
-              Showing {entriesStart} to {entriesEnd} of {rows.length} entries
+              Mostrando de {entriesStart} a {entriesEnd} de {rows.length} entradas
             </MDTypography>
           </MDBox>
         )}
