@@ -190,7 +190,7 @@ function SignInSplit() {
                 {/* Link para Cadastro */}
                 <MDBox mt={3} textAlign="center">
                   <MDTypography variant="button" color="text">
-                    Não tem uma conta?{" "}
+                    Não tem conta?{" "}
                     <MDTypography
                       component={Link}
                       to="/authentication/sign-up"
