@@ -11,7 +11,7 @@ if (!process.env.REACT_APP_API_URL) {
 
 // Crie uma instância do axios
 const api = axios.create({
-  baseURL: `${process.env.REACT_APP_API_URL || ""}/api`, // Adicionado fallback para evitar erros
+  baseURL: process.env.REACT_APP_API_URL, // Adicionado fallback para evitar erros
 });
 
 // Adicione um interceptor para injetar o token em cada requisição
