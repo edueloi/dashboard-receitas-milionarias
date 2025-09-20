@@ -1,8 +1,17 @@
 import axios from "axios";
 
+// Adiciona um aviso para o desenvolvedor se a variável de ambiente estiver faltando
+if (!process.env.REACT_APP_API_URL) {
+  console.warn(
+    "A variável de ambiente REACT_APP_API_URL não está definida. " +
+      "A API pode não funcionar corretamente. " +
+      "Verifique seu arquivo .env e reinicie o servidor de desenvolvimento."
+  );
+}
+
 // Crie uma instância do axios
 const api = axios.create({
-  baseURL: `${process.env.REACT_APP_API_URL}/api`,
+  baseURL: `${process.env.REACT_APP_API_URL || ""}/api`, // Adicionado fallback para evitar erros
 });
 
 // Adicione um interceptor para injetar o token em cada requisição

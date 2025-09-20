@@ -22,8 +22,8 @@ import logo from "assets/images/logos/logo.png";
 import api from "services/api";
 
 function SignInSplit() {
-  const [email, setEmail] = useState("joao.silva@example.com");
-  const [password, setPassword] = useState("senha123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
