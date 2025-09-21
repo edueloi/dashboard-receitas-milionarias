@@ -26,6 +26,7 @@ import {
 // Material Dashboard 2 React components
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
+import getFullImageUrl from "utils/imageUrlHelper";
 
 // Material Dashboard 2 React example components
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
@@ -134,15 +135,6 @@ function TodasAsReceitas() {
   }, [searchTerm, categoryFilter, tagsFilter, allRecipes]);
 
   const mapRecipeData = (recipe) => {
-    const rootUrl = new URL(process.env.REACT_APP_API_URL || window.location.origin).origin;
-
-    const getFullImageUrl = (path) => {
-      if (!path) return null;
-      if (path.startsWith("http")) return path;
-      const cleanPath = path.replace(/\\/g, "/").replace(/^\//, "");
-      return `${rootUrl}/${cleanPath}`;
-    };
-
     const imageUrl = getFullImageUrl(recipe.imagem_url) || "/static/images/default-recipe.jpg";
     const authorAvatarUrl = getFullImageUrl(recipe.criador?.avatar_url);
 

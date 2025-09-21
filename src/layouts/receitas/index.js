@@ -37,6 +37,7 @@ import DataTable from "examples/Tables/DataTable";
 import recipesTableData from "./data/recipesTableData";
 import UserRecipeCard from "./components/UserRecipeCard";
 import PublicRecipeCard from "./components/PublicRecipeCard";
+import getFullImageUrl from "utils/imageUrlHelper";
 
 // Paleta de Cores
 const colorPalette = {
@@ -129,15 +130,6 @@ function MinhasReceitas() {
   }, [searchTerm, categoryFilter, tagsFilter, allUserRecipes]);
 
   const mapRecipeData = (recipe) => {
-    const rootUrl = new URL(process.env.REACT_APP_API_URL || window.location.origin).origin;
-
-    const getFullImageUrl = (path) => {
-      if (!path) return null;
-      if (path.startsWith("http")) return path;
-      const cleanPath = path.replace(/\\/g, "/").replace(/^\//, "");
-      return `${rootUrl}/${cleanPath}`;
-    };
-
     const imageUrl = getFullImageUrl(recipe.imagem_url) || "/static/images/default-recipe.jpg";
     const authorAvatarUrl = getFullImageUrl(recipe.criador?.avatar_url);
 

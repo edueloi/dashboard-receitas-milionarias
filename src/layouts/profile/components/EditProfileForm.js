@@ -9,6 +9,7 @@ import MDButton from "components/MDButton";
 import api from "services/api";
 import toast from "react-hot-toast";
 import MDAvatar from "components/MDAvatar";
+import getFullImageUrl from "utils/imageUrlHelper";
 
 function EditProfileForm({ userData, onSave, onCancel }) {
   const [formData, setFormData] = useState({});
@@ -34,11 +35,7 @@ function EditProfileForm({ userData, onSave, onCancel }) {
         escolaridade: userData.escolaridade || "",
       });
       if (userData.foto_perfil_url) {
-        setPreviewUrl(
-          `${process.env.REACT_APP_API_URL}${
-            userData.foto_perfil_url.startsWith("/") ? "" : "/"
-          }${userData.foto_perfil_url}`
-        );
+        setPreviewUrl(getFullImageUrl(userData.foto_perfil_url));
       }
     }
   }, [userData]);

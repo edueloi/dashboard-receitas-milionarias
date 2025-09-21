@@ -20,6 +20,7 @@ import Box from "@mui/material/Box";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDButton from "components/MDButton";
+import getFullImageUrl from "utils/imageUrlHelper";
 
 // Material Dashboard 2 React example components
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
@@ -99,14 +100,6 @@ function DetalhesReceita() {
       navigator.clipboard.writeText(window.location.href);
       toast.success("Link da receita copiado para a área de transferência!");
     }
-  };
-
-  const getFullImageUrl = (path) => {
-    if (!path) return null;
-    if (path.startsWith("http")) return path;
-    const rootUrl = new URL(process.env.REACT_APP_API_URL || window.location.origin).origin;
-    const cleanPath = path.replace(/\\/g, "/").replace(/^\//, "");
-    return `${rootUrl}/${cleanPath}`;
   };
 
   const handleReviewSubmit = async () => {

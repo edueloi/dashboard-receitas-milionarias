@@ -7,6 +7,7 @@ import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDAvatar from "components/MDAvatar";
 import backgroundImage from "assets/images/bg-profile.jpeg";
+import getFullImageUrl from "utils/imageUrlHelper";
 
 function Header({ children, userData }) {
   const fullName =
@@ -18,11 +19,7 @@ function Header({ children, userData }) {
       : "AA";
 
   // A URL do avatar agora vem da API e precisa ser construída
-  const avatarUrl = userData?.foto_perfil_url
-    ? `${process.env.REACT_APP_API_URL}${
-        userData.foto_perfil_url.startsWith("/") ? "" : "/"
-      }${userData.foto_perfil_url}`
-    : null;
+  const avatarUrl = userData?.foto_perfil_url ? getFullImageUrl(userData.foto_perfil_url) : null;
 
   return (
     <MDBox position="relative" mb={5}>
