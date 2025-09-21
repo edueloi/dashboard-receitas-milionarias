@@ -214,7 +214,7 @@ function Categories() {
   const mapCategoryData = (category) => {
     let imageUrl = "/static/images/cards/contemplative-reptile.jpg";
     if (category.imagem_url) {
-      const apiBaseUrl = process.env.REACT_APP_API_URL.replace("/api", "");
+      const apiBaseUrl = process.env.REACT_APP_API_URL;
       imageUrl = joinUrlPaths(apiBaseUrl, category.imagem_url);
     }
 
