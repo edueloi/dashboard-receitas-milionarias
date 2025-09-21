@@ -24,6 +24,7 @@ import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDButton from "components/MDButton";
 import MDInput from "components/MDInput";
+import { joinUrlPaths } from "utils/urlUtils";
 
 // Material Dashboard 2 React example components
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
@@ -213,9 +214,8 @@ function Categories() {
   const mapCategoryData = (category) => {
     let imageUrl = "/static/images/cards/contemplative-reptile.jpg";
     if (category.imagem_url) {
-      const rootUrl = new URL(process.env.REACT_APP_API_URL || window.location.origin).origin;
-      const cleanPath = category.imagem_url.replace(/\\/g, "/").replace(/^\//, "");
-      imageUrl = `${rootUrl}/${cleanPath}`;
+      const apiBaseUrl = process.env.REACT_APP_API_URL.replace("/api", "");
+      imageUrl = joinUrlPaths(apiBaseUrl, category.imagem_url);
     }
 
     return {
