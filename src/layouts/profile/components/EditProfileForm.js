@@ -34,7 +34,7 @@ function EditProfileForm({ userData, onSave, onCancel }) {
         escolaridade: userData.escolaridade || "",
       });
       if (userData.foto_perfil_url) {
-        setPreviewUrl(`${process.env.REACT_APP_API_URL}${userData.foto_perfil_url.startsWith('/') ? '' : '/'}${userData.foto_perfil_url}`);
+        setPreviewUrl(`${process.env.REACT_APP_API_URL}${userData.foto_perfil_url.startsWith("/") ? "" : "/"}${userData.foto_perfil_url}`);
       }
     }
   }, [userData]);
