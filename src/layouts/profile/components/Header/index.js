@@ -19,7 +19,9 @@ function Header({ children, userData }) {
 
   // A URL do avatar agora vem da API e precisa ser construída
   const avatarUrl = userData?.foto_perfil_url
-    ? `${process.env.REACT_APP_API_URL}${userData.foto_perfil_url.startsWith("/") ? "" : "/"}${userData.foto_perfil_url}`
+    ? `${process.env.REACT_APP_API_URL}${
+        userData.foto_perfil_url.startsWith("/") ? "" : "/"
+      }${userData.foto_perfil_url}`
     : null;
 
   return (
