@@ -1,16 +1,15 @@
 import { useState, useEffect } from "react";
 import Grid from "@mui/material/Grid";
 import MDBox from "components/MDBox";
-import MDTypography from "components/MDTypography";
-import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
-import DashboardNavbar from "examples/Navbars/DashboardNavbar";
-import Footer from "examples/Footer";
-import ReportsBarChart from "examples/Charts/BarCharts/ReportsBarChart";
-import ReportsLineChart from "examples/Charts/LineCharts/ReportsLineChart";
-import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatisticsCard";
 import { CircularProgress } from "@mui/material";
 import toast from "react-hot-toast";
 import api from "services/api";
+
+// Custom Components
+import PageWrapper from "components/PageWrapper";
+import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatisticsCard";
+import ReportsBarChart from "examples/Charts/BarCharts/ReportsBarChart";
+import ReportsLineChart from "examples/Charts/LineCharts/ReportsLineChart";
 
 // Data
 import reportsBarChartData from "layouts/dashboard/data/reportsBarChartData";
@@ -43,8 +42,7 @@ function Relatorios() {
   }, []);
 
   return (
-    <DashboardLayout>
-      <DashboardNavbar />
+    <PageWrapper title="Relatórios">
       <MDBox py={3}>
         <MDBox>
           <Grid container spacing={3}>
@@ -155,8 +153,7 @@ function Relatorios() {
           </Grid>
         </MDBox>
       </MDBox>
-      <Footer />
-    </DashboardLayout>
+    </PageWrapper>
   );
 }
 

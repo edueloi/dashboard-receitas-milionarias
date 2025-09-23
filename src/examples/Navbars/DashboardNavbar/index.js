@@ -77,14 +77,6 @@ function DashboardNavbar({ absolute, light }) {
       sx={(theme) => navbar(theme, { transparentNavbar, absolute, light, darkMode })}
     >
       <Toolbar sx={(theme) => navbarContainer(theme)}>
-        <MDBox
-          color="inherit"
-          mb={{ xs: 1, md: 0 }}
-          sx={(theme) => navbarRow(theme, { isMini: miniSidenav })}
-        >
-          <Breadcrumbs icon="home" title={route[route.length - 1]} route={route} light={light} />
-        </MDBox>
-
         <MDBox sx={(theme) => navbarRow(theme, { isMini: miniSidenav })}>
           <MDBox color={light ? "white" : "inherit"}>
             <Link to="/profile">

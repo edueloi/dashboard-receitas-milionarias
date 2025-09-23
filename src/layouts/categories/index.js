@@ -27,8 +27,7 @@ import MDInput from "components/MDInput";
 import { joinUrlPaths } from "utils/urlUtils";
 
 // Material Dashboard 2 React example components
-import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
-import DashboardNavbar from "examples/Navbars/DashboardNavbar";
+import PageWrapper from "components/PageWrapper";
 import DataTable from "examples/Tables/DataTable";
 
 // Data & Components
@@ -234,8 +233,7 @@ function Categories() {
   );
 
   return (
-    <DashboardLayout>
-      <DashboardNavbar />
+    <PageWrapper title="Categorias">
       <MDBox pt={6} pb={3}>
         <Card>
           <MDBox p={3}>
@@ -256,7 +254,7 @@ function Categories() {
                   />
                   <MDBox display="flex" alignItems="center">
                     <ToggleButtonGroup
-                      color="success"
+                      color="primary"
                       value={view}
                       exclusive
                       onChange={handleViewChange}
@@ -272,7 +270,7 @@ function Categories() {
                     {isAdmin && (
                       <MDButton
                         variant="gradient"
-                        color="success"
+                        color="primary"
                         onClick={() => handleModalOpen("category")}
                       >
                         <Icon sx={{ mr: 1 }}>add</Icon>
@@ -292,7 +290,7 @@ function Categories() {
                     entriesPerPage
                     showTotalEntries
                     canSearch={false}
-                    pagination={{ variant: "gradient", color: "success" }}
+                    pagination={{ variant: "gradient", color: "primary" }}
                   />
                 ) : (
                   <Grid container spacing={3}>
@@ -322,7 +320,7 @@ function Categories() {
                   {isAdmin && (
                     <MDButton
                       variant="gradient"
-                      color="success"
+                      color="primary"
                       onClick={() => handleModalOpen("tag")}
                     >
                       <Icon sx={{ mr: 1 }}>add</Icon>
@@ -385,7 +383,7 @@ function Categories() {
             <MDButton color="secondary" onClick={handleModalClose} sx={{ mr: 1 }}>
               Cancelar
             </MDButton>
-            <MDButton variant="gradient" color="success" onClick={handleCreateItem}>
+            <MDButton variant="gradient" color="primary" onClick={handleCreateItem}>
               Salvar
             </MDButton>
           </MDBox>
@@ -412,7 +410,7 @@ function Categories() {
           </MDBox>
         </Box>
       </Modal>
-    </DashboardLayout>
+    </PageWrapper>
   );
 }
 

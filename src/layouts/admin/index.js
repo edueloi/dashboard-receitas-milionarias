@@ -22,9 +22,7 @@ import MDButton from "components/MDButton";
 import MDInput from "components/MDInput";
 
 // Material Dashboard 2 React example components
-import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
-import DashboardNavbar from "examples/Navbars/DashboardNavbar";
-import Footer from "examples/Footer";
+import PageWrapper from "components/PageWrapper";
 import DataTable from "examples/Tables/DataTable";
 
 // Admin Panel components
@@ -169,23 +167,9 @@ function AdminPanel() {
   }));
 
   return (
-    <DashboardLayout>
-      <DashboardNavbar />
+    <PageWrapper title="Painel do Administrador">
       <MDBox pt={3} pb={3}>
         <Card>
-          <MDBox
-            variant="gradient"
-            bgColor="info"
-            borderRadius="lg"
-            coloredShadow="info"
-            p={2}
-            mb={2}
-            textAlign="center"
-          >
-            <MDTypography variant="h6" color="white">
-              Painel do Administrador
-            </MDTypography>
-          </MDBox>
           <AppBar position="static">
             <Tabs value={activeTab} onChange={handleTabChange} centered>
               <Tab label="Gerenciar Usuários" />
@@ -220,7 +204,6 @@ function AdminPanel() {
           </MDBox>
         </Card>
       </MDBox>
-      <Footer />
 
       {/* Edit User Modal */}
       <Modal open={isModalOpen} onClose={handleCloseModal} aria-labelledby="edit-user-modal">
@@ -236,9 +219,9 @@ function AdminPanel() {
           <Card>
             <MDBox
               variant="gradient"
-              bgColor="info"
+              bgColor="primary"
               borderRadius="lg"
-              coloredShadow="info"
+              coloredShadow="primary"
               p={2}
               textAlign="center"
             >
@@ -312,7 +295,7 @@ function AdminPanel() {
                       </MDButton>
                     </Grid>
                     <Grid item>
-                      <MDButton variant="gradient" color="info" onClick={handleSaveUser}>
+                      <MDButton variant="gradient" color="primary" onClick={handleSaveUser}>
                         Salvar Alterações
                       </MDButton>
                     </Grid>
@@ -323,7 +306,7 @@ function AdminPanel() {
           </Card>
         </MDBox>
       </Modal>
-    </DashboardLayout>
+    </PageWrapper>
   );
 }
 

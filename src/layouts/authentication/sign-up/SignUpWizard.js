@@ -28,7 +28,7 @@ import MDAlert from "components/MDAlert";
 import PageLayout from "examples/LayoutContainers/PageLayout";
 
 // Imagem para a lateral
-import bgImage from "assets/images/bg-login.jpg";
+import bgImage from "assets/images/bg-login-pizza.jpg";
 
 // (Opcional) Logos para pagamento
 import mastercardLogo from "assets/images/logos/mastercard.png";
@@ -44,6 +44,7 @@ function SignUpCover() {
     email: "",
     phone: "",
     birthDate: "",
+    cpf: "",
     password: "",
     confirmPassword: "",
     affiliateCode: "",
@@ -61,8 +62,8 @@ function SignUpCover() {
   const handleNext = () => {
     setError("");
     if (activeStep === 0) {
-      if (!formData.firstName || !formData.lastName || !formData.email) {
-        setError("Nome, Sobrenome e Email são obrigatórios.");
+      if (!formData.firstName || !formData.lastName || !formData.email || !formData.cpf) {
+        setError("Nome, Sobrenome, Email e CPF são obrigatórios.");
         return;
       }
     } else if (activeStep === 1) {
@@ -85,9 +86,16 @@ function SignUpCover() {
     setError("");
     setSuccess("");
     try {
-      // Aqui entraria a chamada real para a API de registro e pagamento
-      // Por enquanto, vamos simular com um delay
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const requestBody = {
+        nome: formData.firstName,
+        sobrenome: formData.lastName,
+        email: formData.email,
+        senha: formData.password,
+        cpf: formData.cpf,
+        telefone: formData.phone,
+        id_permissao: 6, // TODO: This should be dynamic
+      };
+      await axios.post("/users/register", requestBody);
       setSuccess("Cadastro concluído! Seu acesso foi liberado. 🚀");
     } catch (e) {
       setError("Houve um erro ao finalizar o cadastro.");
@@ -140,6 +148,16 @@ function SignUpCover() {
                 variant="standard"
                 value={formData.phone}
                 onChange={handleChange("phone")}
+              />{" "}
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              {" "}
+              <MDInput
+                label="CPF"
+                fullWidth
+                variant="standard"
+                value={formData.cpf}
+                onChange={handleChange("cpf")}
               />{" "}
             </Grid>
             <Grid item xs={12} sm={6}>
@@ -254,7 +272,7 @@ function SignUpCover() {
         >
           <MDBox width="100%" maxWidth="550px" p={{ xs: 2, sm: 3 }}>
             <MDBox textAlign="center" mb={4}>
-              <MDTypography variant="h3" color="success" textGradient fontWeight="bold">
+              <MDTypography variant="h3" color="primary">
                 Crie sua Conta
               </MDTypography>
             </MDBox>
@@ -262,7 +280,20 @@ function SignUpCover() {
             <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 4 }}>
               {steps.map((label) => (
                 <Step key={label}>
-                  <StepLabel>{label}</StepLabel>
+                  <StepLabel
+                    StepIconProps={{
+                      sx: {
+                        "&.Mui-active": {
+                          color: (theme) => theme.palette.primary.main,
+                        },
+                        "&.Mui-completed": {
+                          color: (theme) => theme.palette.primary.main,
+                        },
+                      },
+                    }}
+                  >
+                    {label}
+                  </StepLabel>
                 </Step>
               ))}
             </Stepper>
@@ -294,7 +325,7 @@ function SignUpCover() {
               {activeStep < steps.length - 1 ? (
                 <MDButton
                   variant="gradient"
-                  color="success"
+                  color="primary"
                   onClick={handleNext}
                   endIcon={<Icon>arrow_forward</Icon>}
                 >
@@ -303,7 +334,7 @@ function SignUpCover() {
               ) : (
                 <MDButton
                   variant="gradient"
-                  color="success"
+                  color="primary"
                   onClick={handleFinish}
                   disabled={loading || success}
                   startIcon={<Icon>check_circle</Icon>}
@@ -320,10 +351,24 @@ function SignUpCover() {
                   component={Link}
                   to="/authentication/sign-in"
                   variant="button"
-                  color="success"
+                  color="primary"
                   fontWeight="medium"
                 >
                   Entrar
+                </MDTypography>
+              </MDTypography>
+            </MDBox>
+            <MDBox mt={2} mb={2} textAlign="center">
+              <MDTypography variant="button" color="text">
+                <MDTypography
+                  component="a"
+                  href="https://receitasmilionarias.com.br/"
+                  variant="button"
+                  color="secondary"
+                  fontWeight="medium"
+                  textGradient
+                >
+                  Ir para o site
                 </MDTypography>
               </MDTypography>
             </MDBox>

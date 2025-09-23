@@ -9,8 +9,7 @@ import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 
 // Dashboard layouts
-import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
-import DashboardNavbar from "examples/Navbars/DashboardNavbar";
+import PageWrapper from "components/PageWrapper";
 
 // Components
 import ProfileSettings from "./components/ProfileSettings";
@@ -48,56 +47,46 @@ function Configuracoes() {
   ];
 
   return (
-    <DashboardLayout>
-      <DashboardNavbar />
+    <PageWrapper title="Configurações">
       <MDBox py={3}>
-        <MDTypography variant="h4" mb={2}>
-          Configurações
-        </MDTypography>
         <Grid container spacing={4}>
           <Grid item xs={12} md={4} lg={3}>
-            <Card>
-              <MDBox p={2}>
-                {menuItems.map((item) => (
-                  <MDBox
-                    key={item.id}
-                    sx={({ palette: { primary, grey }, functions: { linearGradient } }) => ({
-                      display: "flex",
-                      alignItems: "center",
-                      cursor: "pointer",
-                      borderRadius: "md",
-                      p: 1.5,
-                      mb: 1,
-                      backgroundColor:
-                        selectedComponent === item.id
-                          ? linearGradient(primary.main, primary.light)
-                          : "transparent",
-                      color: selectedComponent === item.id ? "white" : grey[700],
-                      "&:hover": {
-                        backgroundColor:
-                          selectedComponent === item.id
-                            ? linearGradient(primary.main, primary.light)
-                            : grey[100],
-                        color: selectedComponent === item.id ? "white" : grey[700],
-                      },
-                    })}
-                    onClick={() => setSelectedComponent(item.id)}
-                  >
-                    <Icon sx={{ mr: 1.5, color: "inherit" }}>{item.icon}</Icon>
-                    <MDTypography variant="button" fontWeight="regular" color="inherit">
-                      {item.label}
-                    </MDTypography>
-                  </MDBox>
-                ))}
-              </MDBox>
-            </Card>
+            {menuItems.map((item) => (
+              <Card
+                key={item.id}
+                sx={({ palette: { primary, grey }, functions: { linearGradient } }) => ({
+                  cursor: "pointer",
+                  borderRadius: "md",
+                  p: 1.5,
+                  mb: 2,
+                  backgroundColor:
+                    selectedComponent === item.id
+                      ? linearGradient(primary.main, primary.light)
+                      : "transparent",
+                  color: selectedComponent === item.id ? "white" : grey[700],
+                  transition: "all 0.2s ease-in-out",
+                  "&:hover": {
+                    transform: "translateY(-5px)",
+                    boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
+                  },
+                })}
+                onClick={() => setSelectedComponent(item.id)}
+              >
+                <MDBox display="flex" alignItems="center">
+                  <Icon sx={{ mr: 1.5, color: "inherit" }}>{item.icon}</Icon>
+                  <MDTypography variant="button" fontWeight="regular" color="inherit">
+                    {item.label}
+                  </MDTypography>
+                </MDBox>
+              </Card>
+            ))}
           </Grid>
           <Grid item xs={12} md={8} lg={9}>
             {renderContent()}
           </Grid>
         </Grid>
       </MDBox>
-    </DashboardLayout>
+    </PageWrapper>
   );
 }
 

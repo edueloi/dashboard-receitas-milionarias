@@ -8,8 +8,7 @@ import Card from "@mui/material/Card";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDButton from "components/MDButton";
-import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
-import DashboardNavbar from "examples/Navbars/DashboardNavbar";
+import PageWrapper from "components/PageWrapper";
 import ReportsLineChart from "examples/Charts/LineCharts/ReportsLineChart";
 import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatisticsCard";
 import DataTable from "examples/Tables/DataTable"; // CORREÇÃO: Importação correta da tabela
@@ -33,7 +32,7 @@ const tabelaAfiliados = {
         </MDTypography>
       ),
       valor: (
-        <MDTypography variant="caption" color="success" fontWeight="medium">
+        <MDTypography variant="caption" color="primary" fontWeight="medium">
           R$ 50,00
         </MDTypography>
       ),
@@ -50,7 +49,7 @@ const tabelaAfiliados = {
         </MDTypography>
       ),
       valor: (
-        <MDTypography variant="caption" color="success" fontWeight="medium">
+        <MDTypography variant="caption" color="primary" fontWeight="medium">
           R$ 75,50
         </MDTypography>
       ),
@@ -67,7 +66,7 @@ const tabelaAfiliados = {
         </MDTypography>
       ),
       valor: (
-        <MDTypography variant="caption" color="success" fontWeight="medium">
+        <MDTypography variant="caption" color="primary" fontWeight="medium">
           R$ 35,00
         </MDTypography>
       ),
@@ -84,7 +83,7 @@ const tabelaAfiliados = {
         </MDTypography>
       ),
       valor: (
-        <MDTypography variant="caption" color="success" fontWeight="medium">
+        <MDTypography variant="caption" color="primary" fontWeight="medium">
           R$ 110,00
         </MDTypography>
       ),
@@ -99,14 +98,13 @@ const tabelaAfiliados = {
 
 function MinhaCarteira() {
   return (
-    <DashboardLayout>
-      <DashboardNavbar />
+    <PageWrapper title="Minha Carteira">
       <MDBox pt={6} pb={3}>
         {/* Seção 1: Resumo Financeiro */}
         <Grid container spacing={3} mb={4}>
           <Grid item xs={12} md={5}>
             <ComplexStatisticsCard
-              color="success"
+              color="primary"
               icon="account_balance_wallet"
               title="Saldo Disponível"
               count="R$ 1.540,50"
@@ -132,7 +130,7 @@ function MinhaCarteira() {
               }}
             >
               <MDBox p={2} textAlign="center">
-                <MDButton variant="gradient" color="success" size="large">
+                <MDButton variant="gradient" color="primary" size="large">
                   Solicitar Saque
                 </MDButton>
               </MDBox>
@@ -143,7 +141,7 @@ function MinhaCarteira() {
         {/* Seção 2: Desempenho Visual */}
         <MDBox mb={3}>
           <ReportsLineChart
-            color="success"
+            color="primary"
             title="Ganhos Mensais"
             description="Evolução dos seus ganhos de afiliados nos últimos meses."
             date="atualizado hoje"
@@ -168,7 +166,7 @@ function MinhaCarteira() {
           </MDBox>
         </Card>
       </MDBox>
-    </DashboardLayout>
+    </PageWrapper>
   );
 }
 

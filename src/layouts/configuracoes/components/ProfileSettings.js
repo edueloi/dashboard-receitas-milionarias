@@ -65,10 +65,20 @@ function ProfileSettings() {
 
   return (
     <Card>
-      <MDBox p={3}>
-        <MDTypography variant="h5" fontWeight="medium">
+      <MDBox
+        variant="gradient"
+        bgColor="primary"
+        borderRadius="lg"
+        coloredShadow="primary"
+        p={2}
+        mt={-3}
+        mx={2}
+      >
+        <MDTypography variant="h6" color="white">
           Perfil Público
         </MDTypography>
+      </MDBox>
+      <MDBox p={3}>
         <MDTypography variant="body2" color="text">
           Estas informações serão exibidas publicamente.
         </MDTypography>
@@ -81,7 +91,7 @@ function ProfileSettings() {
           <MDTypography variant="body2" color="text" mb={1}>
             PNG, JPG ou GIF. Máximo de 5MB.
           </MDTypography>
-          <MDButton variant="outlined" color="info" size="small">
+          <MDButton variant="outlined" color="primary" size="small">
             Alterar Foto
           </MDButton>
         </MDBox>
@@ -116,7 +126,7 @@ function ProfileSettings() {
       </MDBox>
       <Divider />
       <MDBox p={3} display="flex" justifyContent="flex-end">
-        <MDButton variant="gradient" color="success" onClick={handleSave}>
+        <MDButton variant="gradient" color="primary" onClick={handleSave}>
           Salvar Alterações
         </MDButton>
       </MDBox>

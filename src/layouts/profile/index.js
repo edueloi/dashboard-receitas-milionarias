@@ -159,10 +159,20 @@ function Overview() {
           <Card
             sx={{ height: "100%", borderRadius: "1rem", boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}
           >
-            <MDBox p={3}>
-              <MDTypography variant="h6" fontWeight="medium">
+            <MDBox
+              variant="gradient"
+              bgColor="primary"
+              borderRadius="lg"
+              coloredShadow="primary"
+              p={2}
+              mt={-3}
+              mx={2}
+            >
+              <MDTypography variant="h6" color="white">
                 Biografia
               </MDTypography>
+            </MDBox>
+            <MDBox p={3}>
               <MDTypography variant="body2" color="text" mt={2}>
                 {userData.biografia || "Nenhuma biografia para mostrar."}
               </MDTypography>
@@ -175,14 +185,25 @@ function Overview() {
           <Card
             sx={{ height: "100%", borderRadius: "1rem", boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}
           >
-            <MDBox display="flex" justifyContent="space-between" alignItems="center" p={3}>
-              <MDTypography variant="h6" fontWeight="medium">
+            <MDBox
+              variant="gradient"
+              bgColor="primary"
+              borderRadius="lg"
+              coloredShadow="primary"
+              p={2}
+              mt={-3}
+              mx={2}
+              display="flex"
+              justifyContent="space-between"
+              alignItems="center"
+            >
+              <MDTypography variant="h6" color="white">
                 Informações do Perfil
               </MDTypography>
               <Tooltip title="Editar Perfil" placement="top">
                 <MDButton
                   variant="outlined"
-                  color="info"
+                  color="white"
                   size="small"
                   onClick={() => setIsEditing(true)}
                   sx={{ textTransform: "none" }}
