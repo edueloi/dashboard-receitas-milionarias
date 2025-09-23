@@ -10,6 +10,8 @@ import api from "services/api";
 import toast from "react-hot-toast";
 import MDAvatar from "components/MDAvatar";
 import getFullImageUrl from "utils/imageUrlHelper";
+import iconUserBlack from "assets/images/icon_user_black.png";
+import Divider from "@mui/material/Divider";
 
 function EditProfileForm({ userData, onSave, onCancel }) {
   const [formData, setFormData] = useState({});
@@ -99,7 +101,7 @@ function EditProfileForm({ userData, onSave, onCancel }) {
       <MDBox p={3} display="flex" justifyContent="space-between" alignItems="center">
         <MDTypography variant="h5">Editar Perfil</MDTypography>
         <MDBox display="flex" alignItems="center">
-          <MDAvatar src={previewUrl} alt="Avatar" size="xl" shadow="sm" />
+          <MDAvatar src={previewUrl || iconUserBlack} alt="Avatar" size="xl" shadow="sm" />
           <MDButton
             variant="outlined"
             color="info"
@@ -121,6 +123,12 @@ function EditProfileForm({ userData, onSave, onCancel }) {
       <MDBox component="form" p={3} pt={0}>
         <Grid container spacing={3}>
           {/* Informações Pessoais */}
+          <Grid item xs={12}>
+            <MDTypography variant="h6" mt={2} mb={1}>
+              Informações Pessoais
+            </MDTypography>
+            <Divider />
+          </Grid>
           <Grid item xs={12} sm={6}>
             <MDInput
               name="nome"
@@ -157,6 +165,15 @@ function EditProfileForm({ userData, onSave, onCancel }) {
               fullWidth
             />
           </Grid>
+          <Grid item xs={12} sm={6}>
+            <MDInput
+              name="escolaridade"
+              label="Escolaridade"
+              value={formData.escolaridade}
+              onChange={handleChange}
+              fullWidth
+            />
+          </Grid>
           <Grid item xs={12}>
             <MDInput
               name="biografia"
@@ -171,9 +188,10 @@ function EditProfileForm({ userData, onSave, onCancel }) {
 
           {/* Endereço */}
           <Grid item xs={12}>
-            <MDTypography variant="h6" mt={2}>
+            <MDTypography variant="h6" mt={2} mb={1}>
               Endereço
             </MDTypography>
+            <Divider />
           </Grid>
           <Grid item xs={12} sm={8}>
             <MDInput

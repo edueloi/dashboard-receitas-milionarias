@@ -8,6 +8,7 @@ import MDTypography from "components/MDTypography";
 import MDAvatar from "components/MDAvatar";
 import backgroundImage from "assets/images/bg-profile.jpeg";
 import getFullImageUrl from "utils/imageUrlHelper";
+import iconUserBlack from "assets/images/icon_user_black.png";
 
 function Header({ children, userData }) {
   const fullName =
@@ -55,8 +56,8 @@ function Header({ children, userData }) {
         <Grid container spacing={3} alignItems="center">
           <Grid item>
             {/* O MDAvatar agora usa a URL vinda da API. As iniciais são o fallback. */}
-            <MDAvatar src={avatarUrl} alt={fullName} size="xl" shadow="sm">
-              {!avatarUrl && initials}
+            <MDAvatar src={avatarUrl || iconUserBlack} alt={fullName} size="xl" shadow="sm">
+              {!avatarUrl && !iconUserBlack && initials}
             </MDAvatar>
           </Grid>
           <Grid item>

@@ -14,6 +14,7 @@ import MDButton from "components/MDButton";
 
 // Images
 import defaultAvatar from "assets/images/bruce-mars.jpg";
+import iconUserBlack from "assets/images/icon_user_black.png";
 
 // AuthContext and API
 import { useAuth } from "../../../context/AuthContext";
@@ -85,7 +86,11 @@ function ProfileSettings() {
       </MDBox>
       <Divider />
       <MDBox p={3} display="flex" alignItems="center">
-        <Avatar src={defaultAvatar} alt="profile-image" sx={{ width: 80, height: 80, mr: 3 }} />
+        <Avatar
+          src={user.foto || iconUserBlack}
+          alt="profile-image"
+          sx={{ width: 80, height: 80, mr: 3 }}
+        />
         <MDBox>
           <MDTypography variant="h6">Sua Foto</MDTypography>
           <MDTypography variant="body2" color="text" mb={1}>

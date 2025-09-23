@@ -6,6 +6,8 @@ import Divider from "@mui/material/Divider";
 import ThemeSettings from "./components/ThemeSettings";
 // Material Dashboard 2 React components
 import MDBox from "components/MDBox";
+import iconUserBlack from "assets/images/icon_user_black.png";
+import { useMaterialUIController } from "context";
 import MDTypography from "components/MDTypography";
 
 // Dashboard layouts
