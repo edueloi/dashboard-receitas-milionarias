@@ -94,10 +94,10 @@ function Configurator() {
     palette: { white, gradients, background },
   }) => ({
     height: pxToRem(39),
-    background: darkMode ? white.main : linearGradient(gradients.dark.main, gradients.dark.state),
+    background: darkMode ? white.main : linearGradient(gradients.primary.main, gradients.primary.state),
     color: darkMode ? background.sidenav : white.main,
     "&:hover, &:focus, &:focus:not(:hover)": {
-      background: darkMode ? white.main : linearGradient(gradients.dark.main, gradients.dark.state),
+      background: darkMode ? white.main : linearGradient(gradients.primary.main, gradients.primary.state),
       color: darkMode ? background.sidenav : white.main,
     },
   });
@@ -113,7 +113,7 @@ function Configurator() {
         px={3}
       >
         <MDBox>
-          <MDTypography variant="h5">Configurações de Tema</MDTypography>
+          <MDTypography variant="h5" color="secondary">Configurações de Tema</MDTypography>
           <MDTypography variant="body2" color="text">
             Personalize a aparência do painel.
           </MDTypography>
@@ -244,14 +244,14 @@ function Configurator() {
           lineHeight={1}
         >
           <MDTypography variant="h6">Barra de Navegação Fixa</MDTypography>
-          <Switch checked={fixedNavbar} onChange={handleFixedNavbar} />
+          <Switch checked={fixedNavbar} onChange={handleFixedNavbar} color="primary" />
         </MDBox>
 
         <Divider />
 
         <MDBox display="flex" justifyContent="space-between" alignItems="center" lineHeight={1}>
           <MDTypography variant="h6">Modo Claro / Escuro</MDTypography>
-          <Switch checked={darkMode} onChange={handleDarkMode} />
+          <Switch checked={darkMode} onChange={handleDarkMode} color="primary" />
         </MDBox>
       </MDBox>
     </ConfiguratorRoot>
