@@ -1,132 +1,141 @@
-/**
-=========================================================
-* Material Dashboard 2 React - v2.2.0
-=========================================================
-*/
-
-import { useEffect } from "react";
-import { useLocation, NavLink, useNavigate } from "react-router-dom"; // ADICIONADO: useNavigate
+// examples/Sidenav/index.js
+import { useEffect, useMemo } from "react";
+import { useLocation, NavLink, useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import List from "@mui/material/List";
 import Divider from "@mui/material/Divider";
 import Link from "@mui/material/Link";
 import Icon from "@mui/material/Icon";
-import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
+import { useTheme } from "@mui/material/styles";
+
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
+
 import SidenavCollapse from "examples/Sidenav/SidenavCollapse";
 import SidenavRoot from "examples/Sidenav/SidenavRoot";
 import sidenavLogoLabel from "examples/Sidenav/styles/sidenav";
+
 import { useMaterialUIController, setMiniSidenav } from "context";
-import { useAuth } from "context/AuthContext"; // ADICIONADO: useAuth
+import { useAuth } from "context/AuthContext";
 
 function Sidenav({ color, brand, brandName, routes, ...rest }) {
   const [controller, dispatch] = useMaterialUIController();
   const { miniSidenav, transparentSidenav, whiteSidenav, darkMode } = controller;
-  const location = useLocation();
-  const collapseName = location.pathname.replace("/", "");
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("xl"));
 
-  // ADICIONADO: Hooks para logout e navegação
+  const location = useLocation();
+  const theme = useTheme();
+  // mini no lg pra baixo (bom compromisso para desktop/tablet)
+  const isMobile = useMediaQuery(theme.breakpoints.down("lg"));
+
   const { logout } = useAuth();
   const navigate = useNavigate();
 
-  const closeSidenav = () => setMiniSidenav(dispatch, true);
-
   useEffect(() => {
-    if (isMobile) {
-      setMiniSidenav(dispatch, true);
-    } else {
-      setMiniSidenav(dispatch, false);
-    }
+    setMiniSidenav(dispatch, isMobile);
   }, [isMobile, dispatch]);
 
   useEffect(() => {
-    if (isMobile) {
-      closeSidenav();
-    }
-  }, [location, isMobile, dispatch]);
+    if (isMobile) setMiniSidenav(dispatch, true);
+  }, [location.pathname, isMobile, dispatch]);
 
   let textColor = "white";
-  if (transparentSidenav || (whiteSidenav && !darkMode)) {
-    textColor = "dark";
-  } else if (whiteSidenav && darkMode) {
-    textColor = "inherit";
-  }
+  if (transparentSidenav || (whiteSidenav && !darkMode)) textColor = "dark";
+  else if (whiteSidenav && darkMode) textColor = "inherit";
 
-  // ADICIONADO: Função para lidar com o logout
+  const closeSidenav = () => setMiniSidenav(dispatch, true);
+
   const handleLogout = () => {
-    logout(); // Limpa a sessão do usuário
-    navigate("/authentication/sign-in"); // Redireciona para a página de login
+    logout();
+    navigate("/authentication/sign-in");
   };
 
-  const renderRoutes = routes.map(({ type, name, icon, title, noCollapse, key, href, route }) => {
-    let returnValue;
+  const isActive = (routePath) =>
+    routePath
+      ? location.pathname === routePath || location.pathname.startsWith(`${routePath}/`)
+      : false;
 
-    if (type === "collapse") {
-      // 👇 LÓGICA DE LOGOUT ADICIONADA AQUI 👇
-      if (key === "logout") {
-        returnValue = (
-          <MDBox key={key} onClick={handleLogout} sx={{ cursor: "pointer" }}>
-            <SidenavCollapse name={name} icon={icon} />
-          </MDBox>
-        );
-      } else {
-        // Lógica original para os outros botões
-        returnValue = href ? (
-          <Link
-            href={href}
-            key={key}
-            target="_blank"
-            rel="noreferrer"
-            sx={{ textDecoration: "none" }}
-          >
-            <SidenavCollapse
-              name={name}
-              icon={icon}
-              active={key === collapseName}
-              noCollapse={noCollapse}
+  const renderRoutes = useMemo(
+    () =>
+      routes.map(({ type, name, icon, title, noCollapse, key, href, route }) => {
+        if (type === "title") {
+          return (
+            <MDTypography
+              key={key}
+              color={textColor}
+              display="block"
+              variant="caption"
+              fontWeight="bold"
+              textTransform="uppercase"
+              pl={3}
+              mt={2}
+              mb={1}
+              ml={1}
+            >
+              {title}
+            </MDTypography>
+          );
+        }
+
+        if (type === "divider") {
+          return (
+            <Divider
+              key={key}
+              light={
+                (!darkMode && !whiteSidenav && !transparentSidenav) ||
+                (darkMode && !transparentSidenav && whiteSidenav)
+              }
             />
-          </Link>
-        ) : (
-          <NavLink key={key} to={route}>
-            <SidenavCollapse name={name} icon={icon} active={key === collapseName} />
-          </NavLink>
-        );
-      }
-    } else if (type === "title") {
-      returnValue = (
-        <MDTypography
-          key={key}
-          color={textColor}
-          display="block"
-          variant="caption"
-          fontWeight="bold"
-          textTransform="uppercase"
-          pl={3}
-          mt={2}
-          mb={1}
-          ml={1}
-        >
-          {title}
-        </MDTypography>
-      );
-    } else if (type === "divider") {
-      returnValue = (
-        <Divider
-          key={key}
-          light={
-            (!darkMode && !whiteSidenav && !transparentSidenav) ||
-            (darkMode && !transparentSidenav && whiteSidenav)
-          }
-        />
-      );
-    }
+          );
+        }
 
-    return returnValue;
-  });
+        if (type === "collapse") {
+          if (key === "logout") {
+            return (
+              <MDBox
+                key={key}
+                onClick={handleLogout}
+                role="button"
+                aria-label="Sair da conta"
+                tabIndex={0}
+                onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleLogout()}
+                sx={{ cursor: "pointer", outline: "none" }}
+              >
+                <SidenavCollapse name={name} icon={icon} />
+              </MDBox>
+            );
+          }
+
+          if (href) {
+            return (
+              <Link
+                href={href}
+                key={key}
+                target="_blank"
+                rel="noreferrer"
+                sx={{ textDecoration: "none" }}
+              >
+                <SidenavCollapse name={name} icon={icon} active={isActive(route)} />
+              </Link>
+            );
+          }
+
+          return (
+            <NavLink
+              key={key}
+              to={route}
+              onClick={isMobile ? closeSidenav : undefined}
+              style={{ textDecoration: "none" }}
+            >
+              <SidenavCollapse name={name} icon={icon} active={isActive(route)} />
+            </NavLink>
+          );
+        }
+
+        return null;
+      }),
+    [routes, textColor, darkMode, whiteSidenav, transparentSidenav, isMobile, location.pathname]
+  );
 
   return (
     <SidenavRoot
@@ -134,49 +143,79 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
       variant={isMobile ? "temporary" : "permanent"}
       open={!miniSidenav}
       onClose={closeSidenav}
-      ownerState={{ transparentSidenav, whiteSidenav, miniSidenav, darkMode }}
+      ownerState={{ transparentSidenav, whiteSidenav, miniSidenav, darkMode, isMobile }}
+      ModalProps={{ keepMounted: true }}
+      PaperProps={{
+        sx: {
+          // padding lateral interno pra não “colarem” os itens na borda
+          px: isMobile ? 1 : 0,
+        },
+      }}
     >
-      <MDBox pt={3} pb={1} px={4} textAlign="center">
-        <MDBox
-          display={{ xs: "block", xl: "none" }}
-          position="absolute"
-          top={0}
-          right={0}
-          p={1.625}
-          onClick={closeSidenav}
-          sx={{ cursor: "pointer" }}
-        >
-          <MDTypography variant="h6" color="secondary">
-            <Icon sx={{ fontWeight: "bold" }}>close</Icon>
-          </MDTypography>
-        </MDBox>
-        <MDBox component={NavLink} to="/" display="flex" alignItems="center">
-          {brand && <MDBox component="img" src={brand} alt="Brand" width="2rem" />}
+      {/* Header / logo */}
+      <MDBox pt={3} pb={1} px={3} textAlign="center" position="relative">
+        {isMobile && (
           <MDBox
-            width={!brandName && "100%"}
-            sx={(theme) => sidenavLogoLabel(theme, { miniSidenav })}
+            position="absolute"
+            top={0}
+            right={0}
+            p={1.25}
+            onClick={closeSidenav}
+            sx={{ cursor: "pointer" }}
           >
-            <MDTypography component="h6" variant="button" fontWeight="medium" color={textColor}>
+            <MDTypography variant="h6" color="secondary">
+              <Icon sx={{ fontWeight: "bold" }}>close</Icon>
+            </MDTypography>
+          </MDBox>
+        )}
+
+        <MDBox
+          component={NavLink}
+          to="/"
+          display="flex"
+          alignItems="center"
+          justifyContent="center"
+          gap={1}
+          sx={{ textDecoration: "none" }}
+        >
+          {brand ? (
+            <MDBox
+              component="img"
+              src={brand}
+              alt="Brand"
+              sx={{ width: 28, height: 28, borderRadius: "6px", objectFit: "contain" }}
+            />
+          ) : null}
+          <MDBox width={!brandName && "100%"} sx={(t) => sidenavLogoLabel(t, { miniSidenav })}>
+            <MDTypography
+              component="h6"
+              variant="button"
+              fontWeight="medium"
+              color={textColor}
+              noWrap
+            >
               {brandName}
             </MDTypography>
           </MDBox>
         </MDBox>
       </MDBox>
+
       <Divider
         light={
           (!darkMode && !whiteSidenav && !transparentSidenav) ||
           (darkMode && !transparentSidenav && whiteSidenav)
         }
       />
-      <List>{renderRoutes}</List>
+
+      {/* Lista com scroll suave e altura total */}
+      <List sx={{ px: 1.25, py: 1, overflowY: "auto", height: "calc(100vh - 120px)" }}>
+        {renderRoutes}
+      </List>
     </SidenavRoot>
   );
 }
 
-Sidenav.defaultProps = {
-  color: "success",
-  brand: "",
-};
+Sidenav.defaultProps = { color: "success", brand: "" };
 
 Sidenav.propTypes = {
   color: PropTypes.oneOf(["primary", "secondary", "info", "success", "warning", "error", "dark"]),
