@@ -1,50 +1,53 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import api from "services/api";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
 
-// @mui material components
+// @mui
 import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
 import Icon from "@mui/material/Icon";
 import {
   CircularProgress,
   TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Autocomplete,
   Chip,
   ToggleButtonGroup,
   ToggleButton,
+  Modal,
+  Box,
+  Tabs,
+  Tab,
+  Stack,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
 
-// Material Dashboard 2 React components
+// MD
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDButton from "components/MDButton";
 
-// Material Dashboard 2 React example components
-import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
-import DashboardNavbar from "examples/Navbars/DashboardNavbar";
+// Layout & table
+import PageWrapper from "components/PageWrapper";
 import DataTable from "examples/Tables/DataTable";
 
-// Data and components
+// Data & components
 import recipesTableData from "./data/recipesTableData";
 import UserRecipeCard from "./components/UserRecipeCard";
-import PublicRecipeCard from "./components/PublicRecipeCard";
 import getFullImageUrl from "utils/imageUrlHelper";
 
-// Paleta de Cores
-const colorPalette = {
-  dourado: "#C9A635",
-  verdeEscuro: "#1C3B32",
-  branco: "#FFFFFF",
-  cinza: "#444444",
+const modalStyle = {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  width: 440,
+  bgcolor: "background.paper",
+  borderRadius: 2,
+  boxShadow: 24,
+  p: 3,
 };
 
 function useQuery() {
@@ -55,24 +58,28 @@ function MinhasReceitas() {
   const { user, uiPermissions } = useAuth();
   const navigate = useNavigate();
   const query = useQuery();
-
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isAdmin = uiPermissions.includes("admin");
 
   const [allUserRecipes, setAllUserRecipes] = useState([]);
   const [filteredRecipes, setFilteredRecipes] = useState([]);
   const [listaCategorias, setListaCategorias] = useState([]);
   const [listaTags, setListaTags] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState("card"); // 'card' or 'table'
+  const [view, setView] = useState("card"); // 'card' | 'table'
+  const [tab, setTab] = useState(0);
 
-  // Filter states
+  // filtros
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("Todos");
   const [tagsFilter, setTagsFilter] = useState([]);
 
-  const isAdmin = uiPermissions.includes("admin");
+  // modal delete
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [recipeToDelete, setRecipeToDelete] = useState(null);
 
+  // fetch
   useEffect(() => {
     const fetchInitialData = async () => {
       if (!user?.codigo_afiliado_proprio) {
@@ -88,15 +95,15 @@ function MinhasReceitas() {
         ]);
 
         const userRecipes = recipesRes.data.filter(
-          (recipe) => recipe.criador?.codigo_afiliado_proprio === user.codigo_afiliado_proprio
+          (r) => r.criador?.codigo_afiliado_proprio === user.codigo_afiliado_proprio
         );
 
         setAllUserRecipes(userRecipes);
         setFilteredRecipes(userRecipes);
         setListaCategorias([{ id: "Todos", nome: "Todos" }, ...categoriesRes.data]);
         setListaTags(tagsRes.data);
-      } catch (error) {
-        console.error("Erro ao buscar dados iniciais:", error);
+      } catch (e) {
+        console.error(e);
         toast.error("Não foi possível carregar suas receitas, categorias ou tags.");
       } finally {
         setLoading(false);
@@ -106,27 +113,25 @@ function MinhasReceitas() {
     fetchInitialData();
   }, [user]);
 
+  // filtros
   useEffect(() => {
-    let filtered = allUserRecipes;
+    let list = allUserRecipes;
 
     if (searchTerm) {
-      filtered = filtered.filter((recipe) =>
-        recipe.titulo.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      const q = searchTerm.toLowerCase().trim();
+      list = list.filter((r) => r.titulo.toLowerCase().includes(q));
     }
 
     if (categoryFilter !== "Todos") {
-      filtered = filtered.filter((recipe) => recipe.categoria?.nome === categoryFilter);
+      list = list.filter((r) => r.categoria?.nome === categoryFilter);
     }
 
     if (tagsFilter.length > 0) {
-      const tagNames = tagsFilter.map((t) => t.nome);
-      filtered = filtered.filter((recipe) =>
-        recipe.tags?.some((tag) => tagNames.includes(tag.nome))
-      );
+      const names = tagsFilter.map((t) => t.nome);
+      list = list.filter((r) => r.tags?.some((t) => names.includes(t.nome)));
     }
 
-    setFilteredRecipes(filtered);
+    setFilteredRecipes(list);
   }, [searchTerm, categoryFilter, tagsFilter, allUserRecipes]);
 
   const mapRecipeData = (recipe) => {
@@ -138,10 +143,7 @@ function MinhasReceitas() {
       name: recipe.titulo,
       image: imageUrl,
       description: recipe.resumo,
-      author: {
-        name: recipe.criador?.nome || "Autor Desconhecido",
-        avatar: authorAvatarUrl,
-      },
+      author: { name: recipe.criador?.nome || "Autor Desconhecido", avatar: authorAvatarUrl },
       rating: recipe.avaliacao_media || 0,
       votes: recipe.total_avaliacoes || 0,
       tags: recipe.tags || [],
@@ -149,212 +151,184 @@ function MinhasReceitas() {
     };
   };
 
-  const handleEdit = (id) => {
-    navigate(`/receitas/editar/${id}`);
+  const handleEdit = (id) => navigate(`/receitas/editar/${id}`);
+
+  const openDeleteModal = (id) => {
+    setRecipeToDelete(id);
+    setDeleteOpen(true);
+  };
+  const closeDeleteModal = () => {
+    setRecipeToDelete(null);
+    setDeleteOpen(false);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Tem certeza que deseja excluir esta receita? Esta ação é irreversível.")) {
-      try {
-        await api.delete(`/recipes/${id}`);
-        toast.success("Receita excluída com sucesso!");
-        setAllUserRecipes((prev) => prev.filter((r) => r.id !== id));
-      } catch (error) {
-        console.error("Erro ao excluir receita:", error);
-        toast.error("Não foi possível excluir a receita.");
-      }
+  const confirmDelete = async () => {
+    if (!recipeToDelete) return;
+    try {
+      await api.delete(`/recipes/${recipeToDelete}`);
+      toast.success("Receita excluída com sucesso!");
+      setAllUserRecipes((prev) => prev.filter((r) => String(r.id) !== String(recipeToDelete)));
+    } catch (e) {
+      console.error(e);
+      toast.error("Não foi possível excluir a receita.");
+    } finally {
+      closeDeleteModal();
     }
   };
 
   const { columns, rows } = recipesTableData(
     filteredRecipes.map(mapRecipeData),
     isAdmin,
-    handleDelete,
+    openDeleteModal,
     handleEdit
   );
 
-  return (
-    <DashboardLayout>
-      <DashboardNavbar />
-      <MDBox pt={6} pb={3}>
-        {/* Cabeçalho da página */}
-        <MDBox
-          display="flex"
-          flexDirection={isMobile ? "column" : "row"}
-          justifyContent="space-between"
-          alignItems={isMobile ? "flex-start" : "center"}
-          mb={3}
+  // ações do header
+  const headerActions = useMemo(
+    () => (
+      <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap">
+        <ToggleButtonGroup value={view} exclusive onChange={(_e, v) => v && setView(v)}>
+          <ToggleButton value="card" aria-label="Cartões">
+            <Icon>grid_view</Icon>
+          </ToggleButton>
+          <ToggleButton value="table" aria-label="Tabela">
+            <Icon>table_rows</Icon>
+          </ToggleButton>
+        </ToggleButtonGroup>
+
+        <MDButton
+          variant="gradient"
+          onClick={() => navigate("/receitas/adicionar")}
+          startIcon={<Icon>add</Icon>}
+          sx={{
+            backgroundColor: "#C9A635 !important",
+            color: "#fff !important",
+            textTransform: "uppercase",
+            fontWeight: 700,
+            "& .MuiButton-startIcon": { mr: 1 },
+            "& .MuiSvgIcon-root, & .material-icons": {
+              color: "#fff !important",
+            },
+            "&:hover": { backgroundColor: "#B5942E !important" },
+          }}
         >
-          <MDTypography
-            variant="h4"
-            fontWeight="bold"
-            sx={{ color: colorPalette.verdeEscuro, mb: isMobile ? 1 : 0 }}
-          >
-            Minhas Receitas
-          </MDTypography>
-          <MDButton
-            variant="gradient"
-            sx={{
-              backgroundColor: colorPalette.dourado,
-              color: colorPalette.branco,
-              "&:hover": {
-                backgroundColor: colorPalette.verdeEscuro,
-              },
-            }}
-            onClick={() => navigate("/receitas/adicionar")}
-          >
-            <Icon sx={{ mr: 1 }}>add</Icon>
-            Adicionar Nova Receita
-          </MDButton>
-        </MDBox>
+          Nova Receita
+        </MDButton>
+      </Stack>
+    ),
+    [view, navigate]
+  );
 
-        {/* Card de Filtros */}
-        <Card sx={{ p: 2 }}>
-          <MDBox
-            display="flex"
-            flexWrap="wrap"
+  return (
+    <PageWrapper
+      size="compact"
+      title="Minhas Receitas"
+      subtitle="Gerencie, edite e organize as receitas que você criou."
+      actions={headerActions}
+    >
+      {/* Filtros */}
+      <Card>
+        <MDBox p={{ xs: 2, md: 3 }}>
+          <Stack
+            direction={{ xs: "column", md: "row" }}
+            spacing={2}
+            alignItems={{ xs: "stretch", md: "center" }}
             justifyContent="space-between"
-            alignItems="center"
-            p={1}
-            sx={{ flexDirection: isMobile ? "column" : "row" }}
           >
-            {/* Filtros */}
-            <MDBox
-              display="flex"
-              flexWrap="wrap"
-              alignItems="center"
-              flexGrow={1}
-              sx={{ flexDirection: isMobile ? "column" : "row" }}
-            >
-              <MDBox sx={{ minWidth: 250, m: 1, width: isMobile ? "100%" : "auto" }}>
-                <TextField
-                  fullWidth
-                  variant="outlined"
-                  label="Buscar pelo nome..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  sx={{ "& .MuiOutlinedInput-root": { color: colorPalette.cinza } }}
-                />
-              </MDBox>
-              <MDBox sx={{ minWidth: 200, m: 1, width: isMobile ? "100%" : "auto" }}>
-                <Autocomplete
-                  disablePortal
-                  options={listaCategorias}
-                  getOptionLabel={(option) => option.nome}
-                  value={listaCategorias.find((cat) => cat.nome === categoryFilter) || null}
-                  onChange={(event, newValue) => {
-                    setCategoryFilter(newValue ? newValue.nome : "Todos");
-                  }}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      variant="outlined"
-                      label="Categoria"
-                      placeholder="Filtrar por categoria"
-                      sx={{ "& .MuiOutlinedInput-root": { color: colorPalette.cinza } }}
-                    />
-                  )}
-                  sx={{ "& .MuiOutlinedInput-root": { color: colorPalette.cinza } }}
-                />
-              </MDBox>
-              <MDBox sx={{ minWidth: 300, m: 1, width: isMobile ? "100%" : "auto" }}>
-                <Autocomplete
-                  multiple
-                  options={listaTags}
-                  getOptionLabel={(option) => option.nome}
-                  value={tagsFilter}
-                  onChange={(event, newValue) => setTagsFilter(newValue)}
-                  renderTags={(value, getTagProps) =>
-                    value.map((option, index) => (
-                      <Chip
-                        key={option.id}
-                        label={option.nome}
-                        sx={{ backgroundColor: colorPalette.dourado, color: colorPalette.branco }}
-                        {...getTagProps({ index })}
-                      />
-                    ))
-                  }
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      variant="outlined"
-                      label="Tags"
-                      placeholder="Filtrar por tags"
-                      sx={{ "& .MuiOutlinedInput-root": { color: colorPalette.cinza } }}
-                    />
-                  )}
-                />
-              </MDBox>
-            </MDBox>
-            {/* Alternância de Visualização */}
-            <MDBox sx={{ m: 1, width: isMobile ? "100%" : "auto" }}>
-              <ToggleButtonGroup
-                sx={{
-                  "& .MuiToggleButtonGroup-grouped": {
-                    border: `1px solid ${colorPalette.cinza} !important`,
-                    color: colorPalette.cinza,
-                    "&.Mui-selected": {
-                      backgroundColor: colorPalette.dourado,
-                      color: colorPalette.branco,
-                      "&:hover": {
-                        backgroundColor: colorPalette.dourado,
-                      },
-                    },
-                    "&:not(.Mui-selected)": {
-                      "&:hover": {
-                        backgroundColor: "rgba(0,0,0,0.04)",
-                      },
-                    },
-                  },
-                  width: isMobile ? "100%" : "auto",
-                }}
-                value={view}
-                exclusive
-                onChange={(e, newView) => newView && setView(newView)}
-              >
-                <ToggleButton value="card" sx={{ width: isMobile ? "50%" : "auto" }}>
-                  <Icon>grid_view</Icon>
-                </ToggleButton>
-                <ToggleButton value="table" sx={{ width: isMobile ? "50%" : "auto" }}>
-                  <Icon>table_rows</Icon>
-                </ToggleButton>
-              </ToggleButtonGroup>
-            </MDBox>
-          </MDBox>
-        </Card>
+            <TextField
+              label="Buscar pelo nome..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              sx={{ width: { xs: "100%", md: 280 } }}
+            />
 
-        <MDBox mt={3}>
-          <Card>
-            {loading ? (
-              <MDBox display="flex" justifyContent="center" p={5}>
-                <CircularProgress sx={{ color: colorPalette.dourado }} />
-              </MDBox>
-            ) : // Condicional para renderizar o DataTable ou o Grid de Cards
-            view === "table" ? (
-              <DataTable
-                table={{ columns, rows }}
-                isSorted={false}
-                entriesPerPage
-                showTotalEntries
-                pagination={{ variant: "gradient", color: "success" }}
-              />
-            ) : (
+            <Autocomplete
+              disablePortal
+              options={listaCategorias}
+              getOptionLabel={(o) => o.nome}
+              value={listaCategorias.find((c) => c.nome === categoryFilter) || null}
+              onChange={(_e, v) => setCategoryFilter(v ? v.nome : "Todos")}
+              sx={{ width: { xs: "100%", md: 240 } }}
+              renderInput={(params) => <TextField {...params} label="Categoria" />}
+            />
+
+            <Autocomplete
+              multiple
+              options={listaTags}
+              getOptionLabel={(o) => o.nome}
+              value={tagsFilter}
+              onChange={(_e, v) => setTagsFilter(v)}
+              sx={{ width: { xs: "100%", md: 360 } }}
+              renderTags={(value, getTagProps) =>
+                value.map((option, index) => (
+                  <Chip
+                    key={option.id}
+                    label={option.nome}
+                    sx={{ backgroundColor: "#C9A635", color: "#fff" }}
+                    {...getTagProps({ index })}
+                  />
+                ))
+              }
+              renderInput={(params) => <TextField {...params} label="Tags" placeholder="Tags" />}
+            />
+          </Stack>
+        </MDBox>
+      </Card>
+
+      {/* Lista */}
+      <MDBox mt={2}>
+        <Card>
+          {loading ? (
+            <MDBox display="flex" justifyContent="center" p={5}>
+              <CircularProgress sx={{ color: "#C9A635" }} />
+            </MDBox>
+          ) : view === "table" ? (
+            <DataTable
+              table={{ columns, rows }}
+              isSorted={false}
+              entriesPerPage
+              showTotalEntries
+              pagination={{ variant: "gradient", color: "success" }}
+            />
+          ) : (
+            <MDBox p={{ xs: 2, md: 3 }}>
               <Grid container spacing={3}>
                 {filteredRecipes.map((recipe) => (
                   <Grid item xs={12} sm={6} md={4} lg={3} key={recipe.id}>
                     <UserRecipeCard
                       recipe={mapRecipeData(recipe)}
                       onEdit={handleEdit}
-                      onDelete={handleDelete}
+                      onDelete={openDeleteModal} // abre modal
+                      size="tall"
                     />
                   </Grid>
                 ))}
               </Grid>
-            )}
-          </Card>
-        </MDBox>
+            </MDBox>
+          )}
+        </Card>
       </MDBox>
-    </DashboardLayout>
+
+      {/* Modal de confirmação (igual padrão das Categorias) */}
+      <Modal open={deleteOpen} onClose={closeDeleteModal}>
+        <Box sx={modalStyle}>
+          <MDTypography variant="h5" fontWeight="medium">
+            Confirmar Exclusão
+          </MDTypography>
+          <MDTypography variant="body2" color="text" mt={2} mb={3}>
+            Tem certeza que deseja excluir esta receita? Esta ação é irreversível.
+          </MDTypography>
+          <MDBox display="flex" justifyContent="flex-end" gap={1}>
+            <MDButton color="secondary" onClick={closeDeleteModal}>
+              Cancelar
+            </MDButton>
+            <MDButton variant="gradient" color="error" onClick={confirmDelete}>
+              Deletar
+            </MDButton>
+          </MDBox>
+        </Box>
+      </Modal>
+    </PageWrapper>
   );
 }
 

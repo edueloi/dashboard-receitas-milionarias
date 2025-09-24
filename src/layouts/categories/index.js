@@ -9,7 +9,6 @@ import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
 import Icon from "@mui/material/Icon";
 import {
-  CircularProgress,
   Modal,
   TextField,
   Box,
@@ -17,6 +16,8 @@ import {
   Tab,
   ToggleButtonGroup,
   ToggleButton,
+  Stack,
+  Skeleton, // Importado para o loading state
 } from "@mui/material";
 
 // Material Dashboard 2 React components
@@ -42,7 +43,7 @@ const style = {
   transform: "translate(-50%, -50%)",
   width: 400,
   bgcolor: "background.paper",
-  border: "2px solid #000",
+  borderRadius: "8px", // Borda arredondada para o modal
   boxShadow: 24,
   p: 4,
 };
@@ -50,7 +51,7 @@ const style = {
 function Categories() {
   const { uiPermissions } = useAuth();
   const [tabValue, setTabValue] = useState(0);
-  const [view, setView] = useState("table"); // 'table' or 'card'
+  const [view, setView] = useState("card"); // 'table' or 'card'
 
   const [categories, setCategories] = useState([]);
   const [tags, setTags] = useState([]);
@@ -232,33 +233,55 @@ function Categories() {
     handleDelete
   );
 
+  // Componente para o Skeleton Loading
+  const renderSkeletons = () => (
+    <Grid container spacing={3}>
+      {Array.from(new Array(8)).map((_, index) => (
+        <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
+          <Skeleton variant="rectangular" sx={{ borderRadius: "lg", minHeight: 180 }} />
+        </Grid>
+      ))}
+    </Grid>
+  );
+
   return (
-    <PageWrapper title="Categorias">
-      <MDBox pt={6} pb={3}>
+    <PageWrapper
+      title="Categorias e Tags"
+      subtitle="Organize e gerencie o conteúdo das suas receitas."
+    >
+      <MDBox pt={1} pb={2}>
         <Card>
           <MDBox p={3}>
-            <Tabs value={tabValue} onChange={handleTabChange} centered>
+            {/* Header da Página */}
+
+            <Tabs value={tabValue} onChange={handleTabChange} sx={{ mb: 3 }}>
               <Tab label="Categorias" />
               <Tab label="Tags" />
             </Tabs>
 
             {tabValue === 0 && (
-              <MDBox pt={3}>
-                <MDBox display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+              <MDBox>
+                {/* Cabeçalho de Ações para Categorias */}
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={2}
+                  justifyContent="space-between"
+                  alignItems="center"
+                  mb={3}
+                >
                   <TextField
                     label="Buscar Categoria"
                     variant="outlined"
                     value={categorySearch}
                     onChange={(e) => setCategorySearch(e.target.value)}
-                    sx={{ width: "250px" }}
+                    sx={{ width: { xs: "100%", sm: "250px" } }}
                   />
-                  <MDBox display="flex" alignItems="center">
+                  <Stack direction="row" spacing={2} alignItems="center">
                     <ToggleButtonGroup
                       color="primary"
                       value={view}
                       exclusive
                       onChange={handleViewChange}
-                      sx={{ mr: 2 }}
                     >
                       <ToggleButton value="table">
                         <Icon>table_rows</Icon>
@@ -277,12 +300,11 @@ function Categories() {
                         Nova Categoria
                       </MDButton>
                     )}
-                  </MDBox>
-                </MDBox>
+                  </Stack>
+                </Stack>
+                {/* Conteúdo */}
                 {loading ? (
-                  <MDBox display="flex" justifyContent="center" p={5}>
-                    <CircularProgress />
-                  </MDBox>
+                  renderSkeletons()
                 ) : view === "table" ? (
                   <DataTable
                     table={{ columns, rows }}
@@ -309,13 +331,21 @@ function Categories() {
             )}
 
             {tabValue === 1 && (
-              <MDBox pt={3}>
-                <MDBox display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+              <MDBox>
+                {/* Cabeçalho de Ações para Tags */}
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={2}
+                  justifyContent="space-between"
+                  alignItems="center"
+                  mb={3}
+                >
                   <TextField
                     label="Buscar Tag"
                     variant="outlined"
                     value={tagSearch}
                     onChange={(e) => setTagSearch(e.target.value)}
+                    sx={{ width: { xs: "100%", sm: "250px" } }}
                   />
                   {isAdmin && (
                     <MDButton
@@ -327,9 +357,12 @@ function Categories() {
                       Nova Tag
                     </MDButton>
                   )}
-                </MDBox>
+                </Stack>
+                {/* Conteúdo */}
                 {loading ? (
-                  <CircularProgress />
+                  <MDBox display="flex" justifyContent="center" p={5}>
+                    <Skeleton variant="rectangular" width="100%" height={100} />
+                  </MDBox>
                 ) : (
                   <MDBox display="flex" flexWrap="wrap" gap={2}>
                     {filteredTags.map((tag) => (
@@ -370,13 +403,13 @@ function Categories() {
                 value={newItemDescription}
                 onChange={(e) => setNewItemDescription(e.target.value)}
               />
-              <MDInput
-                type="file"
-                fullWidth
-                onChange={handleImageChange}
-                inputProps={{ accept: "image/*" }}
-                sx={{ mt: 2 }}
-              />
+              <MDButton component="label" variant="outlined" color="primary" sx={{ mt: 3, mb: 1 }}>
+                Selecionar Imagem
+                <input type="file" hidden accept="image/*" onChange={handleImageChange} />
+              </MDButton>
+              {newCategoryImage && (
+                <MDTypography variant="caption">{newCategoryImage.name}</MDTypography>
+              )}
             </>
           )}
           <MDBox mt={4} display="flex" justifyContent="flex-end">
@@ -405,7 +438,7 @@ function Categories() {
               Cancelar
             </MDButton>
             <MDButton variant="gradient" color="error" onClick={confirmDelete}>
-              Deletar
+              Excluir
             </MDButton>
           </MDBox>
         </Box>
