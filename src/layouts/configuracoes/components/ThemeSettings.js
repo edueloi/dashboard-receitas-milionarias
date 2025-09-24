@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import Card from "@mui/material/Card";
 import Divider from "@mui/material/Divider";
-import Switch from "@mui/material/Switch";
 import IconButton from "@mui/material/IconButton";
+import Switch from "@mui/material/Switch";
+
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDButton from "components/MDButton";
+
 import {
   useMaterialUIController,
   setTransparentSidenav,
@@ -15,7 +17,7 @@ import {
   setDarkMode,
 } from "context";
 
-function ThemeSettings() {
+export default function ThemeSettings() {
   const [controller, dispatch] = useMaterialUIController();
   const { fixedNavbar, sidenavColor, transparentSidenav, whiteSidenav, darkMode } = controller;
 
@@ -23,9 +25,7 @@ function ThemeSettings() {
   const sidenavColors = ["primary", "dark", "info", "success", "warning", "error"];
 
   useEffect(() => {
-    function handleDisabled() {
-      return window.innerWidth > 1200 ? setDisabled(false) : setDisabled(true);
-    }
+    const handleDisabled = () => setDisabled(!(window.innerWidth > 1200));
     window.addEventListener("resize", handleDisabled);
     handleDisabled();
     return () => window.removeEventListener("resize", handleDisabled);
@@ -54,26 +54,32 @@ function ThemeSettings() {
       <MDBox p={3}>
         <MDTypography variant="h5">Configurações de Aparência</MDTypography>
         <MDTypography variant="body2" color="text">
-          Personalize a aparência do seu painel.
+          Personalize as cores e o comportamento visual do painel.
         </MDTypography>
       </MDBox>
       <Divider />
+
       <MDBox p={3}>
-        {/* Sidenav Colors */}
-        <MDBox>
+        {/* Cores do Sidenav */}
+        <MDBox mb={3}>
           <MDTypography variant="h6">Cores do Menu Lateral</MDTypography>
-          <MDBox mb={0.5}>
+          <MDTypography variant="caption" color="text">
+            Escolha um degradê para o fundo do menu lateral.
+          </MDTypography>
+          <MDBox mt={1}>
             {sidenavColors.map((color) => (
               <IconButton
                 key={color}
+                aria-label={`Cor ${color}`}
                 sx={({
                   borders: { borderWidth },
                   palette: { white, dark, background },
                   transitions,
                 }) => ({
-                  width: "24px",
-                  height: "24px",
-                  padding: 0,
+                  width: 24,
+                  height: 24,
+                  p: 0,
+                  mr: 1,
                   border: `${borderWidth[1]} solid ${darkMode ? background.sidenav : white.main}`,
                   borderColor: sidenavColor === color && (darkMode ? white.main : dark.main),
                   transition: transitions.create("border-color", {
@@ -82,8 +88,7 @@ function ThemeSettings() {
                   }),
                   backgroundImage: ({ functions: { linearGradient }, palette: { gradients } }) =>
                     linearGradient(gradients[color].main, gradients[color].state),
-                  "&:not(:last-child)": { mr: 1 },
-                  "&:hover, &:focus, &:active": {
+                  "&:hover, &:focus": {
                     borderColor: darkMode ? white.main : dark.main,
                   },
                 })}
@@ -93,13 +98,13 @@ function ThemeSettings() {
           </MDBox>
         </MDBox>
 
-        {/* Sidenav Type */}
-        <MDBox mt={3} lineHeight={1}>
+        {/* Tipo de Sidenav */}
+        <MDBox mb={3} lineHeight={1}>
           <MDTypography variant="h6">Estilo do Menu Lateral</MDTypography>
-          <MDTypography variant="button" color="text">
-            Escolha entre os 3 estilos de menu.
+          <MDTypography variant="caption" color="text">
+            Escolha entre escuro, transparente ou claro.
           </MDTypography>
-          <MDBox sx={{ display: "flex", mt: 2, mr: 1 }}>
+          <MDBox sx={{ display: "flex", mt: 2, gap: 1 }}>
             <MDButton
               color="dark"
               variant={!transparentSidenav && !whiteSidenav ? "contained" : "gradient"}
@@ -109,17 +114,15 @@ function ThemeSettings() {
             >
               Escuro
             </MDButton>
-            <MDBox sx={{ mx: 1, width: "8rem", minWidth: "8rem" }}>
-              <MDButton
-                color="dark"
-                variant={transparentSidenav && !whiteSidenav ? "contained" : "gradient"}
-                onClick={handleTransparentSidenav}
-                disabled={disabled}
-                fullWidth
-              >
-                Transparente
-              </MDButton>
-            </MDBox>
+            <MDButton
+              color="dark"
+              variant={transparentSidenav && !whiteSidenav ? "contained" : "gradient"}
+              onClick={handleTransparentSidenav}
+              disabled={disabled}
+              fullWidth
+            >
+              Transparente
+            </MDButton>
             <MDButton
               color="dark"
               variant={whiteSidenav && !transparentSidenav ? "contained" : "gradient"}
@@ -130,32 +133,35 @@ function ThemeSettings() {
               Claro
             </MDButton>
           </MDBox>
+          {disabled && (
+            <MDTypography variant="caption" color="text">
+              * Para alternar os estilos, aumente a largura da janela.
+            </MDTypography>
+          )}
         </MDBox>
 
-        <Divider sx={{ my: 4 }} />
+        <Divider sx={{ my: 3 }} />
 
-        {/* Navbar Fixed */}
-        <MDBox
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          mt={3}
-          lineHeight={1}
-        >
+        {/* Navbar Fixa */}
+        <MDBox display="flex" justifyContent="space-between" alignItems="center" mb={1}>
           <MDTypography variant="h6">Barra de Navegação Fixa</MDTypography>
           <Switch checked={fixedNavbar} onChange={handleFixedNavbar} />
         </MDBox>
+        <MDTypography variant="caption" color="text">
+          Mantém a barra superior sempre visível ao rolar a página.
+        </MDTypography>
 
-        <Divider />
+        <Divider sx={{ my: 3 }} />
 
         {/* Dark Mode */}
-        <MDBox display="flex" justifyContent="space-between" alignItems="center" lineHeight={1}>
-          <MDTypography variant="h6">Modo Claro / Escuro</MDTypography>
+        <MDBox display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+          <MDTypography variant="h6">Modo Escuro</MDTypography>
           <Switch checked={darkMode} onChange={handleDarkMode} />
         </MDBox>
+        <MDTypography variant="caption" color="text">
+          Alterna entre tema claro e escuro para todo o painel.
+        </MDTypography>
       </MDBox>
     </Card>
   );
 }
-
-export default ThemeSettings;

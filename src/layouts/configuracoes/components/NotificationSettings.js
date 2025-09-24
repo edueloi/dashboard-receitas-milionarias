@@ -1,15 +1,19 @@
-import { useState } from "react";
+// src/layouts/configuracoes/components/NotificationSettings.js
+import { useState, useMemo } from "react";
 import PropTypes from "prop-types";
+import toast from "react-hot-toast";
 
-// @mui material components
+// @mui
 import Card from "@mui/material/Card";
 import Switch from "@mui/material/Switch";
 import Divider from "@mui/material/Divider";
 
-// Material Dashboard 2 React components
+// MD
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDButton from "components/MDButton";
+
+const SECTION_SPACING = { px: 3, py: 2.25 };
 
 function NotificationSettings() {
   const [notifications, setNotifications] = useState({
@@ -20,17 +24,28 @@ function NotificationSettings() {
     systemUpdates: true,
   });
 
+  const initial = useMemo(() => notifications, []); // primeira carga
+  const isDirty = useMemo(
+    () => JSON.stringify(initial) !== JSON.stringify(notifications),
+    [initial, notifications]
+  );
+
   const handleToggle = (e) => {
-    setNotifications({ ...notifications, [e.target.name]: e.target.checked });
+    setNotifications((prev) => ({ ...prev, [e.target.name]: e.target.checked }));
+  };
+
+  const handleSave = () => {
+    // aqui futura chamada: await api.patch('/users/me/notifications', notifications)
+    toast.success("Preferências de notificação salvas!");
   };
 
   const SettingRow = ({ name, label, description, checked, onChange }) => (
-    <MDBox display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-      <MDBox>
-        <MDTypography variant="body1" fontWeight="medium">
+    <MDBox display="flex" justifyContent="space-between" alignItems="center" sx={{ gap: 2, my: 1 }}>
+      <MDBox sx={{ minWidth: 0 }}>
+        <MDTypography variant="body1" fontWeight="medium" sx={{ lineHeight: 1.2 }}>
           {label}
         </MDTypography>
-        <MDTypography variant="caption" color="text">
+        <MDTypography variant="caption" color="text" sx={{ display: "block", opacity: 0.9 }}>
           {description}
         </MDTypography>
       </MDBox>
@@ -48,6 +63,7 @@ function NotificationSettings() {
 
   return (
     <Card>
+      {/* Header */}
       <MDBox p={3} sx={{ borderBottom: "1px solid", borderColor: "divider" }}>
         <MDTypography variant="h5" fontWeight="medium">
           Notificações
@@ -57,8 +73,11 @@ function NotificationSettings() {
         </MDTypography>
       </MDBox>
 
-      <MDBox p={3}>
-        <MDTypography variant="h6">Atividade da Conta</MDTypography>
+      {/* Conta */}
+      <MDBox {...SECTION_SPACING}>
+        <MDTypography variant="h6" sx={{ mb: 1 }}>
+          Atividade da conta
+        </MDTypography>
         <SettingRow
           name="newRecipes"
           label="Novas receitas publicadas"
@@ -77,8 +96,11 @@ function NotificationSettings() {
 
       <Divider />
 
-      <MDBox p={3}>
-        <MDTypography variant="h6">Ofertas</MDTypography>
+      {/* Ofertas */}
+      <MDBox {...SECTION_SPACING}>
+        <MDTypography variant="h6" sx={{ mb: 1 }}>
+          Ofertas
+        </MDTypography>
         <SettingRow
           name="offers"
           label="Ofertas especiais de parceiros"
@@ -90,8 +112,11 @@ function NotificationSettings() {
 
       <Divider />
 
-      <MDBox p={3}>
-        <MDTypography variant="h6">Sistema</MDTypography>
+      {/* Sistema */}
+      <MDBox {...SECTION_SPACING}>
+        <MDTypography variant="h6" sx={{ mb: 1 }}>
+          Sistema
+        </MDTypography>
         <SettingRow
           name="weeklySummary"
           label="Resumo semanal por e-mail"
@@ -110,9 +135,16 @@ function NotificationSettings() {
 
       <Divider />
 
+      {/* Ações */}
       <MDBox p={3} display="flex" justifyContent="flex-end">
-        <MDButton variant="gradient" color="success">
-          Salvar Alterações
+        <MDButton
+          variant="gradient"
+          color="success"
+          disabled={!isDirty}
+          onClick={handleSave}
+          sx={{ minWidth: 180 }}
+        >
+          Salvar alterações
         </MDButton>
       </MDBox>
     </Card>
