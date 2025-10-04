@@ -1,10 +1,18 @@
 // src/layouts/authentication/sign-in/index.js
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 // Material UI & Nossos Componentes
-import { Card, CircularProgress, Grid, Icon, IconButton, InputAdornment } from "@mui/material";
+import {
+  Card,
+  CircularProgress,
+  Grid,
+  Icon,
+  IconButton,
+  InputAdornment,
+  Switch,
+} from "@mui/material";
 import MDBox from "components/MDBox";
 import MDButton from "components/MDButton";
 import MDInput from "components/MDInput";
@@ -21,16 +29,31 @@ import bgImage from "assets/images/bg-login.jpg";
 import logo from "assets/images/logos/logo.png";
 import api from "services/api";
 
+const REMEMBER_ME_EMAIL = "rememberMeEmail";
+const REMEMBER_ME_PASSWORD = "rememberMePassword";
+
 function SignInSplit() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const handleClickShowPassword = () => setShowPassword(!showPassword);
+  const handleSetRememberMe = () => setRememberMe(!rememberMe);
+
+  useEffect(() => {
+    const savedEmail = localStorage.getItem(REMEMBER_ME_EMAIL);
+    const savedPassword = localStorage.getItem(REMEMBER_ME_PASSWORD);
+    if (savedEmail && savedPassword) {
+      setEmail(savedEmail);
+      setPassword(savedPassword);
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleSignIn = async () => {
     if (!email || !password) {

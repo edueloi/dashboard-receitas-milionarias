@@ -147,7 +147,6 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
       ModalProps={{ keepMounted: true }}
       PaperProps={{
         sx: {
-          // padding lateral interno pra não “colarem” os itens na borda
           px: isMobile ? 1 : 0,
         },
       }}
@@ -207,7 +206,6 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
         }
       />
 
-      {/* Lista com scroll suave e altura total */}
       <List sx={{ px: 1.25, py: 1, overflowY: "auto", height: "calc(100vh - 120px)" }}>
         {renderRoutes}
       </List>

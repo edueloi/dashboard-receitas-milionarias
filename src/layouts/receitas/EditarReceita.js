@@ -19,7 +19,7 @@ import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDInput from "components/MDInput";
 import MDButton from "components/MDButton";
-import { joinUrlPaths } from "utils/urlUtils";
+import getFullImageUrl from "utils/imageUrlHelper";
 
 // Material Dashboard 2 React example components
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
@@ -63,7 +63,7 @@ function EditarReceita() {
 
         // Se a receita tiver uma imagem, define a URL para a visualização
         if (recipeData.imagem_url) {
-          setImagemPreview(recipeData.imagem_url);
+          setImagemPreview(getFullImageUrl(recipeData.imagem_url));
         }
 
         // Mapear os dados da receita para o formData
@@ -281,10 +281,7 @@ function EditarReceita() {
                   <MDBox mt={2} mb={2}>
                     <MDTypography variant="body2">Imagem Atual:</MDTypography>
                     <img
-                      src={joinUrlPaths(
-                        process.env.REACT_APP_API_URL.replace("/api", ""),
-                        imagemPreview
-                      )}
+                      src={imagemPreview}
                       alt="Imagem da Receita"
                       style={{ maxWidth: "300px", height: "auto", borderRadius: "8px" }}
                     />

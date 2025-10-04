@@ -4,6 +4,14 @@ export default function getFullImageUrl(input) {
   // já é absoluta? (http, https ou protocolo-agnóstica //)
   if (/^https?:\/\//i.test(input) || /^\/\//.test(input)) return input;
 
+  // WORKAROUND: Corrige caminhos absolutos indevidos vindos do back-end
+  // Ex: C:/.../uploads/imagem.png -> uploads/imagem.png
+  const uploadPathMatch = String(input).match(/[\\/]uploads[\\/].*/i);
+  if (uploadPathMatch && uploadPathMatch[0]) {
+    // eslint-disable-next-line no-param-reassign
+    input = uploadPathMatch[0];
+  }
+
   // normaliza backslashes e remove espaços
   const raw = String(input).trim().replace(/\\/g, "/");
 
