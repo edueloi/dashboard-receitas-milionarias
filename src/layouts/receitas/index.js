@@ -94,7 +94,15 @@ function MinhasReceitas() {
           api.get("/tags"),
         ]);
 
-        const userRecipes = recipesRes.data.filter(
+        console.log("API Response for recipes:", recipesRes.data);
+
+        const recipesData = Array.isArray(recipesRes.data)
+          ? recipesRes.data
+          : recipesRes.data && Array.isArray(recipesRes.data.data)
+          ? recipesRes.data.data
+          : [];
+
+        const userRecipes = recipesData.filter(
           (r) => r.criador?.codigo_afiliado_proprio === user.codigo_afiliado_proprio
         );
 

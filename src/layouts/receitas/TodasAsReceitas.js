@@ -75,8 +75,16 @@ function TodasAsReceitas() {
           api.get("/tags"),
         ]);
 
-        setAllRecipes(recipesRes.data);
-        setFilteredRecipes(recipesRes.data);
+        console.log("API Response for recipes:", recipesRes.data);
+
+        const recipesData = Array.isArray(recipesRes.data)
+          ? recipesRes.data
+          : recipesRes.data && Array.isArray(recipesRes.data.data)
+          ? recipesRes.data.data
+          : [];
+
+        setAllRecipes(recipesData);
+        setFilteredRecipes(recipesData);
         setListaCategorias([{ id: "Todos", nome: "Todos" }, ...categoriesRes.data]);
         setListaTags(tagsRes.data);
 

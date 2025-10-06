@@ -15,7 +15,7 @@ import {
   MenuItem,
   Divider,
 } from "@mui/material";
-import axios from "axios"; // Importe o axios
+import api from "../../../services/api"; // Importe a instância api
 
 // Nossos componentes
 import MDBox from "components/MDBox";
@@ -29,10 +29,6 @@ import PageLayout from "examples/LayoutContainers/PageLayout";
 
 // Imagem para a lateral
 import bgImage from "assets/images/bg-login-pizza.jpg";
-
-// (Opcional) Logos para pagamento
-import mastercardLogo from "assets/images/logos/mastercard.png";
-import visaLogo from "assets/images/logos/visa.png";
 
 function SignUpCover() {
   const steps = ["Suas Informações", "Segurança", "Pagamento"];
@@ -48,7 +44,6 @@ function SignUpCover() {
     password: "",
     confirmPassword: "",
     affiliateCode: "",
-    paymentMethod: "pix",
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -57,7 +52,6 @@ function SignUpCover() {
   const [success, setSuccess] = useState("");
 
   const handleChange = (field) => (e) => setFormData({ ...formData, [field]: e.target.value });
-  const handlePaymentChange = (method) => setFormData({ ...formData, paymentMethod: method });
 
   const handleNext = () => {
     setError("");
@@ -86,20 +80,30 @@ function SignUpCover() {
     setError("");
     setSuccess("");
     try {
-      const requestBody = {
-        nome: formData.firstName,
-        sobrenome: formData.lastName,
+      // 1. Chamar o backend para criar a sessão de checkout
+      const response = await api.post("/create-checkout-session", {
         email: formData.email,
-        senha: formData.password,
-        cpf: formData.cpf,
-        telefone: formData.phone,
-        id_permissao: 6, // TODO: This should be dynamic
-      };
-      await axios.post("/users/register", requestBody);
-      setSuccess("Cadastro concluído! Seu acesso foi liberado. 🚀");
-    } catch (e) {
-      setError("Houve um erro ao finalizar o cadastro.");
-    } finally {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        affiliateId: formData.affiliateCode,
+      });
+
+      const session = response.data;
+
+      // 2. Redirecionar para o checkout do Stripe
+      const stripe = window.Stripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
+      const { error: stripeError } = await stripe.redirectToCheckout({
+        sessionId: session.id,
+      });
+
+      if (stripeError) {
+        setError(stripeError.message);
+        setLoading(false);
+      }
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.error || "Ocorreu um erro ao processar seu pagamento. Tente novamente.";
+      setError(errorMessage);
       setLoading(false);
     }
   };
@@ -218,11 +222,17 @@ function SignUpCover() {
           </Grid>
         );
       case 2:
-        // ... (código do passo de pagamento, se desejar mantê-lo)
         return (
-          <MDTypography variant="body2" color="text" align="center">
-            Passo de pagamento simulado.
-          </MDTypography>
+          <>
+            <MDTypography variant="h5" fontWeight="bold" textAlign="center" mb={2}>
+              Finalize sua Assinatura
+            </MDTypography>
+            <MDTypography variant="body2" color="text" textAlign="center">
+              Você está a um passo de se juntar à nossa comunidade. Ao clicar no botão abaixo, você
+              será redirecionado para nosso ambiente de pagamento 100% seguro para finalizar sua
+              assinatura.
+            </MDTypography>
+          </>
         );
       default:
         return null;
@@ -316,7 +326,7 @@ function SignUpCover() {
                 variant="outlined"
                 color="secondary"
                 onClick={handleBack}
-                disabled={activeStep === 0 || loading || success}
+                disabled={activeStep === 0 || loading}
                 startIcon={<Icon>arrow_back</Icon>}
               >
                 Voltar
@@ -336,10 +346,10 @@ function SignUpCover() {
                   variant="gradient"
                   color="primary"
                   onClick={handleFinish}
-                  disabled={loading || success}
+                  disabled={loading}
                   startIcon={<Icon>check_circle</Icon>}
                 >
-                  {loading ? <CircularProgress size={20} color="white" /> : "Finalizar Cadastro"}
+                  {loading ? <CircularProgress size={20} color="white" /> : "Finalizar e Pagar"}
                 </MDButton>
               )}
             </MDBox>

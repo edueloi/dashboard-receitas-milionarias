@@ -137,11 +137,8 @@ function SignInSplit() {
                 <MDBox component="img" src={logo} alt="Logo" sx={{ width: "70%", height: "70%" }} />
               </MDBox>
 
-              <MDTypography variant="h5" fontWeight="bold" color="text.primary">
+              <MDTypography variant="h5" fontWeight="bold" color="dark">
                 Acessar Sistema
-              </MDTypography>
-              <MDTypography variant="body2" color="text.secondary" mt={1}>
-                Digite suas credenciais para continuar
               </MDTypography>
             </MDBox>
 
