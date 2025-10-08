@@ -43,12 +43,12 @@ function Dashboard() {
 
       // Receitas (visível a todos logados)
       const recipesRes = await api.get("/recipes");
-      setTotalRecipesCount(recipesRes.data.length);
+      setTotalRecipesCount(recipesRes.data?.length || 0);
 
       // Usuários (somente admin)
       if (isAdmin) {
         const usersRes = await api.get("/users");
-        setTotalUsersCount(usersRes.data.length);
+        setTotalUsersCount(usersRes.data?.length || 0);
       }
     } catch (error) {
       // 403 para não-admin ao buscar /users é esperado — não mostrar toast nesse caso

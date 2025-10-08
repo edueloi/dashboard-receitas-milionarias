@@ -1,18 +1,47 @@
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 import { slugify } from "utils/slugify";
+import toast from "react-hot-toast";
+import { useAuth } from "context/AuthContext";
 
 import Card from "@mui/material/Card";
 import Avatar from "@mui/material/Avatar";
 import Chip from "@mui/material/Chip";
 import Icon from "@mui/material/Icon";
+import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
 import { alpha } from "@mui/material/styles";
 
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 
 function PublicRecipeCard({ recipe }) {
+  const { user } = useAuth();
   const { id, name, image, description, author, rating, votes, category } = recipe;
+
+  const handleShare = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const affiliateCode = user?.codigo_afiliado_proprio;
+    if (!affiliateCode) {
+      toast.error("Você precisa ser um afiliado para compartilhar receitas.");
+      return;
+    }
+
+    const externalSiteUrl = process.env.REACT_APP_EXTERNAL_SITE_URL || "http://127.0.0.1:5500";
+    const shareUrl = `${externalSiteUrl}/receita.html?id=${id}&ref=${affiliateCode}`;
+
+    navigator.clipboard.writeText(shareUrl).then(
+      () => {
+        toast.success("Link de compartilhamento copiado!");
+      },
+      (err) => {
+        console.error("Erro ao copiar o link: ", err);
+        toast.error("Não foi possível copiar o link.");
+      }
+    );
+  };
 
   return (
     <Link to={`/receita/${id}-${slugify(name)}`} style={{ textDecoration: "none" }}>
@@ -160,11 +189,17 @@ function PublicRecipeCard({ recipe }) {
             </MDTypography>
           </MDBox>
 
-          <MDBox display="flex" alignItems="center" gap={0.5} sx={{ opacity: 0.9 }}>
+          <MDBox
+            display="flex"
+            alignItems="center"
+            gap={0.5}
+            onClick={handleShare}
+            sx={{ cursor: "pointer", "&:hover": { color: "primary.main" } }}
+          >
+            <Icon>share</Icon>
             <MDTypography variant="button" color="text" sx={{ fontWeight: 700 }}>
-              ver
+              Compartilhar
             </MDTypography>
-            <Icon fontSize="small">chevron_right</Icon>
           </MDBox>
         </MDBox>
       </Card>

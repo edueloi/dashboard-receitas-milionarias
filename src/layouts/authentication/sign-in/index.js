@@ -212,8 +212,14 @@ function SignInSplit() {
                   <MDTypography variant="button" color="text">
                     Não tem conta?{" "}
                     <MDTypography
-                      component={Link}
-                      to="/authentication/sign-up"
+                      component="a"
+                      href={
+                        process.env.NODE_ENV === "production"
+                          ? "https://receitasmilionarias.com.br/cadastro.html"
+                          : "http://127.0.0.1:5500/cadastro.html"
+                      }
+                      target="_blank"
+                      rel="noopener noreferrer"
                       variant="button"
                       fontWeight="medium"
                       sx={{

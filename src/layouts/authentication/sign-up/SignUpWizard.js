@@ -1,6 +1,6 @@
 // src/layouts/authentication/sign-up/index.js
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   Card,
@@ -50,6 +50,16 @@ function SignUpCover() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
+
+  useEffect(() => {
+    const storedAffiliateCode = localStorage.getItem("rm_afiliado");
+    if (storedAffiliateCode) {
+      setFormData((prevData) => ({
+        ...prevData,
+        affiliateCode: storedAffiliateCode,
+      }));
+    }
+  }, []); // Executa apenas uma vez, ao montar o componente
 
   const handleChange = (field) => (e) => setFormData({ ...formData, [field]: e.target.value });
 
