@@ -199,6 +199,14 @@ function Dashboard() {
       })) || [],
   };
 
+  const proximoPagamento = user?.lastPayment
+    ? new Date(new Date(user.lastPayment).setDate(new Date(user.lastPayment).getDate() + 30))
+    : null;
+
+  const diasRestantes = proximoPagamento
+    ? Math.ceil((proximoPagamento - new Date()) / (1000 * 60 * 60 * 24))
+    : null;
+
   return (
     <PageWrapper
       title="Painel Financeiro"
@@ -228,7 +236,7 @@ function Dashboard() {
               />
             </MDBox>
           </Grid>
-          <Grid item xs={12} md={6} lg={user?.permissao === "admin" ? 6 : 4}>
+          <Grid item xs={12} md={6} lg={user?.permissao === "admin" ? 3 : 4}>
             <MDBox mb={1.5}>
               <ComplexStatisticsCard
                 color="success"
@@ -239,6 +247,43 @@ function Dashboard() {
               />
             </MDBox>
           </Grid>
+          <Grid item xs={12} md={6} lg={user?.permissao === "admin" ? 3 : 4}>
+            <MDBox mb={1.5}>
+              <ComplexStatisticsCard
+                color="info"
+                icon="person"
+                title="Tipo de Permissão"
+                count={user?.permissao?.toUpperCase()}
+                percentage={{ color: "info", amount: "", label: "Sua permissão atual" }}
+              />
+            </MDBox>
+          </Grid>
+          {(user?.permissao === "afiliado" || user?.permissao === "afiliado_pro") && (
+            <>
+              <Grid item xs={12} md={6} lg={3}>
+                <MDBox mb={1.5}>
+                  <ComplexStatisticsCard
+                    color="warning"
+                    icon="event"
+                    title="Próximo Pagamento"
+                    count={proximoPagamento ? proximoPagamento.toLocaleDateString("pt-BR") : "-"}
+                    percentage={{ color: "info", amount: "", label: "Data da próxima cobrança" }}
+                  />
+                </MDBox>
+              </Grid>
+              <Grid item xs={12} md={6} lg={3}>
+                <MDBox mb={1.5}>
+                  <ComplexStatisticsCard
+                    color="error"
+                    icon="hourglass_empty"
+                    title="Dias Restantes"
+                    count={diasRestantes !== null ? `${diasRestantes} dias` : "-"}
+                    percentage={{ color: "info", amount: "", label: "Acesso restante" }}
+                  />
+                </MDBox>
+              </Grid>
+            </>
+          )}
           {user?.permissao === "admin" && (
             <Grid item xs={12} md={6} lg={6}>
               <MDBox mb={1.5}>
