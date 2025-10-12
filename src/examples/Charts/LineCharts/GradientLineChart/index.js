@@ -81,7 +81,7 @@ function GradientLineChart({ icon, title, description, height, chart }) {
           fill: true,
           maxBarThickness: 6,
           backgroundColor: gradientChartLine(
-            chartElement.ctx,
+            chartElement.canvas,
             colors[dataset.color] ? colors[dataset.color || "dark"].main : colors.dark.main
           ),
         }))
