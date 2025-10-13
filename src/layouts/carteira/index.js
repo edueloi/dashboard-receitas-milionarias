@@ -28,92 +28,12 @@ import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatist
 import DataTable from "examples/Tables/DataTable";
 
 // Data / API
-import ganhosMensaisChartData from "layouts/carteira/data/ganhosMensaisChartData";
 import api from "services/api";
 import toast from "react-hot-toast";
 
 const palette = { gold: "#C9A635", green: "#1C3B32" };
 const brl = (v) =>
   typeof v === "number" ? v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : v;
-
-// mock tabela
-const tabelaAfiliados = {
-  columns: [
-    { Header: "afiliado", accessor: "afiliado", width: "45%", align: "left" },
-    { Header: "valor", accessor: "valor", align: "center" },
-    { Header: "data", accessor: "data", align: "center" },
-  ],
-  rows: [
-    {
-      afiliado: (
-        <MDTypography variant="caption" color="text" fontWeight="medium">
-          Maria Silva
-        </MDTypography>
-      ),
-      valor: (
-        <MDTypography variant="caption" color="primary" fontWeight="medium">
-          R$ 50,00
-        </MDTypography>
-      ),
-      data: (
-        <MDTypography variant="caption" color="text" fontWeight="medium">
-          23/08/2025
-        </MDTypography>
-      ),
-    },
-    {
-      afiliado: (
-        <MDTypography variant="caption" color="text" fontWeight="medium">
-          João Pereira
-        </MDTypography>
-      ),
-      valor: (
-        <MDTypography variant="caption" color="primary" fontWeight="medium">
-          R$ 75,50
-        </MDTypography>
-      ),
-      data: (
-        <MDTypography variant="caption" color="text" fontWeight="medium">
-          21/08/2025
-        </MDTypography>
-      ),
-    },
-    {
-      afiliado: (
-        <MDTypography variant="caption" color="text" fontWeight="medium">
-          Ana Costa
-        </MDTypography>
-      ),
-      valor: (
-        <MDTypography variant="caption" color="primary" fontWeight="medium">
-          R$ 35,00
-        </MDTypography>
-      ),
-      data: (
-        <MDTypography variant="caption" color="text" fontWeight="medium">
-          20/08/2025
-        </MDTypography>
-      ),
-    },
-    {
-      afiliado: (
-        <MDTypography variant="caption" color="text" fontWeight="medium">
-          Lucas Martins
-        </MDTypography>
-      ),
-      valor: (
-        <MDTypography variant="caption" color="primary" fontWeight="medium">
-          R$ 110,00
-        </MDTypography>
-      ),
-      data: (
-        <MDTypography variant="caption" color="text" fontWeight="medium">
-          15/08/2025
-        </MDTypography>
-      ),
-    },
-  ],
-};
 
 const withdrawModalStyle = {
   position: "absolute",
@@ -130,8 +50,10 @@ const withdrawModalStyle = {
 function MinhaCarteira() {
   const [period, setPeriod] = useState("30d");
   const [loading, setLoading] = useState(true);
-  const [saldoDisponivel, setSaldoDisponivel] = useState(1540.5);
-  const [ganhosPendentes, setGanhosPendentes] = useState(320.0);
+  const [saldoDisponivel, setSaldoDisponivel] = useState(0);
+  const [ganhosPendentes, setGanhosPendentes] = useState(0);
+  const [commissions, setCommissions] = useState([]);
+  const [referredUsers, setReferredUsers] = useState([]);
 
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState("");
@@ -141,16 +63,23 @@ function MinhaCarteira() {
   const fetchWallet = useCallback(async () => {
     try {
       setLoading(true);
-      // const { data } = await api.get(`/wallet?period=${period}`);
-      setSaldoDisponivel(1540.5);
-      setGanhosPendentes(320.0);
+      const [{ data: commissionsData }, { data: referredUsersData }] = await Promise.all([
+        api.get(`/commissions?period=${period}`),
+        api.get("/users/referred"),
+      ]);
+      console.log("Commissions Data:", commissionsData);
+      console.log("Referred Users Data:", referredUsersData);
+      setSaldoDisponivel(commissionsData.balances.saldo_disponivel);
+      setGanhosPendentes(commissionsData.balances.saldo_pendente);
+      setCommissions(commissionsData.commissions);
+      setReferredUsers(referredUsersData);
     } catch (e) {
       console.error(e);
       toast.error("Não foi possível carregar os dados da carteira.");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [period]);
 
   useEffect(() => {
     fetchWallet();
@@ -247,6 +176,64 @@ function MinhaCarteira() {
     [period, fetchWallet]
   );
 
+  const tabelaAfiliados = {
+    columns: [
+      { Header: "afiliado", accessor: "afiliado", width: "45%", align: "left" },
+      { Header: "valor", accessor: "valor", align: "center" },
+      { Header: "data", accessor: "data", align: "center" },
+    ],
+    rows: commissions.map((commission) => ({
+      afiliado: (
+        <MDTypography variant="caption" color="text" fontWeight="medium">
+          {commission.nome_pagador}
+        </MDTypography>
+      ),
+      valor: (
+        <MDTypography variant="caption" color="primary" fontWeight="medium">
+          {brl(commission.valor)}
+        </MDTypography>
+      ),
+      data: (
+        <MDTypography variant="caption" color="text" fontWeight="medium">
+          {new Date(commission.data_criacao).toLocaleDateString("pt-BR")}
+        </MDTypography>
+      ),
+    })),
+  };
+
+  const tabelaMeusAfiliados = {
+    columns: [
+      { Header: "nome", accessor: "nome", width: "45%", align: "left" },
+      { Header: "email", accessor: "email", align: "center" },
+      { Header: "data de cadastro", accessor: "data", align: "center" },
+    ],
+    rows: referredUsers.map((user) => ({
+      nome: (
+        <MDTypography variant="caption" color="text" fontWeight="medium">
+          {user.nome}
+        </MDTypography>
+      ),
+      email: (
+        <MDTypography variant="caption" color="text" fontWeight="medium">
+          {user.email}
+        </MDTypography>
+      ),
+      data: (
+        <MDTypography variant="caption" color="text" fontWeight="medium">
+          {new Date(user.data_criacao).toLocaleDateString("pt-BR")}
+        </MDTypography>
+      ),
+    })),
+  };
+
+  const ganhosMensaisChartData = {
+    labels: commissions.map((c) => new Date(c.data_criacao).toLocaleDateString("pt-BR")),
+    datasets: {
+      label: "Ganhos",
+      data: commissions.map((c) => c.valor),
+    },
+  };
+
   return (
     <PageWrapper
       title="Minha Carteira"
@@ -327,7 +314,7 @@ function MinhaCarteira() {
         </Card>
 
         {/* Tabela */}
-        <Card>
+        <Card sx={{ mb: 3 }}>
           <MDBox display="flex" justifyContent="space-between" alignItems="center" p={2.5}>
             <MDTypography variant="h6">Histórico de Ganhos por Afiliado</MDTypography>
             <IconButton onClick={fetchWallet} size="small" sx={{ color: palette.green }}>
@@ -338,6 +325,25 @@ function MinhaCarteira() {
           <MDBox>
             <DataTable
               table={tabelaAfiliados}
+              isSorted={false}
+              entriesPerPage={false}
+              showTotalEntries={false}
+              noEndBorder
+            />
+          </MDBox>
+        </Card>
+
+        <Card>
+          <MDBox display="flex" justifyContent="space-between" alignItems="center" p={2.5}>
+            <MDTypography variant="h6">Meus Afiliados</MDTypography>
+            <IconButton onClick={fetchWallet} size="small" sx={{ color: palette.green }}>
+              <Icon>refresh</Icon>
+            </IconButton>
+          </MDBox>
+          <Divider />
+          <MDBox>
+            <DataTable
+              table={tabelaMeusAfiliados}
               isSorted={false}
               entriesPerPage={false}
               showTotalEntries={false}
