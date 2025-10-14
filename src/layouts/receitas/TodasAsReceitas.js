@@ -129,7 +129,7 @@ function TodasAsReceitas() {
 
   const mapRecipeData = (recipe) => {
     const imageUrl = getFullImageUrl(recipe.imagem_url) || "/static/images/default-recipe.jpg";
-    const authorAvatarUrl = getFullImageUrl(recipe.criador?.avatar_url);
+    const authorAvatarUrl = getFullImageUrl(recipe.criador?.foto_perfil_url);
 
     return {
       id: String(recipe.id),
@@ -137,8 +137,8 @@ function TodasAsReceitas() {
       image: imageUrl,
       description: recipe.resumo,
       author: { name: recipe.criador?.nome || "Autor Desconhecido", avatar: authorAvatarUrl },
-      rating: recipe.avaliacao_media || 0,
-      votes: recipe.total_avaliacoes || 0,
+      rating: Number(recipe.media_avaliacoes) || 0,
+      votes: Number(recipe.quantidade_avaliacoes) || 0,
       tags: recipe.tags || [],
       category: recipe.categoria?.nome || "Sem Categoria",
     };
