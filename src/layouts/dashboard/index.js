@@ -230,7 +230,7 @@ function Dashboard() {
             <MDBox mb={1.5}>
               <ComplexStatisticsCard
                 icon="receipt_long"
-                title="Tarifas Stripe"
+                title="Tarifas"
                 count={loading ? "-" : toBRL(stats?.total?.tarifa)}
                 percentage={{ color: "info", amount: "", label: `Período: ${range}` }}
               />
@@ -291,7 +291,7 @@ function Dashboard() {
                   color="primary"
                   icon="people"
                   title="Total de Usuários"
-                  count={loading ? "-" : stats?.totalUsuarios}
+                  count={loading ? "-" : stats?.totalClientes}
                   percentage={{ color: "info", amount: "", label: "Usuários cadastrados" }}
                 />
               </MDBox>
