@@ -46,10 +46,10 @@ function Dashboard() {
         let response;
         if (user?.permissao === "admin") {
           response = await api.get(
-            `/dashboard-data?range=${currentRange}&userStatus=${currentUserStatus}`
+            `/stripe-dashboard-data?range=${currentRange}&userStatus=${currentUserStatus}`
           );
         } else {
-          response = await api.get(`/dashboard-data/me?range=${currentRange}`);
+          response = await api.get(`/stripe-dashboard-data?range=${currentRange}`);
         }
         setStats(response.data);
       } catch (error) {

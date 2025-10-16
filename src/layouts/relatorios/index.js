@@ -1,220 +1,201 @@
 // src/pages/Relatorios/index.jsx
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Grid from "@mui/material/Grid";
-import Stack from "@mui/material/Stack";
 import Icon from "@mui/material/Icon";
-import IconButton from "@mui/material/IconButton";
-import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
-import ToggleButton from "@mui/material/ToggleButton";
 import Skeleton from "@mui/material/Skeleton";
-import Divider from "@mui/material/Divider";
-import { CircularProgress } from "@mui/material";
-import { alpha } from "@mui/material/styles";
 import toast from "react-hot-toast";
 
 import MDBox from "components/MDBox";
-import MDTypography from "components/MDTypography";
-import MDButton from "components/MDButton";
 import PageWrapper from "components/PageWrapper";
 
 import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatisticsCard";
 import ReportsBarChart from "examples/Charts/BarCharts/ReportsBarChart";
-import ReportsLineChart from "examples/Charts/LineCharts/ReportsLineChart";
-
-import reportsBarChartData from "layouts/dashboard/data/reportsBarChartData";
-import reportsLineChartData from "layouts/dashboard/data/reportsLineChartData";
+import PieChart from "examples/Charts/PieChart";
 
 import api from "services/api";
 
-const palette = {
-  gold: "#C9A635",
-  green: "#1C3B32",
-};
-
 function Relatorios() {
-  const { sales, tasks } = reportsLineChartData;
-
-  const [totalRecipesCount, setTotalRecipesCount] = useState(0);
-  const [totalUsersCount, setTotalUsersCount] = useState(0);
-  const [loadingCounts, setLoadingCounts] = useState(true);
-  const [period, setPeriod] = useState("30d"); // 7d | 30d | 90d
-
-  const fetchCounts = useCallback(async () => {
-    try {
-      setLoadingCounts(true);
-      const [recipesRes, usersRes] = await Promise.all([
-        api.get("/recipes"),
-        api.get("/users"), // ajuste se seu endpoint de admin for outro
-      ]);
-      setTotalRecipesCount(recipesRes.data?.length ?? 0);
-      setTotalUsersCount(usersRes.data?.length ?? 0);
-    } catch (error) {
-      console.error("Erro ao buscar contagens para relatórios:", error);
-      toast.error("Erro ao carregar dados de contagem.");
-    } finally {
-      setLoadingCounts(false);
-    }
-  }, []);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchCounts();
-  }, [fetchCounts]);
+    const fetchStats = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get("/stats/global");
+        setStats(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar estatísticas globais:", error);
+        toast.error("Erro ao carregar as estatísticas.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const headerActions = useMemo(
-    () => (
-      <Stack
-        direction="row"
-        spacing={1.25}
-        alignItems="center"
-        flexWrap="wrap"
-        justifyContent="center"
-      >
-        <ToggleButtonGroup
-          value={period}
-          exclusive
-          onChange={(_e, v) => v && setPeriod(v)}
-          size="small"
-          sx={{
-            "& .MuiToggleButtonGroup-grouped": {
-              borderColor: alpha(palette.green, 0.25),
-              color: palette.green,
-              "&.Mui-selected": {
-                backgroundColor: palette.gold,
-                color: "#fff",
-                borderColor: palette.gold,
-                "&:hover": { backgroundColor: palette.gold },
-              },
-            },
-          }}
-        >
-          <ToggleButton value="7d">7 dias</ToggleButton>
-          <ToggleButton value="30d">30 dias</ToggleButton>
-          <ToggleButton value="90d">90 dias</ToggleButton>
-        </ToggleButtonGroup>
+    fetchStats();
+  }, []);
 
-        <MDButton
-          variant="gradient"
-          onClick={fetchCounts}
-          startIcon={<Icon>refresh</Icon>}
-          sx={{
-            backgroundColor: `${palette.green} !important`,
-            color: "#fff !important",
-            "&:hover": { backgroundColor: `${palette.gold} !important` },
-          }}
-        >
-          Atualizar
-        </MDButton>
-      </Stack>
-    ),
-    [period, fetchCounts]
-  );
+  const recipesByCategoryChart = useMemo(() => {
+    if (!stats?.receitas_por_categoria) return null;
+    return {
+      labels: stats.receitas_por_categoria.map((item) => item.nome),
+      datasets: {
+        label: "Receitas",
+        data: stats.receitas_por_categoria.map((item) => item.quantidade),
+      },
+    };
+  }, [stats]);
+
+  const recipesByTagChart = useMemo(() => {
+    if (!stats?.receitas_por_tag) return null;
+    return {
+      labels: stats.receitas_por_tag.map((item) => item.nome),
+      datasets: {
+        label: "Receitas",
+        data: stats.receitas_por_tag.map((item) => item.quantidade),
+      },
+    };
+  }, [stats]);
+
+  const affiliateLevelsChart = useMemo(() => {
+    if (!stats?.afiliados_niveis) return null;
+    return {
+      labels: stats.afiliados_niveis.map((item) => item.nome),
+      datasets: {
+        label: "Afiliados",
+        backgroundColors: ["info", "light"],
+        data: stats.afiliados_niveis.map((item) => item.quantidade),
+      },
+    };
+  }, [stats]);
+
+  const affiliateStatusChart = useMemo(() => {
+    if (!stats?.afiliados_status) return null;
+    return {
+      labels: stats.afiliados_status.map((item) => item.nome),
+      datasets: {
+        label: "Afiliados",
+        backgroundColors: ["success", "warning", "error", "grey"],
+        data: stats.afiliados_status.map((item) => item.quantidade),
+      },
+    };
+  }, [stats]);
 
   return (
-    <PageWrapper
-      title="Relatórios"
-      subtitle="Acompanhe métricas gerais e o desempenho recente do seu projeto."
-      actions={headerActions}
-    >
-      <MDBox>
-        {/* KPIs */}
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6} lg={3}>
-            {loadingCounts ? (
-              <Skeleton variant="rounded" height={120} />
-            ) : (
+    <PageWrapper title="Relatórios" subtitle="Acompanhe as métricas gerais do seu projeto.">
+      <MDBox py={3}>
+        {loading ? (
+          <Grid container spacing={3}>
+            {[...Array(8)].map((_, i) => (
+              <Grid item xs={12} md={6} lg={3} key={i}>
+                <Skeleton variant="rounded" height={120} />
+              </Grid>
+            ))}
+          </Grid>
+        ) : (
+          <Grid container spacing={3}>
+            {/* KPIs */}
+            <Grid item xs={12} md={6} lg={3}>
               <ComplexStatisticsCard
                 color="dark"
                 icon="menu_book"
                 title="Total de Receitas"
-                count={totalRecipesCount}
-                percentage={{ color: "success", amount: "", label: "" }}
+                count={stats?.total_receitas || 0}
               />
-            )}
-          </Grid>
-
-          <Grid item xs={12} md={6} lg={3}>
-            {loadingCounts ? (
-              <Skeleton variant="rounded" height={120} />
-            ) : (
+            </Grid>
+            <Grid item xs={12} md={6} lg={3}>
               <ComplexStatisticsCard
-                icon="people_alt"
-                title="Total de Usuários"
-                count={totalUsersCount}
-                percentage={{ color: "success", amount: "", label: "" }}
+                icon="sell"
+                title="Total de Tags"
+                count={stats?.total_tags || 0}
               />
-            )}
-          </Grid>
-
-          {/* KPIs “fakes” de exemplo — ajuste para dados reais quando quiser */}
-          <Grid item xs={12} md={6} lg={3}>
-            {loadingCounts ? (
-              <Skeleton variant="rounded" height={120} />
-            ) : (
+            </Grid>
+            <Grid item xs={12} md={6} lg={3}>
               <ComplexStatisticsCard
                 color="success"
-                icon="store"
-                title="Novas Receitas"
-                count="34k"
-                percentage={{ color: "success", amount: "+1%", label: "vs mês anterior" }}
+                icon="category"
+                title="Total de Categorias"
+                count={stats?.total_categorias || 0}
               />
-            )}
-          </Grid>
-
-          <Grid item xs={12} md={6} lg={3}>
-            {loadingCounts ? (
-              <Skeleton variant="rounded" height={120} />
-            ) : (
+            </Grid>
+            <Grid item xs={12} md={6} lg={3}>
               <ComplexStatisticsCard
                 color="primary"
-                icon="person_add"
-                title="Seguidores"
-                count="+91"
-                percentage={{ color: "success", amount: "", label: "entraram recentemente" }}
+                icon="people_alt"
+                title="Total de Afiliados"
+                count={stats?.total_afiliados || 0}
               />
-            )}
+            </Grid>
+            <Grid item xs={12} md={6} lg={3}>
+              <ComplexStatisticsCard
+                color="info"
+                icon="payments"
+                title="Afiliados Pagantes"
+                count={stats?.afiliados_pagantes || 0}
+              />
+            </Grid>
+            <Grid item xs={12} md={6} lg={3}>
+              <ComplexStatisticsCard
+                color="warning"
+                icon="admin_panel_settings"
+                title="Administradores"
+                count={stats?.total_admins || 0}
+              />
+            </Grid>
           </Grid>
-        </Grid>
+        )}
 
-        {/* Linha separadora sutil */}
-        <Divider sx={{ my: 3, borderColor: alpha(palette.green, 0.15) }} />
-
-        {/* Charts */}
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6} lg={4}>
-            {/* dá pra trocar o chart por dados filtrados pelo período se desejar */}
-            <ReportsBarChart
-              color="info"
-              title="Visualizações do site"
-              description={`Desempenho da última campanha • período: ${period}`}
-              date="atualizado recentemente"
-              chart={reportsBarChartData}
-            />
+        <MDBox mt={6}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              {recipesByCategoryChart && (
+                <ReportsBarChart
+                  color="info"
+                  title="Receitas por Categoria"
+                  description="Quantidade de receitas em cada categoria"
+                  date="dados atualizados"
+                  chart={recipesByCategoryChart}
+                />
+              )}
+            </Grid>
+            <Grid item xs={12} md={6}>
+              {recipesByTagChart && (
+                <ReportsBarChart
+                  color="primary"
+                  title="Receitas por Tag"
+                  description="Quantidade de receitas para cada tag"
+                  date="dados atualizados"
+                  chart={recipesByTagChart}
+                />
+              )}
+            </Grid>
           </Grid>
+        </MDBox>
 
-          <Grid item xs={12} md={6} lg={4}>
-            <ReportsLineChart
-              color="success"
-              title="Vendas diárias"
-              description={
-                <>
-                  (<strong>+15%</strong>) de aumento nas vendas de hoje.
-                </>
-              }
-              date="atualizado há 4 min"
-              chart={sales}
-            />
+        <MDBox mt={6}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              {affiliateLevelsChart && (
+                <PieChart
+                  icon={{ color: "primary", component: "group" }}
+                  title="Níveis de Afiliados"
+                  description="Distribuição de afiliados por nível"
+                  chart={affiliateLevelsChart}
+                />
+              )}
+            </Grid>
+            <Grid item xs={12} md={6}>
+              {affiliateStatusChart && (
+                <PieChart
+                  icon={{ color: "info", component: "pie_chart" }}
+                  title="Status dos Afiliados"
+                  description="Distribuição de afiliados por status"
+                  chart={affiliateStatusChart}
+                />
+              )}
+            </Grid>
           </Grid>
-
-          <Grid item xs={12} md={6} lg={4}>
-            <ReportsLineChart
-              color="dark"
-              title="Tarefas concluídas"
-              description="Desempenho da última semana"
-              date="enviado agora"
-              chart={tasks}
-            />
-          </Grid>
-        </Grid>
+        </MDBox>
       </MDBox>
     </PageWrapper>
   );

@@ -1,4 +1,3 @@
-// src/layouts/carteira/index.js
 import { useState, useEffect, useMemo, useCallback } from "react";
 
 // MUI
@@ -54,6 +53,7 @@ function MinhaCarteira() {
   const [ganhosPendentes, setGanhosPendentes] = useState(0);
   const [commissions, setCommissions] = useState([]);
   const [referredUsers, setReferredUsers] = useState([]);
+  const [monthlyEarnings, setMonthlyEarnings] = useState([]);
 
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState("");
@@ -63,16 +63,26 @@ function MinhaCarteira() {
   const fetchWallet = useCallback(async () => {
     try {
       setLoading(true);
-      const [{ data: commissionsData }, { data: referredUsersData }] = await Promise.all([
-        api.get(`/commissions?period=${period}`),
-        api.get("/users/referred"),
-      ]);
-      console.log("Commissions Data:", commissionsData);
+      const [{ data: balanceData }, { data: referredUsersData }, { data: monthlyEarningsData }] =
+        await Promise.all([
+          api.get("/wallet/balance"),
+          api.get("/users/referred"),
+          api.get("/earnings/monthly"),
+        ]);
+      console.log("Balance Data:", balanceData);
       console.log("Referred Users Data:", referredUsersData);
-      setSaldoDisponivel(commissionsData.balances.saldo_disponivel);
-      setGanhosPendentes(commissionsData.balances.saldo_pendente);
-      setCommissions(commissionsData.commissions);
+      console.log("Monthly Earnings Data:", monthlyEarningsData);
+
+      if (balanceData.origem === "stripe") {
+        setSaldoDisponivel(balanceData.disponivel[0].valor);
+        setGanhosPendentes(balanceData.pendente[0].valor);
+      } else {
+        setSaldoDisponivel(balanceData.disponivel[0].valor);
+        setGanhosPendentes(0); // Não há ganhos pendentes para não-admins
+      }
+
       setReferredUsers(referredUsersData);
+      setMonthlyEarnings(monthlyEarningsData);
     } catch (e) {
       console.error(e);
       toast.error("Não foi possível carregar os dados da carteira.");
@@ -110,6 +120,16 @@ function MinhaCarteira() {
       toast.error("Não foi possível solicitar o saque.");
     } finally {
       setWithdrawing(false);
+    }
+  };
+
+  const handleStripeConnect = async () => {
+    try {
+      const { data } = await api.post("/payouts/stripe-connect");
+      window.location.href = data.url;
+    } catch (error) {
+      console.error(error);
+      toast.error("Não foi possível conectar com o Stripe.");
     }
   };
 
@@ -227,10 +247,10 @@ function MinhaCarteira() {
   };
 
   const ganhosMensaisChartData = {
-    labels: commissions.map((c) => new Date(c.data_criacao).toLocaleDateString("pt-BR")),
+    labels: monthlyEarnings.map((e) => e.mes),
     datasets: {
-      label: "Ganhos",
-      data: commissions.map((c) => c.valor),
+      label: "Disponível",
+      data: monthlyEarnings.map((e) => e.disponivel),
     },
   };
 
@@ -283,20 +303,20 @@ function MinhaCarteira() {
             >
               <MDButton
                 variant="outlined"
-                onClick={handleOpenWithdraw}
-                startIcon={<Icon>payments</Icon>}
+                onClick={handleStripeConnect}
+                startIcon={<Icon>link</Icon>}
                 fullWidth
                 sx={{
                   py: 1.25,
-                  color: palette.gold,
-                  borderColor: palette.gold,
+                  color: palette.green,
+                  borderColor: palette.green,
                   "&:hover": {
-                    backgroundColor: alpha(palette.gold, 0.08),
-                    borderColor: palette.gold,
+                    backgroundColor: alpha(palette.green, 0.08),
+                    borderColor: palette.green,
                   },
                 }}
               >
-                Solicitar Saque
+                Conectar com o Stripe
               </MDButton>
             </Card>
           </Grid>
