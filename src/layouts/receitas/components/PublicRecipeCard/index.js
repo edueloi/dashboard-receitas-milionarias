@@ -23,10 +23,14 @@ function PublicRecipeCard({ recipe }) {
     e.preventDefault();
     e.stopPropagation();
 
-    const affiliateCode = user?.codigo_afiliado_proprio;
+    let affiliateCode = user?.codigo_afiliado_proprio;
     if (!affiliateCode) {
       toast.error("Você precisa ser um afiliado para compartilhar receitas.");
       return;
+    }
+
+    if (affiliateCode.startsWith("afiliado_")) {
+      affiliateCode = affiliateCode.replace("afiliado_", "");
     }
 
     const externalSiteUrl = process.env.REACT_APP_EXTERNAL_SITE_URL || "http://127.0.0.1:5500";
