@@ -11,7 +11,7 @@ import { useMaterialUIController, setMiniSidenav, setDarkMode } from "context";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import PrivateRoute from "./components/PrivateRoute";
 import { Toaster } from "react-hot-toast";
-import brandLogo from "assets/images/logos/logo.png";
+import brandLogo from "assets/images/logos/logo-deitado.png";
 import api from "./services/api";
 
 function AppContent() {

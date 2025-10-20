@@ -182,7 +182,13 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
               component="img"
               src={brand}
               alt="Brand"
-              sx={{ width: 28, height: 28, borderRadius: "6px", objectFit: "contain" }}
+              sx={{
+                width: "auto",
+                height: 48,
+                maxHeight: 60,
+                borderRadius: "6px",
+                objectFit: "contain",
+              }}
             />
           ) : null}
           <MDBox width={!brandName && "100%"} sx={(t) => sidenavLogoLabel(t, { miniSidenav })}>
@@ -206,7 +212,27 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
         }
       />
 
-      <List sx={{ px: 1.25, py: 1, overflowY: "auto", height: "calc(100vh - 120px)" }}>
+      <List
+        sx={{
+          px: 1.25,
+          py: 1,
+          overflowY: "auto",
+          height: "calc(100vh - 120px)",
+          "&::-webkit-scrollbar": {
+            width: "8px",
+          },
+          "&::-webkit-scrollbar-track": {
+            backgroundColor: "transparent",
+          },
+          "&::-webkit-scrollbar-thumb": {
+            backgroundColor: "#C9A635",
+            borderRadius: "4px",
+          },
+          "&::-webkit-scrollbar-thumb:hover": {
+            backgroundColor: "rgba(0, 0, 0, 0.3)",
+          },
+        }}
+      >
         {renderRoutes}
       </List>
     </SidenavRoot>
