@@ -33,7 +33,8 @@ function PublicRecipeCard({ recipe }) {
       affiliateCode = affiliateCode.replace("afiliado_", "");
     }
 
-    const externalSiteUrl = process.env.REACT_APP_EXTERNAL_SITE_URL || "http://127.0.0.1:5500";
+    const externalSiteUrl =
+      process.env.REACT_APP_EXTERNAL_SITE_URL || "https://receitasmilionarias.com.br";
     const shareUrl = `${externalSiteUrl}/receita.html?id=${id}&ref=${affiliateCode}`;
 
     navigator.clipboard.writeText(shareUrl).then(

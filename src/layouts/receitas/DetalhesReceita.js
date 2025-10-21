@@ -182,9 +182,32 @@ function DetalhesReceita() {
 
   const headerActions = useMemo(() => {
     if (!recipe) return null;
-    const affiliateLink = user?.codigo_afiliado
-      ? `${window.location.href}?ref=${user.codigo_afiliado}`
-      : window.location.href;
+
+    const handleShare = () => {
+      let affiliateCode = user?.codigo_afiliado_proprio;
+      if (!affiliateCode) {
+        toast.error("Você precisa ser um afiliado para compartilhar receitas.");
+        return;
+      }
+
+      if (affiliateCode.startsWith("afiliado_")) {
+        affiliateCode = affiliateCode.replace("afiliado_", "");
+      }
+
+      const externalSiteUrl =
+        process.env.REACT_APP_EXTERNAL_SITE_URL || "https://receitasmilionarias.com.br";
+      const shareUrl = `${externalSiteUrl}/receita.html?id=${id}&ref=${affiliateCode}`;
+
+      navigator.clipboard.writeText(shareUrl).then(
+        () => {
+          toast.success("Link de compartilhamento copiado!");
+        },
+        (err) => {
+          console.error("Erro ao copiar o link: ", err);
+          toast.error("Não foi possível copiar o link.");
+        }
+      );
+    };
 
     return (
       <Stack
@@ -194,62 +217,17 @@ function DetalhesReceita() {
         flexWrap="wrap"
         justifyContent="center"
       >
-        <Tooltip title={isFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos"} arrow>
-          <IconButton
-            onClick={async () => {
-              try {
-                await api.post(`/users/me/favorites`, { recipeId: id });
-                setIsFavorite((v) => !v);
-                toast.success(isFavorite ? "Removida dos favoritos!" : "Adicionada aos favoritos!");
-              } catch {
-                toast.error("Não foi possível atualizar o favorito.");
-              }
-            }}
-            sx={{
-              border: `1px solid ${alpha(color.green, 0.2)}`,
-              background: alpha(color.gold, isFavorite ? 0.2 : 0.08),
-              color: isFavorite ? color.gold : color.green,
-              "&:hover": { background: alpha(color.gold, isFavorite ? 0.28 : 0.16) },
-            }}
-          >
-            <Icon>{isFavorite ? "favorite" : "favorite_border"}</Icon>
-          </IconButton>
-        </Tooltip>
-        <Tooltip title="Compartilhar" arrow>
-          <IconButton
-            onClick={() => {
-              if (navigator.share) {
-                navigator.share({ title: recipe.titulo, text: recipe.resumo, url: affiliateLink });
-              } else {
-                navigator.clipboard.writeText(affiliateLink);
-                toast.success("Link de afiliado copiado!");
-              }
-            }}
-            sx={{
-              border: `1px solid ${alpha(color.green, 0.2)}`,
-              background: alpha(color.green, 0.08),
-              color: color.green,
-              "&:hover": { background: alpha(color.green, 0.16) },
-            }}
-          >
-            <Icon>share</Icon>
-          </IconButton>
-        </Tooltip>
         <MDButton
-          variant="outlined"
-          startIcon={<Icon>download</Icon>}
-          onClick={() => toast.success("PDF em desenvolvimento!")}
-          sx={{
-            borderColor: color.gold,
-            color: color.gold,
-            "&:hover": { backgroundColor: color.gold, color: color.white, borderColor: color.gold },
-          }}
+          variant="gradient"
+          color="success"
+          startIcon={<Icon>share</Icon>}
+          onClick={handleShare}
         >
-          PDF
+          Copiar Link de Afiliado
         </MDButton>
       </Stack>
     );
-  }, [recipe, id, isFavorite, user]);
+  }, [recipe, id, user]);
 
   if (loading) {
     return (
