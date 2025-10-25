@@ -16,6 +16,7 @@ import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDInput from "components/MDInput";
 import MDButton from "components/MDButton";
+import ImageUpload from "components/ImageUpload";
 
 // Material Dashboard 2 React example components
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
@@ -122,8 +123,12 @@ function AdicionarReceita() {
     setFormData({ ...formData, instructions: filteredInstructions });
   };
 
-  const handleImageChange = (e) => {
-    setImagem(e.target.files[0]);
+  const handleImageChange = (file) => {
+    setImagem(file);
+  };
+
+  const handleImageDelete = () => {
+    setImagem(null);
   };
 
   const handleStatusChange = (e) => {
@@ -226,12 +231,7 @@ function AdicionarReceita() {
             <Card>
               <MDBox p={3}>
                 <MDTypography variant="h6">Imagem Principal</MDTypography>
-                <MDInput
-                  type="file"
-                  fullWidth
-                  onChange={handleImageChange}
-                  inputProps={{ accept: "image/*" }}
-                />
+                <ImageUpload onImageChange={handleImageChange} onImageDelete={handleImageDelete} />
               </MDBox>
             </Card>
           </Grid>

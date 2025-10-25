@@ -19,6 +19,7 @@ import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDInput from "components/MDInput";
 import MDButton from "components/MDButton";
+import ImageUpload from "components/ImageUpload";
 import getFullImageUrl from "utils/imageUrlHelper";
 
 // Material Dashboard 2 React example components
@@ -35,6 +36,7 @@ function EditarReceita() {
   const [loading, setLoading] = useState(true);
   const [imagem, setImagem] = useState(null); // Estado para o novo arquivo de imagem
   const [imagemPreview, setImagemPreview] = useState(null); // Estado para a URL da imagem atual
+  const [imageToDelete, setImageToDelete] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -159,14 +161,15 @@ function EditarReceita() {
     setFormData({ ...formData, instructions: filteredInstructions });
   };
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImagem(file);
-      setImagemPreview(URL.createObjectURL(file)); // Pré-visualização da nova imagem
-    } else {
-      setImagem(null);
-    }
+  const handleImageChange = (file) => {
+    setImagem(file);
+    setImageToDelete(false);
+  };
+
+  const handleImageDelete = () => {
+    setImagem(null);
+    setImagemPreview(null);
+    setImageToDelete(true);
   };
 
   const handleSubmit = async () => {
@@ -191,6 +194,7 @@ function EditarReceita() {
         ordem: index + 1,
       })),
       tags: formData.tags.map((tag) => tag.id),
+      delete_image: imageToDelete,
     };
 
     form.append("data", JSON.stringify(payload));
@@ -277,21 +281,10 @@ function EditarReceita() {
               {/* Seção de imagem */}
               <Grid item xs={12} mt={2}>
                 <MDTypography variant="h6">Imagem Principal</MDTypography>
-                {imagemPreview && (
-                  <MDBox mt={2} mb={2}>
-                    <MDTypography variant="body2">Imagem Atual:</MDTypography>
-                    <img
-                      src={imagemPreview}
-                      alt="Imagem da Receita"
-                      style={{ maxWidth: "300px", height: "auto", borderRadius: "8px" }}
-                    />
-                  </MDBox>
-                )}
-                <MDInput
-                  type="file"
-                  fullWidth
-                  onChange={handleImageChange}
-                  inputProps={{ accept: "image/*" }}
+                <ImageUpload
+                  onImageChange={handleImageChange}
+                  onImageDelete={handleImageDelete}
+                  initialImage={imagemPreview}
                 />
               </Grid>
 

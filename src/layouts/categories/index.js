@@ -26,6 +26,7 @@ import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDButton from "components/MDButton";
 import MDInput from "components/MDInput";
+import ImageUpload from "components/ImageUpload";
 import getFullImageUrl from "utils/imageUrlHelper";
 
 // Material Dashboard 2 React example components
@@ -69,9 +70,11 @@ function Categories() {
   // State for create/edit modal
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState("category");
+  const [editingItem, setEditingItem] = useState(null);
   const [newItemName, setNewItemName] = useState("");
   const [newItemDescription, setNewItemDescription] = useState("");
   const [newCategoryImage, setNewCategoryImage] = useState(null);
+  const [imageToDelete, setImageToDelete] = useState(false);
 
   // State for delete confirmation modal
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -89,20 +92,35 @@ function Categories() {
     }
   };
 
-  const handleModalOpen = (type) => {
+  const handleModalOpen = (type, item = null) => {
     setModalType(type);
+    setEditingItem(item);
+    if (item) {
+      setNewItemName(item.name);
+      setNewItemDescription(item.description);
+      setNewCategoryImage(null);
+      setImageToDelete(false);
+    }
     setModalOpen(true);
   };
 
   const handleModalClose = () => {
     setModalOpen(false);
+    setEditingItem(null);
     setNewItemName("");
     setNewItemDescription("");
     setNewCategoryImage(null);
+    setImageToDelete(false);
   };
 
-  const handleImageChange = (e) => {
-    setNewCategoryImage(e.target.files[0]);
+  const handleImageChange = (file) => {
+    setNewCategoryImage(file);
+    setImageToDelete(false);
+  };
+
+  const handleImageDelete = () => {
+    setNewCategoryImage(null);
+    setImageToDelete(true);
   };
 
   const fetchAndSetData = async () => {
@@ -146,28 +164,39 @@ function Categories() {
     if (tagSearch) debouncedSavePreference("tagSearch", tagSearch);
   }, [tagSearch, tags, debouncedSavePreference]);
 
-  const handleCreateItem = async () => {
+  const handleCreateOrUpdateItem = async () => {
     const isCategory = modalType === "category";
-    const url = isCategory ? "/categories" : "/tags";
-    const successMessage = isCategory ? "Categoria criada com sucesso!" : "Tag criada com sucesso!";
-    const errorMessage = isCategory
-      ? "Não foi possível criar a categoria."
-      : "Não foi possível criar a tag.";
+    const url = isCategory
+      ? editingItem
+        ? `/categories/${editingItem.id}`
+        : "/categories"
+      : editingItem
+      ? `/tags/${editingItem.id}`
+      : "/tags";
+    const method = editingItem ? "put" : "post";
+
+    const successMessage = `${isCategory ? "Categoria" : "Tag"} ${
+      editingItem ? "atualizada" : "criada"
+    } com sucesso!`;
+
+    const errorMessage = `Não foi possível ${editingItem ? "atualizar" : "criar"} a ${
+      isCategory ? "categoria" : "tag"
+    }.`;
 
     const formData = new FormData();
-    if (isCategory) {
-      const payload = { nome: newItemName, descricao: newItemDescription };
-      formData.append("data", JSON.stringify(payload));
-      if (newCategoryImage) {
-        formData.append("imagem", newCategoryImage);
-      }
-    } else {
-      const payload = { nome: newItemName };
-      formData.append("data", JSON.stringify(payload));
+    const payload = {
+      nome: newItemName,
+      ...(isCategory && { descricao: newItemDescription }),
+      ...(isCategory && imageToDelete && { delete_image: true }),
+    };
+    formData.append("data", JSON.stringify(payload));
+
+    if (isCategory && newCategoryImage) {
+      formData.append("imagem", newCategoryImage);
     }
 
     try {
-      await api.post(url, formData, {
+      await api[method](url, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -176,7 +205,7 @@ function Categories() {
       handleModalClose();
       fetchAndSetData(); // Refresh all data
     } catch (error) {
-      console.error(`Erro ao criar ${modalType}:`, error);
+      console.error(`Erro ao ${editingItem ? "atualizar" : "criar"} ${modalType}:`, error);
       toast.error(errorMessage);
     }
   };
@@ -323,6 +352,7 @@ function Categories() {
                           category={mapCategoryData(cat)}
                           isAdmin={isAdmin}
                           onDelete={handleDelete}
+                          onEdit={() => handleModalOpen("category", cat)}
                         />
                       </Grid>
                     ))}
@@ -367,7 +397,7 @@ function Categories() {
                 ) : (
                   <MDBox display="flex" flexWrap="wrap" gap={2}>
                     {filteredTags.map((tag) => (
-                      <TagCard tag={tag} key={tag.id} />
+                      <TagCard tag={tag} key={tag.id} onEdit={() => handleModalOpen("tag", tag)} />
                     ))}
                   </MDBox>
                 )}
@@ -381,7 +411,9 @@ function Categories() {
       <Modal open={modalOpen} onClose={handleModalClose}>
         <Box sx={style}>
           <MDTypography variant="h6">
-            {modalType === "category" ? "Criar Nova Categoria" : "Criar Nova Tag"}
+            {editingItem
+              ? `Editar ${modalType === "category" ? "Categoria" : "Tag"}`
+              : `Criar Nova ${modalType === "category" ? "Categoria" : "Tag"}`}
           </MDTypography>
           <TextField
             autoFocus
@@ -404,20 +436,20 @@ function Categories() {
                 value={newItemDescription}
                 onChange={(e) => setNewItemDescription(e.target.value)}
               />
-              <MDButton component="label" variant="outlined" color="primary" sx={{ mt: 3, mb: 1 }}>
-                Selecionar Imagem
-                <input type="file" hidden accept="image/*" onChange={handleImageChange} />
-              </MDButton>
-              {newCategoryImage && (
-                <MDTypography variant="caption">{newCategoryImage.name}</MDTypography>
-              )}
+              <MDBox mt={2}>
+                <ImageUpload
+                  onImageChange={handleImageChange}
+                  onImageDelete={handleImageDelete}
+                  initialImage={editingItem ? getFullImageUrl(editingItem.image) : null}
+                />
+              </MDBox>
             </>
           )}
           <MDBox mt={4} display="flex" justifyContent="flex-end">
             <MDButton color="secondary" onClick={handleModalClose} sx={{ mr: 1 }}>
               Cancelar
             </MDButton>
-            <MDButton variant="gradient" color="primary" onClick={handleCreateItem}>
+            <MDButton variant="gradient" color="primary" onClick={handleCreateOrUpdateItem}>
               Salvar
             </MDButton>
           </MDBox>
