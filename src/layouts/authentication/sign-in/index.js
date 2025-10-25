@@ -11,7 +11,7 @@ import {
   Icon,
   IconButton,
   InputAdornment,
-  Switch,
+  Switch, // Componente Switch para o "Lembrar de mim"
 } from "@mui/material";
 import MDBox from "components/MDBox";
 import MDButton from "components/MDButton";
@@ -30,7 +30,6 @@ import logo from "assets/images/logos/logo.png";
 import api from "services/api";
 
 const REMEMBER_ME_EMAIL = "rememberMeEmail";
-const REMEMBER_ME_PASSWORD = "rememberMePassword";
 
 function SignInSplit() {
   const [email, setEmail] = useState("");
@@ -45,12 +44,11 @@ function SignInSplit() {
   const handleClickShowPassword = () => setShowPassword(!showPassword);
   const handleSetRememberMe = () => setRememberMe(!rememberMe);
 
+  // Efeito para carregar o estado salvo do localStorage
   useEffect(() => {
     const savedEmail = localStorage.getItem(REMEMBER_ME_EMAIL);
-    const savedPassword = localStorage.getItem(REMEMBER_ME_PASSWORD);
-    if (savedEmail && savedPassword) {
+    if (savedEmail) {
       setEmail(savedEmail);
-      setPassword(savedPassword);
       setRememberMe(true);
     }
   }, []);
@@ -68,6 +66,13 @@ function SignInSplit() {
 
       toast.success("Login bem-sucedido! Redirecionando...");
       await login(token);
+
+      // Salva ou remove o e-mail do localStorage com base na seleção do usuário
+      if (rememberMe) {
+        localStorage.setItem(REMEMBER_ME_EMAIL, email);
+      } else {
+        localStorage.removeItem(REMEMBER_ME_EMAIL);
+      }
 
       navigate("/dashboard");
     } catch (err) {
@@ -181,6 +186,19 @@ function SignInSplit() {
                       ),
                     }}
                   />
+                </MDBox>
+
+                {/* Switch "Lembrar de Mim" */}
+                <MDBox display="flex" alignItems="center" ml={-1} mb={2}>
+                  <Switch checked={rememberMe} onChange={handleSetRememberMe} disabled={loading} />
+                  <MDTypography
+                    variant="button"
+                    fontWeight="regular"
+                    onClick={handleSetRememberMe}
+                    sx={{ cursor: "pointer", userSelect: "none" }}
+                  >
+                    &nbsp;&nbsp;Lembrar de mim
+                  </MDTypography>
                 </MDBox>
 
                 {/* Botão de Entrar */}
