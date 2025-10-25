@@ -7,15 +7,17 @@ const UserPreferencesContext = createContext(null);
 
 export const useUserPreferences = () => useContext(UserPreferencesContext);
 
+const initialPreferences = {
+  theme: "light",
+  recipeView: "grid",
+  sidenavColor: "primary",
+  sidenavStyle: "dark",
+  fixedNavbar: true,
+};
+
 export const UserPreferencesProvider = ({ children }) => {
-  const { isAuthenticated } = useAuth();
-  const [preferences, setPreferences] = useState({
-    theme: "light",
-    recipeView: "grid",
-    sidenavColor: "primary",
-    sidenavStyle: "dark",
-    fixedNavbar: true,
-  });
+  const { isAuthenticated, user } = useAuth();
+  const [preferences, setPreferences] = useState(initialPreferences);
   const [loading, setLoading] = useState(true);
 
   const fetchPreferences = useCallback(async () => {
@@ -25,16 +27,22 @@ export const UserPreferencesProvider = ({ children }) => {
       setPreferences((prev) => ({ ...prev, ...response.data }));
     } catch (error) {
       console.error("Erro ao buscar preferências do usuário:", error);
+      // Fallback to initial preferences if fetching fails
+      setPreferences(initialPreferences);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && user) {
       fetchPreferences();
+    } else if (!isAuthenticated) {
+      // Reset preferences when user logs out
+      setPreferences(initialPreferences);
+      setLoading(false);
     }
-  }, [isAuthenticated, fetchPreferences]);
+  }, [isAuthenticated, user, fetchPreferences]);
 
   const updatePreference = async (key, value) => {
     const optimisticData = { ...preferences, [key]: value };
