@@ -6,7 +6,7 @@
 */
 
 import { useState, useEffect } from "react";
-import { useLocation, Link } from "react-router-dom";
+import { useLocation, Link, useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
@@ -31,34 +31,42 @@ import {
   useMaterialUIController,
   setTransparentNavbar,
   setMiniSidenav,
-  setOpenConfigurator,
+  setFixedNavbar,
 } from "context";
+import { useUserPreferences } from "context/UserPreferencesContext";
 
 function DashboardNavbar({ absolute, light }) {
   const [navbarType, setNavbarType] = useState();
   const [controller, dispatch] = useMaterialUIController();
-  const { miniSidenav, transparentNavbar, fixedNavbar, openConfigurator, darkMode } = controller;
+  const { miniSidenav, transparentNavbar, fixedNavbar, darkMode } = controller;
+  const { preferences } = useUserPreferences();
+  const navigate = useNavigate();
   const route = useLocation().pathname.split("/").slice(1);
 
   useEffect(() => {
-    if (fixedNavbar) {
+    setFixedNavbar(dispatch, preferences.fixedNavbar);
+
+    if (preferences.fixedNavbar) {
       setNavbarType("sticky");
     } else {
       setNavbarType("static");
     }
 
     function handleTransparentNavbar() {
-      setTransparentNavbar(dispatch, (fixedNavbar && window.scrollY === 0) || !fixedNavbar);
+      setTransparentNavbar(
+        dispatch,
+        (preferences.fixedNavbar && window.scrollY === 0) || !preferences.fixedNavbar
+      );
     }
 
     window.addEventListener("scroll", handleTransparentNavbar);
     handleTransparentNavbar();
 
     return () => window.removeEventListener("scroll", handleTransparentNavbar);
-  }, [dispatch, fixedNavbar]);
+  }, [dispatch, preferences.fixedNavbar]);
 
   const handleMiniSidenav = () => setMiniSidenav(dispatch, !miniSidenav);
-  const handleConfiguratorOpen = () => setOpenConfigurator(dispatch, !openConfigurator);
+  const handleSettingsNavigation = () => navigate("/configuracoes");
 
   const iconsStyle = ({ palette: { dark, white, text }, functions: { rgba } }) => ({
     color: () => {
@@ -102,7 +110,7 @@ function DashboardNavbar({ absolute, light }) {
               disableRipple
               color="inherit"
               sx={navbarIconButton}
-              onClick={handleConfiguratorOpen}
+              onClick={handleSettingsNavigation}
             >
               <Icon sx={iconsStyle}>settings</Icon>
             </IconButton>

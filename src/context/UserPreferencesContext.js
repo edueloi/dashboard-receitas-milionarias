@@ -12,6 +12,9 @@ export const UserPreferencesProvider = ({ children }) => {
   const [preferences, setPreferences] = useState({
     theme: "light",
     recipeView: "grid",
+    sidenavColor: "primary",
+    sidenavStyle: "dark",
+    fixedNavbar: true,
   });
   const [loading, setLoading] = useState(true);
 

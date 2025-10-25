@@ -8,18 +8,12 @@ import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDButton from "components/MDButton";
 
-import {
-  useMaterialUIController,
-  setTransparentSidenav,
-  setWhiteSidenav,
-  setFixedNavbar,
-  setSidenavColor,
-  setDarkMode,
-} from "context";
+import { useUserPreferences } from "context/UserPreferencesContext";
 
 export default function ThemeSettings() {
-  const [controller, dispatch] = useMaterialUIController();
-  const { fixedNavbar, sidenavColor, transparentSidenav, whiteSidenav, darkMode } = controller;
+  const { preferences, updatePreference } = useUserPreferences();
+  const { theme, sidenavColor, sidenavStyle, fixedNavbar } = preferences;
+  const darkMode = theme === "dark";
 
   const [disabled, setDisabled] = useState(false);
   const sidenavColors = ["primary", "dark", "info", "success", "warning", "error"];
@@ -31,23 +25,22 @@ export default function ThemeSettings() {
     return () => window.removeEventListener("resize", handleDisabled);
   }, []);
 
-  const handleTransparentSidenav = () => {
-    setTransparentSidenav(dispatch, true);
-    setWhiteSidenav(dispatch, false);
+  const handleSidenavColor = (color) => {
+    updatePreference("sidenavColor", color);
   };
 
-  const handleWhiteSidenav = () => {
-    setWhiteSidenav(dispatch, true);
-    setTransparentSidenav(dispatch, false);
+  const handleSidenavStyle = (style) => {
+    updatePreference("sidenavStyle", style);
   };
 
-  const handleDarkSidenav = () => {
-    setWhiteSidenav(dispatch, false);
-    setTransparentSidenav(dispatch, false);
+  const handleFixedNavbar = () => {
+    updatePreference("fixedNavbar", !fixedNavbar);
   };
 
-  const handleFixedNavbar = () => setFixedNavbar(dispatch, !fixedNavbar);
-  const handleDarkMode = () => setDarkMode(dispatch, !darkMode);
+  const handleDarkMode = () => {
+    const newTheme = darkMode ? "light" : "dark";
+    updatePreference("theme", newTheme);
+  };
 
   return (
     <Card>
@@ -92,7 +85,7 @@ export default function ThemeSettings() {
                     borderColor: darkMode ? white.main : dark.main,
                   },
                 })}
-                onClick={() => setSidenavColor(dispatch, color)}
+                onClick={() => handleSidenavColor(color)}
               />
             ))}
           </MDBox>
@@ -107,8 +100,8 @@ export default function ThemeSettings() {
           <MDBox sx={{ display: "flex", mt: 2, gap: 1 }}>
             <MDButton
               color="dark"
-              variant={!transparentSidenav && !whiteSidenav ? "contained" : "gradient"}
-              onClick={handleDarkSidenav}
+              variant={sidenavStyle === "dark" ? "contained" : "gradient"}
+              onClick={() => handleSidenavStyle("dark")}
               disabled={disabled}
               fullWidth
             >
@@ -116,8 +109,8 @@ export default function ThemeSettings() {
             </MDButton>
             <MDButton
               color="dark"
-              variant={transparentSidenav && !whiteSidenav ? "contained" : "gradient"}
-              onClick={handleTransparentSidenav}
+              variant={sidenavStyle === "transparent" ? "contained" : "gradient"}
+              onClick={() => handleSidenavStyle("transparent")}
               disabled={disabled}
               fullWidth
             >
@@ -125,8 +118,8 @@ export default function ThemeSettings() {
             </MDButton>
             <MDButton
               color="dark"
-              variant={whiteSidenav && !transparentSidenav ? "contained" : "gradient"}
-              onClick={handleWhiteSidenav}
+              variant={sidenavStyle === "white" ? "contained" : "gradient"}
+              onClick={() => handleSidenavStyle("white")}
               disabled={disabled}
               fullWidth
             >

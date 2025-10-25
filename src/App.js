@@ -7,7 +7,14 @@ import Sidenav from "examples/Sidenav";
 import theme from "assets/theme";
 import themeDark from "assets/theme-dark";
 import routes from "routes";
-import { useMaterialUIController, setMiniSidenav, setDarkMode } from "context";
+import {
+  useMaterialUIController,
+  setMiniSidenav,
+  setDarkMode,
+  setSidenavColor,
+  setTransparentSidenav,
+  setWhiteSidenav,
+} from "context";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { UserPreferencesProvider, useUserPreferences } from "./context/UserPreferencesContext";
 import PrivateRoute from "./components/PrivateRoute";
@@ -21,11 +28,26 @@ function AppContent() {
   const { pathname } = useLocation();
   const { isAuthenticated, loading, uiPermissions } = useAuth();
   const { preferences } = useUserPreferences();
-  const darkMode = preferences.theme === "dark";
+  const { theme: themePref, sidenavColor: sidenavColorPref, sidenavStyle } = preferences;
+  const darkMode = themePref === "dark";
 
   useEffect(() => {
     setDarkMode(dispatch, darkMode);
   }, [darkMode, dispatch]);
+
+  useEffect(() => {
+    setSidenavColor(dispatch, sidenavColorPref);
+    if (sidenavStyle === "transparent") {
+      setTransparentSidenav(dispatch, true);
+      setWhiteSidenav(dispatch, false);
+    } else if (sidenavStyle === "white") {
+      setTransparentSidenav(dispatch, false);
+      setWhiteSidenav(dispatch, true);
+    } else {
+      setTransparentSidenav(dispatch, false);
+      setWhiteSidenav(dispatch, false);
+    }
+  }, [sidenavColorPref, sidenavStyle, dispatch]);
 
   const handleOnMouseEnter = () => {
     if (miniSidenav && !onMouseEnter) {
