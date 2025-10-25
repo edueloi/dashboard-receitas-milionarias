@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import api from "services/api";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
+import { useUserPreferences } from "../../context/UserPreferencesContext";
 
 // @mui
 import Card from "@mui/material/Card";
@@ -56,6 +57,7 @@ function useQuery() {
 
 function MinhasReceitas() {
   const { user, uiPermissions } = useAuth();
+  const { preferences, updatePreference } = useUserPreferences();
   const navigate = useNavigate();
   const query = useQuery();
   const theme = useTheme();
@@ -67,7 +69,7 @@ function MinhasReceitas() {
   const [listaCategorias, setListaCategorias] = useState([]);
   const [listaTags, setListaTags] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState("card"); // 'card' | 'table'
+  const view = preferences.recipeView;
   const [tab, setTab] = useState(0);
 
   // filtros
@@ -195,7 +197,11 @@ function MinhasReceitas() {
   const headerActions = useMemo(
     () => (
       <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap">
-        <ToggleButtonGroup value={view} exclusive onChange={(_e, v) => v && setView(v)}>
+        <ToggleButtonGroup
+          value={view}
+          exclusive
+          onChange={(_e, v) => v && updatePreference("recipeView", v)}
+        >
           <ToggleButton value="card" aria-label="Cartões">
             <Icon>grid_view</Icon>
           </ToggleButton>
@@ -224,7 +230,7 @@ function MinhasReceitas() {
         </MDButton>
       </Stack>
     ),
-    [view, navigate]
+    [view, navigate, updatePreference]
   );
 
   return (

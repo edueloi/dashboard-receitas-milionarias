@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import api from "services/api";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
+import { useUserPreferences } from "../../context/UserPreferencesContext";
 import { debounce } from "lodash";
 
 // @mui material components
@@ -50,8 +51,9 @@ const style = {
 
 function Categories() {
   const { uiPermissions } = useAuth();
+  const { preferences, updatePreference } = useUserPreferences();
   const [tabValue, setTabValue] = useState(0);
-  const [view, setView] = useState("card"); // 'table' or 'card'
+  const view = preferences.recipeView;
 
   const [categories, setCategories] = useState([]);
   const [tags, setTags] = useState([]);
@@ -83,7 +85,7 @@ function Categories() {
 
   const handleViewChange = (event, newView) => {
     if (newView !== null) {
-      setView(newView);
+      updatePreference("recipeView", newView);
     }
   };
 

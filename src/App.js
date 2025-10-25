@@ -9,35 +9,23 @@ import themeDark from "assets/theme-dark";
 import routes from "routes";
 import { useMaterialUIController, setMiniSidenav, setDarkMode } from "context";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { UserPreferencesProvider, useUserPreferences } from "./context/UserPreferencesContext";
 import PrivateRoute from "./components/PrivateRoute";
 import { Toaster } from "react-hot-toast";
 import brandLogo from "assets/images/logos/logo-deitado.png";
-import api from "./services/api";
 
 function AppContent() {
   const [controller, dispatch] = useMaterialUIController();
-  const { miniSidenav, direction, layout, sidenavColor, darkMode } = controller;
+  const { miniSidenav, direction, layout, sidenavColor } = controller;
   const [onMouseEnter, setOnMouseEnter] = useState(false);
   const { pathname } = useLocation();
   const { isAuthenticated, loading, uiPermissions } = useAuth();
+  const { preferences } = useUserPreferences();
+  const darkMode = preferences.theme === "dark";
 
   useEffect(() => {
-    const fetchThemePreference = async () => {
-      if (isAuthenticated) {
-        try {
-          const response = await api.get("/users/me/preferences");
-          const savedTheme = response.data.theme || localStorage.getItem("theme") || "light";
-          setDarkMode(dispatch, savedTheme === "dark");
-        } catch (error) {
-          console.error("Erro ao buscar preferência de tema:", error);
-          const savedTheme = localStorage.getItem("theme") || "light";
-          setDarkMode(dispatch, savedTheme === "dark");
-        }
-      }
-    };
-
-    fetchThemePreference();
-  }, [isAuthenticated, dispatch]);
+    setDarkMode(dispatch, darkMode);
+  }, [darkMode, dispatch]);
 
   const handleOnMouseEnter = () => {
     if (miniSidenav && !onMouseEnter) {
@@ -102,7 +90,7 @@ function AppContent() {
           </Route>
         );
       }
-      return []; // Return an empty array for null routes to be flattened
+      return [];
     });
   };
 
@@ -146,7 +134,9 @@ function AppContent() {
 export default function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <UserPreferencesProvider>
+        <AppContent />
+      </UserPreferencesProvider>
     </AuthProvider>
   );
 }
