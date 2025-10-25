@@ -1,7 +1,11 @@
 import axios from "axios";
 
-// Adiciona um aviso para o desenvolvedor se a variável de ambiente estiver faltando
-if (!process.env.REACT_APP_API_URL) {
+const baseURL =
+  process.env.NODE_ENV === "production"
+    ? process.env.REACT_APP_API_URL
+    : process.env.REACT_APP_API_URL || "http://localhost:8080/";
+
+if (!baseURL) {
   console.warn(
     "A variável de ambiente REACT_APP_API_URL não está definida. " +
       "A API pode não funcionar corretamente. " +
@@ -9,18 +13,15 @@ if (!process.env.REACT_APP_API_URL) {
   );
 }
 
-// Crie uma instância do axios
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL, // Adicionado fallback para evitar erros
+  baseURL,
 });
 
 // Adicione um interceptor para injetar o token em cada requisição
 api.interceptors.request.use(
   (config) => {
-    // Pega o token do localStorage (ou de onde você o salvou após o login)
-    const token = localStorage.getItem("authToken"); // IMPORTANTE: O nome 'authToken' deve ser o mesmo que você usou para salvar o token.
+    const token = localStorage.getItem("authToken");
 
-    // Se o token existir, adiciona ao cabeçalho de autorização
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -28,7 +29,6 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
-    // Faz algo com o erro da requisição
     return Promise.reject(error);
   }
 );
