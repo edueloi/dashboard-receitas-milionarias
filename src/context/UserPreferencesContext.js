@@ -13,6 +13,9 @@ const initialPreferences = {
   sidenavColor: "primary",
   sidenavStyle: "dark",
   fixedNavbar: true,
+  // chaves de notificação (podem ser sobrescritas pelo backend)
+  newRecipes: false,
+  comments: false,
 };
 
 export const UserPreferencesProvider = ({ children }) => {
@@ -20,14 +23,38 @@ export const UserPreferencesProvider = ({ children }) => {
   const [preferences, setPreferences] = useState(initialPreferences);
   const [loading, setLoading] = useState(true);
 
+  const parseBool = (v) => {
+    if (typeof v === "boolean") return v;
+    if (typeof v === "number") return v === 1;
+    if (typeof v === "string") {
+      const s = v.toLowerCase().trim();
+      if (s === "true" || s === "1") return true;
+      if (s === "false" || s === "0") return false;
+    }
+    return v;
+  };
+
   const fetchPreferences = useCallback(async () => {
     setLoading(true);
     try {
       const response = await api.get("/users/me/preferences");
-      setPreferences((prev) => ({ ...prev, ...response.data }));
+
+      if (Array.isArray(response.data)) {
+        const prefsObject = response.data.reduce((acc, pref) => {
+          const key = pref.preferencia_chave;
+          const value = parseBool(pref.preferencia_valor);
+          acc[key] = value;
+          return acc;
+        }, {});
+        setPreferences((prev) => ({ ...prev, ...prefsObject }));
+      } else if (response.data && typeof response.data === "object") {
+        const normalized = Object.fromEntries(
+          Object.entries(response.data).map(([k, v]) => [k, parseBool(v)])
+        );
+        setPreferences((prev) => ({ ...prev, ...normalized }));
+      }
     } catch (error) {
       console.error("Erro ao buscar preferências do usuário:", error);
-      // Fallback to initial preferences if fetching fails
       setPreferences(initialPreferences);
     } finally {
       setLoading(false);
@@ -38,22 +65,30 @@ export const UserPreferencesProvider = ({ children }) => {
     if (isAuthenticated && user) {
       fetchPreferences();
     } else if (!isAuthenticated) {
-      // Reset preferences when user logs out
       setPreferences(initialPreferences);
       setLoading(false);
     }
   }, [isAuthenticated, user, fetchPreferences]);
 
   const updatePreference = async (key, value) => {
-    const optimisticData = { ...preferences, [key]: value };
-    setPreferences(optimisticData);
+    // otimismo + captura do valor anterior para rollback
+    let previousValue;
+    setPreferences((prev) => {
+      previousValue = prev[key];
+      return { ...prev, [key]: value };
+    });
 
     try {
-      await api.post("/users/me/preferences", { preferencia_chave: key, preferencia_valor: value });
+      // retorne a promise para quem chamou (Promise.all)
+      return await api.post("/users/me/preferences", {
+        preferencia_chave: key,
+        preferencia_valor: value,
+      });
     } catch (error) {
       console.error(`Erro ao atualizar a preferência '${key}':`, error);
-      // Revert if API call fails
-      setPreferences(preferences);
+      // rollback funcional
+      setPreferences((prev) => ({ ...prev, [key]: previousValue }));
+      throw error;
     }
   };
 
@@ -61,6 +96,7 @@ export const UserPreferencesProvider = ({ children }) => {
     preferences,
     loading,
     updatePreference,
+    refetchPreferences: fetchPreferences,
   };
 
   return (

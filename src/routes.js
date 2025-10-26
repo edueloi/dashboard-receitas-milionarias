@@ -14,6 +14,8 @@ import AdicionarReceita from "layouts/receitas/AdicionarReceita";
 import EditarReceita from "layouts/receitas/EditarReceita";
 import Relatorios from "layouts/relatorios";
 import AdminPanel from "layouts/admin";
+import Ebooks from "layouts/ebooks";
+import CriarEbook from "layouts/ebooks/CriarEbook";
 
 // --- Autenticação ---
 import SignInSplit from "layouts/authentication/sign-in";
@@ -71,6 +73,14 @@ const routes = [
     icon: <Icon fontSize="small">category</Icon>,
     route: "/categories",
     component: <Categories />,
+  },
+  {
+    type: "collapse",
+    name: "Ebooks",
+    key: "ebooks",
+    icon: <Icon fontSize="small">book</Icon>,
+    route: "/ebooks",
+    component: <Ebooks />,
   },
   {
     type: "collapse",
@@ -136,6 +146,11 @@ const routes = [
     key: "editar-categoria",
     route: "/categories/editar/:id",
     component: <EditarCategoria />,
+  },
+  {
+    key: "criar-ebook",
+    route: "/ebooks/criar",
+    component: <CriarEbook />,
   },
   {
     key: "detalhes-receita",

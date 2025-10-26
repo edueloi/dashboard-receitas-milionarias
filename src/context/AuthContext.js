@@ -14,17 +14,19 @@ const getPermissionsForRole = (roleName) => {
     "dashboard",
     "todas-as-receitas",
     "categories",
+    "ebooks",
     "carteira",
     "profile",
     "configuracoes",
     "detalhes-receita",
   ]);
 
-  // Todos, exceto afiliados, podem criar e gerenciar suas próprias receitas
+  // Todos, exceto afiliados, podem criar e gerenciar suas próprias receitas e ebooks
   if (roleName !== "afiliado" && roleName !== "afiliado_pro") {
     baseRoutes.add("receitas");
     baseRoutes.add("adicionar-receita");
     baseRoutes.add("editar-receita");
+    baseRoutes.add("criar-ebook");
   }
 
   // Apenas Admins podem ver páginas de admin e editar categorias
