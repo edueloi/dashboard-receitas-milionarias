@@ -7,6 +7,7 @@ import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
 import Icon from "@mui/material/Icon";
 import { TextField, Autocomplete, Stack } from "@mui/material";
+import { styled } from "@mui/material/styles";
 
 // MD
 import MDBox from "components/MDBox";
@@ -27,6 +28,10 @@ const ebookCategories = [
   { nome: "Vendas" },
 ];
 
+const FileInput = styled("input")({
+  display: "none",
+});
+
 function CriarEbook() {
   const navigate = useNavigate();
   const [ebookInfo, setEbookInfo] = useState({
@@ -36,16 +41,21 @@ function CriarEbook() {
     category: null,
     coverImage: null,
   });
+  const [ebookFile, setEbookFile] = useState(null);
   const [saving, setSaving] = useState(false);
 
   const handleChange = (e) => {
     setEbookInfo((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  const handleFileChange = (e) => {
+    setEbookFile(e.target.files[0]);
+  };
+
   const handleSave = async () => {
     setSaving(true);
     // Mock save logic
-    console.log("Saving ebook:", ebookInfo);
+    console.log("Saving ebook:", { ...ebookInfo, ebookFile });
     toast.success("Ebook salvo com sucesso (mock)!");
     setTimeout(() => {
       setSaving(false);
@@ -110,6 +120,32 @@ function CriarEbook() {
                     multiline
                     rows={10}
                   />
+                </Grid>
+                <Grid item xs={12}>
+                  <MDTypography variant="h6" mb={1}>
+                    Arquivo do Ebook
+                  </MDTypography>
+                  <label htmlFor="ebook-file-upload">
+                    <FileInput
+                      accept=".pdf,.doc,.docx,.ppt,.pptx"
+                      id="ebook-file-upload"
+                      type="file"
+                      onChange={handleFileChange}
+                    />
+                    <MDButton
+                      variant="outlined"
+                      color="info"
+                      component="span"
+                      startIcon={<Icon>attach_file</Icon>}
+                    >
+                      Selecionar Arquivo
+                    </MDButton>
+                  </label>
+                  {ebookFile && (
+                    <MDTypography variant="body2" mt={1}>
+                      {ebookFile.name}
+                    </MDTypography>
+                  )}
                 </Grid>
               </Grid>
             </MDBox>
