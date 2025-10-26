@@ -36,6 +36,40 @@ const modalStyle = {
 
 const palette = { gold: "#C9A635", green: "#1C3B32" };
 
+const PasswordInput = ({ name, label, value, onChange, show, setShow, showKey }) => (
+  <MDInput
+    name={name}
+    label={label}
+    type={show[showKey] ? "text" : "password"}
+    value={value}
+    onChange={onChange}
+    fullWidth
+    variant="outlined"
+    InputProps={{
+      endAdornment: (
+        <InputAdornment position="end">
+          <Icon
+            onClick={() => setShow((s) => ({ ...s, [showKey]: !s[showKey] }))}
+            sx={{ cursor: "pointer", color: "text.secondary" }}
+          >
+            {show[showKey] ? "visibility_off" : "visibility"}
+          </Icon>
+        </InputAdornment>
+      ),
+    }}
+  />
+);
+
+PasswordInput.propTypes = {
+  name: PropTypes.string.isRequired,
+  label: PropTypes.string.isRequired,
+  value: PropTypes.string.isRequired,
+  onChange: PropTypes.func.isRequired,
+  show: PropTypes.object.isRequired,
+  setShow: PropTypes.func.isRequired,
+  showKey: PropTypes.oneOf(["current", "new", "confirm"]).isRequired,
+};
+
 export default function SecuritySettings() {
   const [passwordInfo, setPasswordInfo] = useState({
     currentPassword: "",
@@ -147,38 +181,6 @@ export default function SecuritySettings() {
     }
   };
 
-  const PasswordInput = ({ name, label, value, onChange, showKey }) => (
-    <MDInput
-      name={name}
-      label={label}
-      type={show[showKey] ? "text" : "password"}
-      value={value}
-      onChange={onChange}
-      fullWidth
-      variant="outlined"
-      InputProps={{
-        endAdornment: (
-          <InputAdornment position="end">
-            <Icon
-              onClick={() => setShow((s) => ({ ...s, [showKey]: !s[showKey] }))}
-              sx={{ cursor: "pointer", color: "text.secondary" }}
-            >
-              {show[showKey] ? "visibility_off" : "visibility"}
-            </Icon>
-          </InputAdornment>
-        ),
-      }}
-    />
-  );
-
-  PasswordInput.propTypes = {
-    name: PropTypes.string.isRequired,
-    label: PropTypes.string.isRequired,
-    value: PropTypes.string.isRequired,
-    onChange: PropTypes.func.isRequired,
-    showKey: PropTypes.oneOf(["current", "new", "confirm"]).isRequired,
-  };
-
   return (
     <>
       <Grid container spacing={4}>
@@ -202,6 +204,8 @@ export default function SecuritySettings() {
                     label="Senha Atual"
                     value={passwordInfo.currentPassword}
                     onChange={handleChange}
+                    show={show}
+                    setShow={setShow}
                     showKey="current"
                   />
                 </Grid>
@@ -211,6 +215,8 @@ export default function SecuritySettings() {
                     label="Nova Senha"
                     value={passwordInfo.newPassword}
                     onChange={handleChange}
+                    show={show}
+                    setShow={setShow}
                     showKey="new"
                   />
                   <Box mt={1}>
@@ -235,6 +241,8 @@ export default function SecuritySettings() {
                     label="Confirme a Nova Senha"
                     value={passwordInfo.confirmPassword}
                     onChange={handleChange}
+                    show={show}
+                    setShow={setShow}
                     showKey="confirm"
                   />
                 </Grid>
@@ -274,6 +282,7 @@ export default function SecuritySettings() {
                 <MDTypography variant="body1">Status</MDTypography>
                 <Switch checked={twoFAEnabled} onChange={handleToggle2FA} />
               </MDBox>
+              .
               <Divider />
               <MDBox mt={2}>
                 <MDTypography variant="h5" fontWeight="medium" mb={0.5}>
