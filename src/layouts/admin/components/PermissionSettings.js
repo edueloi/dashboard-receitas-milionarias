@@ -10,18 +10,19 @@ import {
   InputLabel,
   MenuItem,
   Select,
+  CircularProgress,
 } from "@mui/material";
 import toast from "react-hot-toast";
+import api from "services/api"; // Importando a instância do Axios
 
-// Mock de dados - no futuro, viria da API
 const mockRoles = ["admin", "sub-admin", "produtor", "editor", "afiliado pro", "afiliado"];
 
-// Para quebrar a dependência circular, definimos as rotas aqui em vez de importar.
 const visibleRoutes = [
   { key: "dashboard", name: "Painel Principal" },
   { key: "todas-as-receitas", name: "Todas as Receitas" },
   { key: "receitas", name: "Minhas Receitas" },
   { key: "categories", name: "Categorias" },
+  { key: "ebooks", name: "Ebooks" },
   { key: "relatorios", name: "Relatórios" },
   { key: "carteira", name: "Minha Carteira" },
   { key: "profile", name: "Perfil" },
@@ -32,61 +33,54 @@ const visibleRoutes = [
 function PermissionSettings() {
   const [permissions, setPermissions] = useState({});
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [selectedRole, setSelectedRole] = useState("sub-admin");
 
-  // Simula o carregamento das permissões da API
   useEffect(() => {
-    const mockPermissions = {
-      admin: visibleRoutes.map((r) => r.key), // Admin pode tudo
-      "sub-admin": [
-        "dashboard",
-        "todas-as-receitas",
-        "receitas",
-        "categories",
-        "relatorios",
-        "carteira",
-        "profile",
-        "configuracoes",
-      ],
-      produtor: ["dashboard", "todas-as-receitas", "receitas", "categories", "relatorios"],
-      editor: ["dashboard", "todas-as-receitas", "receitas", "categories"],
-      "afiliado pro": ["dashboard", "carteira", "profile"],
-      afiliado: ["dashboard", "carteira", "profile"],
+    const fetchPermissions = async () => {
+      if (!selectedRole) return;
+
+      setLoading(true);
+      try {
+        const response = await api.get(`/permissions/${selectedRole}`);
+        setPermissions(response.data);
+      } catch (error) {
+        console.error("Erro ao carregar permissões:", error);
+        toast.error("Não foi possível carregar as permissões.");
+        // Em caso de erro, define um estado inicial seguro
+        const initialPerms = {};
+        visibleRoutes.forEach((route) => {
+          initialPerms[route.key] = false;
+        });
+        setPermissions(initialPerms);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    const initialState = {};
-    mockRoles.forEach((role) => {
-      initialState[role] = {};
-      visibleRoutes.forEach((route) => {
-        initialState[role][route.key] = mockPermissions[role]?.includes(route.key) || false;
-      });
-    });
+    fetchPermissions();
+  }, [selectedRole]);
 
-    setPermissions(initialState);
-    setLoading(false);
-  }, []);
-
-  const handlePermissionChange = (role, routeKey) => {
+  const handlePermissionChange = (routeKey) => {
     setPermissions((prev) => ({
       ...prev,
-      [role]: {
-        ...prev[role],
-        [routeKey]: !prev[role][routeKey],
-      },
+      [routeKey]: !prev[routeKey],
     }));
   };
 
   const handleSavePermissions = async () => {
-    toast.success(`Permissões para ${capitalize(selectedRole)} salvas! (Simulação)`);
-    // No futuro, a API receberia apenas os dados do cargo selecionado
-    // await api.post(`/permissions/ui/${selectedRole}`, permissions[selectedRole]);
+    setSaving(true);
+    try {
+      await api.post(`/permissions/${selectedRole}`, permissions);
+      toast.success(`Permissões para ${capitalize(selectedRole)} salvas com sucesso!`);
+    } catch (error) {
+      console.error("Erro ao salvar permissões:", error);
+      toast.error("Falha ao salvar as permissões. Tente novamente.");
+    } finally {
+      setSaving(false);
+    }
   };
-
   const capitalize = (str) => (str ? str.charAt(0).toUpperCase() + str.slice(1) : "");
-
-  if (loading) {
-    return <MDTypography>Carregando...</MDTypography>;
-  }
 
   return (
     <MDBox>
@@ -106,9 +100,10 @@ function PermissionSettings() {
             onChange={(e) => setSelectedRole(e.target.value)}
             label="Selecionar Cargo"
             sx={{ height: 44 }}
+            disabled={loading || saving}
           >
             {mockRoles
-              .filter((role) => role !== "admin") // Filtra o admin para não ser editado
+              .filter((role) => role !== "admin")
               .map((role) => (
                 <MenuItem key={role} value={role}>
                   {capitalize(role)}
@@ -118,30 +113,42 @@ function PermissionSettings() {
         </FormControl>
       </MDBox>
 
-      <MDBox>
-        <MDTypography variant="h6" gutterBottom>
-          Acessos para: {capitalize(selectedRole)}
-        </MDTypography>
-        <Grid container spacing={2}>
-          {visibleRoutes.map((route) => (
-            <Grid item xs={12} sm={6} md={4} key={route.key}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={permissions[selectedRole]?.[route.key] || false}
-                    onChange={() => handlePermissionChange(selectedRole, route.key)}
-                  />
-                }
-                label={route.name}
-              />
-            </Grid>
-          ))}
-        </Grid>
-      </MDBox>
+      {loading ? (
+        <MDBox display="flex" justifyContent="center" alignItems="center" mt={5}>
+          <CircularProgress />
+        </MDBox>
+      ) : (
+        <MDBox>
+          <MDTypography variant="h6" gutterBottom>
+            Acessos para: {capitalize(selectedRole)}
+          </MDTypography>
+          <Grid container spacing={2}>
+            {visibleRoutes.map((route) => (
+              <Grid item xs={12} sm={6} md={4} key={route.key}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={permissions[route.key] || false}
+                      onChange={() => handlePermissionChange(route.key)}
+                      disabled={saving}
+                    />
+                  }
+                  label={route.name}
+                />
+              </Grid>
+            ))}
+          </Grid>
+        </MDBox>
+      )}
 
       <MDBox mt={3} display="flex" justifyContent="flex-end">
-        <MDButton variant="gradient" color="info" onClick={handleSavePermissions}>
-          Salvar Permissões
+        <MDButton
+          variant="gradient"
+          color="info"
+          onClick={handleSavePermissions}
+          disabled={loading || saving}
+        >
+          {saving ? <CircularProgress size={24} color="inherit" /> : "Salvar Permissões"}
         </MDButton>
       </MDBox>
     </MDBox>
