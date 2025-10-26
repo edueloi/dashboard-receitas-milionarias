@@ -77,7 +77,6 @@ function PermissionSettings() {
   };
 
   const handleSavePermissions = async () => {
-    console.log("Salvando permissões para o cargo:", selectedRole, permissions[selectedRole]);
     toast.success(`Permissões para ${capitalize(selectedRole)} salvas! (Simulação)`);
     // No futuro, a API receberia apenas os dados do cargo selecionado
     // await api.post(`/permissions/ui/${selectedRole}`, permissions[selectedRole]);

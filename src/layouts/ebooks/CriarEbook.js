@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import api from "services/api";
 
 // @mui
 import Card from "@mui/material/Card";
@@ -20,12 +21,12 @@ import PageWrapper from "components/PageWrapper";
 import ImageUpload from "components/ImageUpload";
 
 const ebookCategories = [
-  { nome: "Fundamentais (iniciante)" },
-  { nome: "Dietas & Saúde" },
-  { nome: "Kids & Família" },
-  { nome: "Fitness" },
-  { nome: "Marketing" },
-  { nome: "Vendas" },
+  { id: 1, nome: "Fundamentais (iniciante)" },
+  { id: 2, nome: "Dietas & Saúde" },
+  { id: 3, nome: "Kids & Família" },
+  { id: 4, nome: "Fitness" },
+  { id: 5, nome: "Marketing" },
+  { id: 6, nome: "Vendas" },
 ];
 
 const FileInput = styled("input")({
@@ -35,12 +36,12 @@ const FileInput = styled("input")({
 function CriarEbook() {
   const navigate = useNavigate();
   const [ebookInfo, setEbookInfo] = useState({
-    title: "",
-    shortDescription: "",
-    description: "",
-    category: null,
-    coverImage: null,
+    titulo: "",
+    descricao_curta: "",
+    descricao: "",
+    categoria_id: null,
   });
+  const [coverImage, setCoverImage] = useState(null);
   const [ebookFile, setEbookFile] = useState(null);
   const [saving, setSaving] = useState(false);
 
@@ -54,13 +55,35 @@ function CriarEbook() {
 
   const handleSave = async () => {
     setSaving(true);
-    // Mock save logic
-    console.log("Saving ebook:", { ...ebookInfo, ebookFile });
-    toast.success("Ebook salvo com sucesso (mock)!");
-    setTimeout(() => {
-      setSaving(false);
+    try {
+      const formData = new FormData();
+      formData.append("titulo", ebookInfo.titulo);
+      formData.append("descricao_curta", ebookInfo.descricao_curta);
+      formData.append("descricao", ebookInfo.descricao);
+      if (ebookInfo.categoria_id) {
+        formData.append("categoria_id", ebookInfo.categoria_id.id);
+      }
+      if (coverImage) {
+        formData.append("capa", coverImage);
+      }
+      if (ebookFile) {
+        formData.append("arquivo", ebookFile);
+      }
+
+      await api.post("/ebooks", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      toast.success("Ebook criado com sucesso!");
       navigate("/ebooks");
-    }, 1000);
+    } catch (error) {
+      console.error("Erro ao criar ebook:", error);
+      toast.error("Erro ao criar ebook. Verifique os campos e tente novamente.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -78,31 +101,29 @@ function CriarEbook() {
                     <MDTypography variant="h6" mb={1}>
                       Capa do Ebook
                     </MDTypography>
-                    <ImageUpload
-                      onImageChange={(file) => setEbookInfo((p) => ({ ...p, coverImage: file }))}
-                    />
+                    <ImageUpload onImageChange={setCoverImage} />
                   </MDBox>
                 </Grid>
                 <Grid item xs={12} md={8}>
                   <Stack spacing={3}>
                     <MDInput
-                      name="title"
+                      name="titulo"
                       label="Título do Ebook"
-                      value={ebookInfo.title}
+                      value={ebookInfo.titulo}
                       onChange={handleChange}
                       fullWidth
                     />
                     <Autocomplete
                       options={ebookCategories}
                       getOptionLabel={(o) => o.nome || ""}
-                      value={ebookInfo.category}
-                      onChange={(_e, v) => setEbookInfo((p) => ({ ...p, category: v }))}
+                      value={ebookInfo.categoria_id}
+                      onChange={(_e, v) => setEbookInfo((p) => ({ ...p, categoria_id: v }))}
                       renderInput={(params) => <TextField {...params} label="Categoria" />}
                     />
                     <MDInput
-                      name="shortDescription"
+                      name="descricao_curta"
                       label="Descrição Curta"
-                      value={ebookInfo.shortDescription}
+                      value={ebookInfo.descricao_curta}
                       onChange={handleChange}
                       fullWidth
                       multiline
@@ -112,9 +133,9 @@ function CriarEbook() {
                 </Grid>
                 <Grid item xs={12}>
                   <MDInput
-                    name="description"
+                    name="descricao"
                     label="Descrição Completa"
-                    value={ebookInfo.description}
+                    value={ebookInfo.descricao}
                     onChange={handleChange}
                     fullWidth
                     multiline

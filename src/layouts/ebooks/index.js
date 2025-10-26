@@ -1,12 +1,14 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import api from "services/api";
+import toast from "react-hot-toast";
 
 // @mui
 import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
 import Icon from "@mui/material/Icon";
-import { CircularProgress, TextField, Stack, Autocomplete } from "@mui/material";
+import { CircularProgress, TextField, Stack, Autocomplete, Modal, Box } from "@mui/material";
 
 // MD
 import MDBox from "components/MDBox";
@@ -17,71 +19,83 @@ import MDButton from "components/MDButton";
 import PageWrapper from "components/PageWrapper";
 import EbookCard from "./components/EbookCard";
 
-// Mock Data
-const mockEbooks = [
-  {
-    id: 1,
-    title: "Guia de Marketing para Chefs",
-    description:
-      "Aprenda as melhores estratégias para divulgar suas receitas e construir sua marca.",
-    image:
-      "https://images.unsplash.com/photo-1516542076529-1ea3854896f2?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60",
-    category: "Marketing",
-  },
-  {
-    id: 2,
-    title: "Vendas de Ebooks de Receitas",
-    description: "Um guia passo a passo para monetizar seus conhecimentos culinários.",
-    image:
-      "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60",
-    category: "Vendas",
-  },
-  {
-    id: 3,
-    title: "Cozinha Fitness para Iniciantes",
-    description: "Receitas fáceis e saudáveis para quem está começando na vida fitness.",
-    image:
-      "https://images.unsplash.com/photo-1498837167922-ddd27525d352?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60",
-    category: "Fitness",
-  },
-  {
-    id: 4,
-    title: "Lanches Divertidos para Crianças",
-    description: "Ideias criativas para refeições que as crianças vão amar.",
-    image:
-      "https://images.unsplash.com/photo-1519681393784-d120267933ba?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=60",
-    category: "Kids & Família",
-  },
-];
-
-const mockCategories = [
-  "Fundamentais (iniciante)",
-  "Dietas & Saúde",
-  "Kids & Família",
-  "Fitness",
-  "Marketing",
-  "Vendas",
-].map((name) => ({ nome: name }));
+const modalStyle = {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  width: 440,
+  bgcolor: "background.paper",
+  borderRadius: 2,
+  boxShadow: 24,
+  p: 3,
+};
 
 function Ebooks() {
   const { uiPermissions } = useAuth();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const [ebooks, setEbooks] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [ebookToDelete, setEbookToDelete] = useState(null);
 
   const canCreate = !uiPermissions.includes("afiliado");
 
+  useEffect(() => {
+    const fetchEbooks = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get("/ebooks");
+        setEbooks(response.data);
+      } catch (error) {
+        console.error("Erro ao buscar ebooks:", error);
+        toast.error("Não foi possível carregar os ebooks.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchEbooks();
+  }, []);
+
   const filteredEbooks = useMemo(() => {
-    let list = mockEbooks;
+    let list = ebooks;
     if (searchTerm) {
-      list = list.filter((e) => e.title.toLowerCase().includes(searchTerm.toLowerCase()));
+      list = list.filter((e) => e.titulo.toLowerCase().includes(searchTerm.toLowerCase()));
     }
     if (categoryFilter) {
-      list = list.filter((e) => e.category === categoryFilter.nome);
+      list = list.filter((e) => e.categoria_nome === categoryFilter.nome);
     }
     return list;
-  }, [searchTerm, categoryFilter]);
+  }, [searchTerm, categoryFilter, ebooks]);
+
+  const openDeleteModal = (id) => {
+    setEbookToDelete(id);
+    setDeleteOpen(true);
+  };
+  const closeDeleteModal = () => {
+    setEbookToDelete(null);
+    setDeleteOpen(false);
+  };
+
+  const confirmDelete = async () => {
+    if (!ebookToDelete) return;
+    try {
+      await api.delete(`/ebooks/${ebookToDelete}`);
+      toast.success("Ebook excluído com sucesso!");
+      setEbooks((prev) => prev.filter((e) => e.id !== ebookToDelete));
+    } catch (e) {
+      console.error(e);
+      toast.error("Não foi possível excluir o ebook.");
+    } finally {
+      closeDeleteModal();
+    }
+  };
+
+  const handleDownload = (id) => {
+    window.open(`${api.defaults.baseURL}/ebooks/${id}/download`);
+  };
 
   const headerActions = useMemo(
     () => (
@@ -121,14 +135,7 @@ function Ebooks() {
               onChange={(e) => setSearchTerm(e.target.value)}
               sx={{ width: { xs: "100%", md: 280 } }}
             />
-            <Autocomplete
-              options={mockCategories}
-              getOptionLabel={(o) => o.nome}
-              value={categoryFilter}
-              onChange={(_e, v) => setCategoryFilter(v)}
-              sx={{ width: { xs: "100%", md: 240 } }}
-              renderInput={(params) => <TextField {...params} label="Filtrar por Categoria" />}
-            />
+            {/* TODO: Fetch categories for filter */}
           </Stack>
         </MDBox>
       </Card>
@@ -144,17 +151,38 @@ function Ebooks() {
             {filteredEbooks.map((ebook) => (
               <Grid item xs={12} sm={6} md={4} lg={3} key={ebook.id}>
                 <EbookCard
-                  image={ebook.image}
-                  title={ebook.title}
-                  description={ebook.description}
-                  onRead={() => alert(`Lendo ${ebook.title}`)} // Mock action
-                  onDownload={() => alert(`Baixando ${ebook.title}`)} // Mock action
+                  image={ebook.capa_url}
+                  title={ebook.titulo}
+                  description={ebook.descricao_curta}
+                  onRead={() => navigate(`/ebooks/${ebook.id}`)} // TODO: Create ebook details page
+                  onDownload={() => handleDownload(ebook.id)}
+                  onDelete={() => openDeleteModal(ebook.id)}
                 />
               </Grid>
             ))}
           </Grid>
         )}
       </MDBox>
+
+      {/* Modal de confirmação */}
+      <Modal open={deleteOpen} onClose={closeDeleteModal}>
+        <Box sx={modalStyle}>
+          <MDTypography variant="h5" fontWeight="medium">
+            Confirmar Exclusão
+          </MDTypography>
+          <MDTypography variant="body2" color="text" mt={2} mb={3}>
+            Tem certeza que deseja excluir este ebook? Esta ação é irreversível.
+          </MDTypography>
+          <MDBox display="flex" justifyContent="flex-end" gap={1}>
+            <MDButton color="secondary" onClick={closeDeleteModal}>
+              Cancelar
+            </MDButton>
+            <MDButton variant="gradient" color="error" onClick={confirmDelete}>
+              Deletar
+            </MDButton>
+          </MDBox>
+        </Box>
+      </Modal>
     </PageWrapper>
   );
 }

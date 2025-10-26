@@ -4,20 +4,41 @@ import CardMedia from "@mui/material/CardMedia";
 import CardContent from "@mui/material/CardContent";
 import CardActions from "@mui/material/CardActions";
 import Icon from "@mui/material/Icon";
+import IconButton from "@mui/material/IconButton";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDButton from "components/MDButton";
 
-function EbookCard({ image, title, description, onRead, onDownload }) {
+function EbookCard({ image, title, description, onRead, onDownload, onDelete }) {
   return (
     <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-      <CardMedia
-        component="img"
-        height="194"
-        image={image || "/static/images/default-ebook-cover.jpg"} // Placeholder
-        alt={title}
-        sx={{ objectFit: "cover" }}
-      />
+      <MDBox position="relative">
+        <CardMedia
+          component="img"
+          height="194"
+          image={image || "/static/images/default-ebook-cover.jpg"} // Placeholder
+          alt={title}
+          sx={{ objectFit: "cover" }}
+        />
+        {onDelete && (
+          <IconButton
+            onClick={onDelete}
+            sx={{
+              position: "absolute",
+              top: 8,
+              right: 8,
+              backgroundColor: "rgba(255, 255, 255, 0.7)",
+              "&:hover": {
+                backgroundColor: "rgba(255, 255, 255, 0.9)",
+              },
+            }}
+            aria-label="delete"
+            size="small"
+          >
+            <Icon color="error">delete</Icon>
+          </IconButton>
+        )}
+      </MDBox>
       <CardContent sx={{ flexGrow: 1 }}>
         <MDTypography variant="h6" gutterBottom>
           {title}
@@ -49,6 +70,7 @@ EbookCard.propTypes = {
   description: PropTypes.string.isRequired,
   onRead: PropTypes.func.isRequired,
   onDownload: PropTypes.func.isRequired,
+  onDelete: PropTypes.func,
 };
 
 export default EbookCard;

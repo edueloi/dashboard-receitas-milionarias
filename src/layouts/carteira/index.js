@@ -69,9 +69,6 @@ function MinhaCarteira() {
           api.get("/users/referred"),
           api.get("/earnings/monthly"),
         ]);
-      console.log("Balance Data:", balanceData);
-      console.log("Referred Users Data:", referredUsersData);
-      console.log("Monthly Earnings Data:", monthlyEarningsData);
 
       if (balanceData.origem === "stripe") {
         setSaldoDisponivel(balanceData.disponivel[0].valor);
