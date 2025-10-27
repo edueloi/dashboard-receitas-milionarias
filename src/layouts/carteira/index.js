@@ -122,7 +122,7 @@ function MinhaCarteira() {
 
   const handleStripeConnect = async () => {
     try {
-      const { data } = await api.post("/payouts/stripe-connect");
+      const { data } = await api.post("/stripe/connect/onboard-user");
       window.location.href = data.url;
     } catch (error) {
       console.error(error);
