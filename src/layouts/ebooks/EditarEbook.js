@@ -224,7 +224,7 @@ function EditarEbook() {
                   </MDTypography>
                   <ImageUpload
                     onImageChange={setCoverImage}
-                    existingImage={ebookInfo.capa_url}
+                    initialImage={ebookInfo.capa_url}
                     sx={{ height: 300 }}
                   />
                   <MDTypography variant="caption" color="text.secondary" mt={1}>
