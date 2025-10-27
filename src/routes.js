@@ -16,6 +16,8 @@ import Relatorios from "layouts/relatorios";
 import AdminPanel from "layouts/admin";
 import Ebooks from "layouts/ebooks";
 import CriarEbook from "layouts/ebooks/CriarEbook";
+import ViewEbook from "layouts/ebooks/ViewEbook";
+import EditarEbook from "layouts/ebooks/EditarEbook";
 
 // --- Autenticação ---
 import SignInSplit from "layouts/authentication/sign-in";
@@ -151,6 +153,16 @@ const routes = [
     key: "criar-ebook",
     route: "/ebooks/criar",
     component: <CriarEbook />,
+  },
+  {
+    key: "editar-ebook",
+    route: "/ebooks/editar/:id",
+    component: <EditarEbook />,
+  },
+  {
+    key: "view-ebook",
+    route: "/ebooks/:id",
+    component: <ViewEbook />,
   },
   {
     key: "detalhes-receita",

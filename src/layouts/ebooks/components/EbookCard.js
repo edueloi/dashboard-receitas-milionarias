@@ -9,7 +9,7 @@ import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDButton from "components/MDButton";
 
-function EbookCard({ image, title, description, onRead, onDownload, onDelete }) {
+function EbookCard({ image, title, description, onRead, onDownload, onEdit, onDelete }) {
   return (
     <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
       <MDBox position="relative">
@@ -20,24 +20,38 @@ function EbookCard({ image, title, description, onRead, onDownload, onDelete }) 
           alt={title}
           sx={{ objectFit: "cover" }}
         />
-        {onDelete && (
-          <IconButton
-            onClick={onDelete}
-            sx={{
-              position: "absolute",
-              top: 8,
-              right: 8,
-              backgroundColor: "rgba(255, 255, 255, 0.7)",
-              "&:hover": {
-                backgroundColor: "rgba(255, 255, 255, 0.9)",
-              },
-            }}
-            aria-label="delete"
-            size="small"
-          >
-            <Icon color="error">delete</Icon>
-          </IconButton>
-        )}
+        <MDBox sx={{ position: "absolute", top: 8, right: 8, display: "flex", gap: 0.5 }}>
+          {onEdit && (
+            <IconButton
+              onClick={onEdit}
+              sx={{
+                backgroundColor: "rgba(255, 255, 255, 0.7)",
+                "&:hover": {
+                  backgroundColor: "rgba(255, 255, 255, 0.9)",
+                },
+              }}
+              aria-label="edit"
+              size="small"
+            >
+              <Icon color="info">edit</Icon>
+            </IconButton>
+          )}
+          {onDelete && (
+            <IconButton
+              onClick={onDelete}
+              sx={{
+                backgroundColor: "rgba(255, 255, 255, 0.7)",
+                "&:hover": {
+                  backgroundColor: "rgba(255, 255, 255, 0.9)",
+                },
+              }}
+              aria-label="delete"
+              size="small"
+            >
+              <Icon color="error">delete</Icon>
+            </IconButton>
+          )}
+        </MDBox>
       </MDBox>
       <CardContent sx={{ flexGrow: 1 }}>
         <MDTypography variant="h6" gutterBottom>
@@ -70,6 +84,7 @@ EbookCard.propTypes = {
   description: PropTypes.string.isRequired,
   onRead: PropTypes.func.isRequired,
   onDownload: PropTypes.func.isRequired,
+  onEdit: PropTypes.func,
   onDelete: PropTypes.func,
 };
 

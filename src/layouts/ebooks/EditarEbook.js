@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import api from "services/api";
 import ReactQuill from "react-quill";
@@ -35,7 +35,8 @@ const FileInput = styled("input")({
   display: "none",
 });
 
-function CriarEbook() {
+function EditarEbook() {
+  const { id } = useParams();
   const navigate = useNavigate();
   const [ebookInfo, setEbookInfo] = useState({
     titulo: "",
@@ -46,6 +47,26 @@ function CriarEbook() {
   const [coverImage, setCoverImage] = useState(null);
   const [ebookFile, setEbookFile] = useState(null);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const fetchEbook = async () => {
+      try {
+        const response = await api.get(`/ebooks/${id}`);
+        const ebook = response.data;
+        setEbookInfo({
+          titulo: ebook.titulo,
+          descricao_curta: ebook.descricao_curta,
+          descricao: ebook.descricao,
+          categoria_id: ebookCategories.find((c) => c.id === ebook.categoria_id) || null,
+        });
+      } catch (error) {
+        console.error("Erro ao buscar ebook:", error);
+        toast.error("Não foi possível carregar os dados do ebook.");
+      }
+    };
+
+    fetchEbook();
+  }, [id]);
 
   const handleChange = (e) => {
     setEbookInfo((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -76,27 +97,24 @@ function CriarEbook() {
         formData.append("arquivo", ebookFile);
       }
 
-      await api.post("/ebooks", formData, {
+      await api.put(`/ebooks/${id}`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
 
-      toast.success("Ebook criado com sucesso!");
+      toast.success("Ebook atualizado com sucesso!");
       navigate("/ebooks");
     } catch (error) {
-      console.error("Erro ao criar ebook:", error);
-      toast.error("Erro ao criar ebook. Verifique os campos e tente novamente.");
+      console.error("Erro ao atualizar ebook:", error);
+      toast.error("Erro ao atualizar ebook. Verifique os campos e tente novamente.");
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <PageWrapper
-      title="Criar Novo Ebook"
-      subtitle="Preencha os detalhes abaixo para adicionar um novo ebook."
-    >
+    <PageWrapper title="Editar Ebook" subtitle="Atualize os detalhes do seu ebook.">
       <Grid container spacing={3}>
         <Grid item xs={12}>
           <Card>
@@ -107,7 +125,7 @@ function CriarEbook() {
                     <MDTypography variant="h6" mb={1}>
                       Capa do Ebook
                     </MDTypography>
-                    <ImageUpload onImageChange={setCoverImage} />
+                    <ImageUpload onImageChange={setCoverImage} existingImage={ebookInfo.capa_url} />
                   </MDBox>
                 </Grid>
                 <Grid item xs={12} md={8}>
@@ -186,7 +204,7 @@ function CriarEbook() {
                 disabled={saving}
                 startIcon={<Icon>{saving ? "hourglass_top" : "save"}</Icon>}
               >
-                {saving ? "Salvando..." : "Salvar Ebook"}
+                {saving ? "Salvando..." : "Salvar Alterações"}
               </MDButton>
             </MDBox>
           </Card>
@@ -196,4 +214,4 @@ function CriarEbook() {
   );
 }
 
-export default CriarEbook;
+export default EditarEbook;

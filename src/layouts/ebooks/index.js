@@ -32,7 +32,7 @@ const modalStyle = {
 };
 
 function Ebooks() {
-  const { uiPermissions } = useAuth();
+  const { user, uiPermissions } = useAuth();
   const navigate = useNavigate();
   const [ebooks, setEbooks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -94,7 +94,11 @@ function Ebooks() {
   };
 
   const handleDownload = (id) => {
-    window.open(`${api.defaults.baseURL}/ebooks/${id}/download`);
+    window.open(`${api.defaults.baseURL}ebooks/${id}/download`);
+  };
+
+  const handleEdit = (id) => {
+    navigate(`/ebooks/editar/${id}`);
   };
 
   const headerActions = useMemo(
@@ -154,9 +158,12 @@ function Ebooks() {
                   image={ebook.capa_url}
                   title={ebook.titulo}
                   description={ebook.descricao_curta}
-                  onRead={() => navigate(`/ebooks/${ebook.id}`)} // TODO: Create ebook details page
+                  onRead={() => navigate(`/ebooks/${ebook.id}`)}
                   onDownload={() => handleDownload(ebook.id)}
-                  onDelete={() => openDeleteModal(ebook.id)}
+                  onEdit={user && ebook.usuario_id === user.id ? () => handleEdit(ebook.id) : null}
+                  onDelete={
+                    user && ebook.usuario_id === user.id ? () => openDeleteModal(ebook.id) : null
+                  }
                 />
               </Grid>
             ))}

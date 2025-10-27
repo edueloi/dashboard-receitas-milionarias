@@ -76,7 +76,10 @@ function AppContent() {
 
   const filteredRoutes = routes.filter(
     (route) =>
-      !route.key || route.key === "logout" || (uiPermissions && uiPermissions.includes(route.key))
+      !route.key ||
+      route.key === "logout" ||
+      route.key === "view-ebook" ||
+      (uiPermissions && uiPermissions.includes(route.key))
   );
 
   const getRoutes = (allRoutes) => {
@@ -95,6 +98,15 @@ function AppContent() {
             />
           ) : (
             <Route path={route.route} element={route.component} key={route.key} />
+          );
+        }
+        if (route.key === "view-ebook") {
+          return (
+            <Route
+              path={route.route}
+              element={<PrivateRoute>{route.component}</PrivateRoute>}
+              key={route.key}
+            />
           );
         }
         return (
