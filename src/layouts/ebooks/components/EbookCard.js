@@ -1,3 +1,4 @@
+import { useState } from "react";
 import PropTypes from "prop-types";
 import Card from "@mui/material/Card";
 import CardMedia from "@mui/material/CardMedia";
@@ -5,13 +6,46 @@ import CardContent from "@mui/material/CardContent";
 import CardActions from "@mui/material/CardActions";
 import Icon from "@mui/material/Icon";
 import IconButton from "@mui/material/IconButton";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDButton from "components/MDButton";
 
 function EbookCard({ image, title, description, onRead, onDownload, onEdit, onDelete }) {
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleEdit = () => {
+    onEdit();
+    handleMenuClose();
+  };
+
+  const handleDelete = () => {
+    onDelete();
+    handleMenuClose();
+  };
+
   return (
-    <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <Card
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        transition: "box-shadow 0.3s",
+        "&:hover": {
+          boxShadow: (theme) => theme.shadows[4],
+        },
+      }}
+    >
       <MDBox position="relative">
         <CardMedia
           component="img"
@@ -20,48 +54,48 @@ function EbookCard({ image, title, description, onRead, onDownload, onEdit, onDe
           alt={title}
           sx={{ objectFit: "cover" }}
         />
-        <MDBox sx={{ position: "absolute", top: 8, right: 8, display: "flex", gap: 0.5 }}>
-          {onEdit && (
+        {(onEdit || onDelete) && (
+          <MDBox sx={{ position: "absolute", top: 8, right: 8 }}>
             <IconButton
-              onClick={onEdit}
+              aria-label="settings"
+              onClick={handleMenuOpen}
               sx={{
                 backgroundColor: "rgba(255, 255, 255, 0.7)",
                 "&:hover": {
                   backgroundColor: "rgba(255, 255, 255, 0.9)",
                 },
               }}
-              aria-label="edit"
-              size="small"
             >
-              <Icon color="info">edit</Icon>
+              <Icon>more_vert</Icon>
             </IconButton>
-          )}
-          {onDelete && (
-            <IconButton
-              onClick={onDelete}
-              sx={{
-                backgroundColor: "rgba(255, 255, 255, 0.7)",
-                "&:hover": {
-                  backgroundColor: "rgba(255, 255, 255, 0.9)",
-                },
-              }}
-              aria-label="delete"
-              size="small"
-            >
-              <Icon color="error">delete</Icon>
-            </IconButton>
-          )}
-        </MDBox>
+            <Menu anchorEl={anchorEl} open={open} onClose={handleMenuClose}>
+              {onEdit && (
+                <MenuItem onClick={handleEdit}>
+                  <Icon>edit</Icon>&nbsp; Editar
+                </MenuItem>
+              )}
+              {onDelete && (
+                <MenuItem onClick={handleDelete}>
+                  <Icon color="error">delete</Icon>&nbsp; Excluir
+                </MenuItem>
+              )}
+            </Menu>
+          </MDBox>
+        )}
       </MDBox>
-      <CardContent sx={{ flexGrow: 1 }}>
-        <MDTypography variant="h6" gutterBottom>
+      <CardContent sx={{ flexGrow: 1, p: 2 }}>
+        <MDTypography variant="h6" gutterBottom sx={{ mb: 1 }}>
           {title}
         </MDTypography>
-        <MDTypography variant="body2" color="text.secondary">
+        <MDTypography
+          variant="body2"
+          color="text.secondary"
+          sx={{ height: 60, overflow: "hidden" }}
+        >
           {description}
         </MDTypography>
       </CardContent>
-      <CardActions sx={{ justifyContent: "flex-end", p: 2, pt: 0 }}>
+      <CardActions sx={{ justifyContent: "space-between", p: 2, pt: 0 }}>
         <MDButton variant="text" color="info" startIcon={<Icon>visibility</Icon>} onClick={onRead}>
           Ler
         </MDButton>

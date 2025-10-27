@@ -18,6 +18,7 @@ import Ebooks from "layouts/ebooks";
 import CriarEbook from "layouts/ebooks/CriarEbook";
 import ViewEbook from "layouts/ebooks/ViewEbook";
 import EditarEbook from "layouts/ebooks/EditarEbook";
+import EbookCategories from "layouts/ebook-categories";
 
 // --- Autenticação ---
 import SignInSplit from "layouts/authentication/sign-in";
@@ -83,6 +84,14 @@ const routes = [
     icon: <Icon fontSize="small">book</Icon>,
     route: "/ebooks",
     component: <Ebooks />,
+  },
+  {
+    type: "collapse",
+    name: "Categorias de Ebooks",
+    key: "ebook-categories",
+    icon: <Icon fontSize="small">class</Icon>,
+    route: "/ebook-categories",
+    component: <EbookCategories />,
   },
   {
     type: "collapse",

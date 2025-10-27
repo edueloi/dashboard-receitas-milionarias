@@ -79,6 +79,7 @@ function AppContent() {
       !route.key ||
       route.key === "logout" ||
       route.key === "view-ebook" ||
+      route.key === "editar-ebook" ||
       (uiPermissions && uiPermissions.includes(route.key))
   );
 
@@ -100,7 +101,7 @@ function AppContent() {
             <Route path={route.route} element={route.component} key={route.key} />
           );
         }
-        if (route.key === "view-ebook") {
+        if (route.key === "view-ebook" || route.key === "editar-ebook") {
           return (
             <Route
               path={route.route}
