@@ -9,7 +9,7 @@ import "react-quill/dist/quill.snow.css";
 import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
 import Icon from "@mui/material/Icon";
-import { TextField, Autocomplete, Stack, Divider, InputAdornment, Modal, Box } from "@mui/material";
+import { TextField, Autocomplete, Stack, Divider, Modal, Box } from "@mui/material";
 import { styled } from "@mui/material/styles";
 
 // MD
@@ -46,7 +46,6 @@ function CriarEbook() {
     descricao_curta: "",
     descricao: "",
     categoria_id: null,
-    preco_centavos: "",
   });
   const [coverImage, setCoverImage] = useState(null);
   const [ebookFile, setEbookFile] = useState(null);
@@ -69,11 +68,6 @@ function CriarEbook() {
   }, []);
 
   const handleChange = (e) => {
-    if (e.target.name === "preco_centavos") {
-      const rawValue = e.target.value.replace(/[^0-9,.]/g, "");
-      setEbookInfo((prev) => ({ ...prev, [e.target.name]: rawValue }));
-      return;
-    }
     setEbookInfo((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
@@ -110,16 +104,6 @@ function CriarEbook() {
   };
 
   const handleSave = async () => {
-    // Lógica de conversão de preço (mantida)
-    let precoParaSalvar = null;
-    if (ebookInfo.preco_centavos) {
-      const cleanedPrice = ebookInfo.preco_centavos.replace(/[.]/g, "").replace(/,/g, ".");
-      const reais = parseFloat(cleanedPrice);
-      if (!isNaN(reais)) {
-        precoParaSalvar = Math.round(reais * 100);
-      }
-    }
-
     setSaving(true);
     try {
       const formData = new FormData();
@@ -130,9 +114,7 @@ function CriarEbook() {
       if (ebookInfo.categoria_id) {
         formData.append("categoria_id", ebookInfo.categoria_id.id);
       }
-      if (precoParaSalvar !== null) {
-        formData.append("preco_centavos", precoParaSalvar);
-      }
+
       if (coverImage) {
         formData.append("capa", coverImage);
       }
@@ -172,7 +154,7 @@ function CriarEbook() {
                 Informações Básicas
               </MDTypography>
               <Divider sx={{ mb: 3 }} />
-              <Grid container spacing={3}>
+              <Grid container spacing={3} alignItems="flex-start">
                 <Grid item xs={12} md={4}>
                   <MDTypography variant="h6" mb={1}>
                     Capa do Ebook <span style={{ color: "red" }}>*</span>
@@ -193,6 +175,7 @@ function CriarEbook() {
                       required
                       fullWidth
                     />
+
                     <Stack direction="row" spacing={1} alignItems="center">
                       <Autocomplete
                         options={ebookCategories}
@@ -211,18 +194,6 @@ function CriarEbook() {
                         <Icon>add</Icon>
                       </MDButton>
                     </Stack>
-
-                    <MDInput
-                      name="preco_centavos"
-                      label="Preço"
-                      value={ebookInfo.preco_centavos}
-                      onChange={handleChange}
-                      placeholder="Ex: 9,90 ou 0,00 para gratuito"
-                      fullWidth
-                      InputProps={{
-                        startAdornment: <InputAdornment position="start">R$</InputAdornment>,
-                      }}
-                    />
 
                     <MDInput
                       name="descricao_curta"
@@ -267,7 +238,23 @@ function CriarEbook() {
               <MDTypography variant="body2" color="text.secondary" mb={2}>
                 Selecione o arquivo final do seu ebook (PDF, DOCX, etc.).
               </MDTypography>
-              <MDBox display="flex" alignItems="center" gap={2}>
+              {/* Ajustes de responsividade para a seção de upload de arquivo */}
+              <MDBox
+                display="flex"
+                // Ajustado para coluna no mobile, linha no desktop
+                sx={{
+                  flexDirection: { xs: "column", sm: "row" },
+                  alignItems: { xs: "flex-start", sm: "center" }, // Alinha itens à esquerda no mobile
+                  gap: { xs: 2, sm: 2 },
+                  "& > label": {
+                    width: { xs: "100%", sm: "auto" }, // Label ocupa 100% no mobile
+                    "& > button": {
+                      width: "100%", // Botão dentro da label também ocupa 100% no mobile
+                      justifyContent: "center",
+                    },
+                  },
+                }}
+              >
                 <label htmlFor="ebook-file-upload">
                   <FileInput
                     accept=".pdf,.doc,.docx,.ppt,.pptx"
@@ -303,13 +290,22 @@ function CriarEbook() {
                   </MDTypography>
                 )}
               </MDBox>
+              {/* Ajustes de responsividade para os botões de ação final */}
               <MDBox
                 mt={6}
                 p={3}
                 display="flex"
                 justifyContent="flex-end"
-                gap={2}
-                sx={{ borderTop: (theme) => `1px solid ${theme.palette.divider}`, pt: 3 }}
+                sx={{
+                  borderTop: (theme) => `1px solid ${theme.palette.divider}`,
+                  pt: 3,
+                  flexDirection: { xs: "column", sm: "row" }, // Coluna no mobile, linha no desktop
+                  gap: { xs: 2, sm: 2 }, // Espaçamento entre os botões
+                  "& > button": {
+                    width: { xs: "100%", sm: "auto" }, // Botões ocupam 100% no mobile, auto no desktop
+                    justifyContent: "center", // Centraliza o conteúdo dos botões
+                  },
+                }}
               >
                 <MDButton color="secondary" onClick={() => navigate("/ebooks")}>
                   <Icon>cancel</Icon>&nbsp; Cancelar

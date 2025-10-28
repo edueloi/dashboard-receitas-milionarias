@@ -84,6 +84,15 @@ const colors = {
     focus: "#444444",
   },
 
+  gold: {
+    main: "#C9A635",
+    focus: "#B39530",
+  },
+  darkGreen: {
+    main: "#1C3B32",
+    focus: "#152C26",
+  },
+
   grey: {
     100: "#f8f9fa",
     200: "#f0f2f5",
