@@ -25,6 +25,10 @@ import SignInSplit from "layouts/authentication/sign-in";
 import SignUpWizard from "layouts/authentication/sign-up/SignUpWizard";
 import AuthLayout from "layouts/authentication/AuthLayout";
 
+import PagamentoPage from "layouts/pagamento";
+import PagamentoSucesso from "layouts/pagamento/PagamentoSucesso";
+import PagamentoCancelado from "layouts/pagamento/PagamentoCancelado";
+
 const routes = [
   // --- ROTAS PÚBLICAS (sem sidebar) ---
   {
@@ -177,6 +181,21 @@ const routes = [
     key: "detalhes-receita",
     route: "/receita/:slug",
     component: <DetalhesReceita />,
+  },
+  {
+    key: "pagamento",
+    route: "/pagamento",
+    component: <PagamentoPage />,
+  },
+  {
+    key: "pagamento-sucesso",
+    route: "/pagamento-sucesso",
+    component: <PagamentoSucesso />,
+  },
+  {
+    key: "pagamento-cancelado",
+    route: "/pagamento-cancelado",
+    component: <PagamentoCancelado />,
   },
 ];
 

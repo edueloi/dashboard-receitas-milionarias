@@ -25,11 +25,19 @@ function AppContent() {
   const [controller, dispatch] = useMaterialUIController();
   const { miniSidenav, direction, layout, sidenavColor } = controller;
   const [onMouseEnter, setOnMouseEnter] = useState(false);
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const { isAuthenticated, loading, uiPermissions } = useAuth();
   const { preferences } = useUserPreferences();
   const { theme: themePref, sidenavColor: sidenavColorPref, sidenavStyle } = preferences;
   const darkMode = themePref === "dark";
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(search);
+    const affiliateId = urlParams.get("ref");
+    if (affiliateId) {
+      localStorage.setItem("affiliateId", affiliateId);
+    }
+  }, [search]);
 
   useEffect(() => {
     setDarkMode(dispatch, darkMode);
