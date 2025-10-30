@@ -17,7 +17,19 @@ import MDButton from "components/MDButton";
  *  - "hero":   3/2 desktop, 4/3 mobile
  */
 function UserRecipeCard({ recipe, onEdit, onDelete, size = "normal" }) {
-  const { id, name, image, description, category } = recipe;
+  const { id, name, image, description, category, status } = recipe;
+
+  // Aceita status em português e inglês
+  const statusLower = (status || "").toLowerCase();
+  let statusColor = "#bdbdbd";
+  let statusLabel = "Inativa";
+  if (statusLower === "ativo" || statusLower === "active") {
+    statusColor = "#43a047";
+    statusLabel = "Ativa";
+  } else if (statusLower === "pendente" || statusLower === "pending") {
+    statusColor = "#ff9800";
+    statusLabel = "Pendente";
+  }
 
   const ratio =
     size === "hero"
@@ -57,7 +69,7 @@ function UserRecipeCard({ recipe, onEdit, onDelete, size = "normal" }) {
             objectFit: "cover",
             objectPosition: "center",
             transform: "scale(1)",
-            transition: "transform .45s ease",
+            transition: "transform .45s ease, filter .3s ease",
             ".MuiCard-root:hover &": { transform: "scale(1.045)" },
           }}
         />
@@ -80,6 +92,41 @@ function UserRecipeCard({ recipe, onEdit, onDelete, size = "normal" }) {
             }}
           />
         ) : null}
+
+        {/* Bolinha de status e texto no canto inferior direito da imagem */}
+        <Tooltip title={statusLabel} arrow enterDelay={150}>
+          <span
+            style={{
+              position: "absolute",
+              right: 120,
+              bottom: 12,
+              zIndex: 3,
+              display: "flex",
+              alignItems: "center",
+              background: "rgba(0,0,0,0.55)",
+              borderRadius: 16,
+              padding: "2px 10px 2px 6px",
+              color: "#fff",
+              fontWeight: 600,
+              fontSize: 13,
+              letterSpacing: 0.2,
+              boxShadow: "0 0 0 1px #bbb",
+            }}
+          >
+            <span
+              style={{
+                display: "inline-block",
+                width: 14,
+                height: 14,
+                borderRadius: "50%",
+                background: statusColor,
+                border: "2px solid #fff",
+                marginRight: 7,
+              }}
+            />
+            {statusLabel}
+          </span>
+        </Tooltip>
       </MDBox>
 
       {/* Divider sutil entre imagem e conteúdo */}
@@ -93,13 +140,13 @@ function UserRecipeCard({ recipe, onEdit, onDelete, size = "normal" }) {
           display: "flex",
           flexDirection: "column",
           gap: 0.75,
-          flexGrow: 1,
+          flexGrow: 1, // Garante que esta caixa ocupe o espaço disponível
         }}
       >
         <MDBox
           sx={{
             display: "flex",
-            alignItems: "flex-start",
+            alignItems: "center",
             gap: 1,
             justifyContent: "space-between",
           }}
@@ -183,6 +230,7 @@ UserRecipeCard.propTypes = {
     image: PropTypes.string.isRequired,
     description: PropTypes.string,
     category: PropTypes.string,
+    status: PropTypes.string,
   }).isRequired,
   onEdit: PropTypes.func.isRequired,
   onDelete: PropTypes.func.isRequired,

@@ -91,7 +91,7 @@ function MinhasReceitas() {
       try {
         setLoading(true);
         const [recipesRes, categoriesRes, tagsRes] = await Promise.all([
-          api.get("/recipes?populate=categoria,tags,criador"),
+          api.get("/recipes?allStatus=true&populate=categoria,tags,criador"),
           api.get("/categories"),
           api.get("/tags"),
         ]);
@@ -158,6 +158,7 @@ function MinhasReceitas() {
       votes: recipe.total_avaliacoes || 0,
       tags: recipe.tags || [],
       category: recipe.categoria?.nome || "Sem Categoria",
+      status: recipe.status,
     };
   };
 
