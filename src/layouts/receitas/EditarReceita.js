@@ -47,6 +47,7 @@ function EditarReceita() {
     tags: [],
     ingredients: [{ groupTitle: "Ingredientes", items: [{ itemText: "" }] }],
     instructions: [{ stepText: "" }],
+    status: "pendente",
   });
 
   useEffect(() => {
@@ -75,6 +76,7 @@ function EditarReceita() {
           category: categoriesRes.data.find((cat) => cat.id === recipeData.id_categoria) || null,
           difficulty: recipeData.dificuldade || "Fácil",
           prepTimeMin: recipeData.tempo_preparo_min || "",
+          status: recipeData.status || "pendente",
           tags: recipeData.tags
             .map((tag) => tagsRes.data.find((t) => t.id === tag.id))
             .filter(Boolean),
@@ -172,6 +174,10 @@ function EditarReceita() {
     setImageToDelete(true);
   };
 
+  const handleStatusChange = (e) => {
+    setFormData((prev) => ({ ...prev, status: e.target.checked ? "ativo" : "pendente" }));
+  };
+
   const handleSubmit = async () => {
     const form = new FormData();
 
@@ -194,6 +200,7 @@ function EditarReceita() {
         ordem: index + 1,
       })),
       tags: formData.tags.map((tag) => tag.id),
+      status: formData.status,
       delete_image: imageToDelete,
     };
 
@@ -290,6 +297,19 @@ function EditarReceita() {
 
               <Grid item xs={12} mt={2}>
                 <MDTypography variant="h6">Detalhes do Preparo</MDTypography>
+              </Grid>
+              <Grid item xs={12}>
+                <Card>
+                  <MDBox p={3}>
+                    <MDTypography variant="h6">Status da Receita</MDTypography>
+                    <MDBox display="flex" alignItems="center" mt={1}>
+                      <Switch checked={formData.status === "ativo"} onChange={handleStatusChange} />
+                      <MDTypography variant="button" sx={{ ml: 1 }}>
+                        {formData.status === "ativo" ? "Ativa" : "Pendente"}
+                      </MDTypography>
+                    </MDBox>
+                  </MDBox>
+                </Card>
               </Grid>
               <Grid item xs={12} md={4}>
                 <Autocomplete

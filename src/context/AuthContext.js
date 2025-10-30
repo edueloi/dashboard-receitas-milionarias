@@ -45,6 +45,8 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [uiPermissions, setUiPermissions] = useState([]);
 
+  const lastRefetch = React.useRef(0);
+
   const logout = useCallback(() => {
     localStorage.removeItem("authToken");
     delete api.defaults.headers.common["Authorization"];
@@ -111,6 +113,27 @@ export const AuthProvider = ({ children }) => {
     };
     checkUserToken();
   }, [logout]);
+
+  // Refetch user profile when window gains focus to pick up changes (e.g. after Stripe onboarding)
+  useEffect(() => {
+    const handleFocus = async () => {
+      try {
+        if (!isAuthenticated) return;
+        const now = Date.now();
+        // Debounce refetches to avoid spamming
+        if (now - lastRefetch.current < 5000) return;
+        lastRefetch.current = now;
+        const response = await api.get("/users/me");
+        processUserData(response.data);
+      } catch (err) {
+        // Ignore errors silently
+        // console.warn('Falha ao refetch perfil no focus:', err);
+      }
+    };
+
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [isAuthenticated]);
 
   const authContextValue = {
     user,

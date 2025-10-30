@@ -42,8 +42,12 @@ function recipesTableData(recipes, isAdmin, onDelete, onEdit) {
 
   const rows = recipes.map((recipe) => {
     // garante valores padrão para evitar erros
-    const media = recipe.media_avaliacoes || 0;
-    const total = recipe.quantidade_avaliacoes || 0;
+    const media = Number(
+      recipe.resultados_avaliacao?.media_avaliacoes ?? recipe.media_avaliacoes ?? 0
+    );
+    const total = Number(
+      recipe.resultados_avaliacao?.quantidade_comentarios ?? recipe.quantidade_avaliacoes ?? 0
+    );
 
     const row = {
       receita: (
@@ -58,14 +62,15 @@ function recipesTableData(recipes, isAdmin, onDelete, onEdit) {
           {recipe.categoria?.nome || "Sem categoria"}
         </MDTypography>
       ),
-      avaliacao: (
-        <MDBox display="flex" alignItems="center" justifyContent="center">
-          <Rating value={media} readOnly precision={0.1} size="small" sx={{ color: "#C9A635" }} />
-          <MDTypography variant="caption" sx={{ ml: 0.5 }}>
-            {media.toFixed(1)} ({total})
-          </MDTypography>
-        </MDBox>
-      ),
+      avaliacao:
+        media > 0 || total > 0 ? (
+          <MDBox display="flex" alignItems="center" justifyContent="center">
+            <Rating value={media} readOnly precision={0.1} size="small" sx={{ color: "#C9A635" }} />
+            <MDTypography variant="caption" sx={{ ml: 0.5 }}>
+              {media.toFixed(1)} ({total})
+            </MDTypography>
+          </MDBox>
+        ) : null,
       tags: (
         <MDBox display="flex" flexWrap="wrap" gap={0.5} justifyContent="center">
           {(recipe.tags || []).slice(0, 3).map((tag) => (

@@ -19,6 +19,9 @@ function PublicRecipeCard({ recipe }) {
   const { user } = useAuth();
   const { id, name, image, description, author, rating, votes, category } = recipe;
 
+  const showRating =
+    (typeof rating === "number" && rating > 0) || (typeof votes === "number" && votes > 0);
+
   const handleShare = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -103,30 +106,32 @@ function PublicRecipeCard({ recipe }) {
           ) : null}
 
           {/* Nota */}
-          <MDBox
-            sx={{
-              position: "absolute",
-              top: 10,
-              right: 10,
-              display: "flex",
-              alignItems: "center",
-              gap: 0.5,
-              px: 1,
-              py: 0.25,
-              borderRadius: 999,
-              bgcolor: alpha("#C9A635", 0.9),
-              color: "#fff",
-              fontWeight: 700,
-            }}
-          >
-            <Icon fontSize="small">star</Icon>
-            <MDTypography variant="button" color="inherit">
-              {Number(rating || 0).toFixed(1)}{" "}
-              <MDTypography component="span" variant="caption" color="inherit" sx={{ ml: 0.25 }}>
-                ({votes})
+          {showRating ? (
+            <MDBox
+              sx={{
+                position: "absolute",
+                top: 10,
+                right: 10,
+                display: "flex",
+                alignItems: "center",
+                gap: 0.5,
+                px: 1,
+                py: 0.25,
+                borderRadius: 999,
+                bgcolor: alpha("#C9A635", 0.9),
+                color: "#fff",
+                fontWeight: 700,
+              }}
+            >
+              <Icon fontSize="small">star</Icon>
+              <MDTypography variant="button" color="inherit">
+                {Number(rating ?? 0).toFixed(1)}{" "}
+                <MDTypography component="span" variant="caption" color="inherit" sx={{ ml: 0.25 }}>
+                  ({votes ?? 0})
+                </MDTypography>
               </MDTypography>
-            </MDTypography>
-          </MDBox>
+            </MDBox>
+          ) : null}
         </MDBox>
 
         {/* CONTEÚDO */}
@@ -222,8 +227,8 @@ PublicRecipeCard.propTypes = {
       name: PropTypes.string.isRequired,
       avatar: PropTypes.string,
     }).isRequired,
-    rating: PropTypes.number.isRequired,
-    votes: PropTypes.number.isRequired,
+    rating: PropTypes.number,
+    votes: PropTypes.number,
     category: PropTypes.string, // agora opcional
   }).isRequired,
 };

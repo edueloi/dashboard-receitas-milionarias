@@ -72,7 +72,8 @@ function TodasAsReceitas() {
       try {
         setLoading(true);
         const [recipesRes, categoriesRes, tagsRes] = await Promise.all([
-          api.get("/recipes?populate=categoria,tags,criador"),
+          // Request only active recipes for the public listing
+          api.get("/recipes?populate=categoria,tags,criador&status=ativo"),
           api.get("/categories"),
           api.get("/tags"),
         ]);
@@ -139,8 +140,20 @@ function TodasAsReceitas() {
       image: imageUrl,
       description: recipe.resumo,
       author: { name: recipe.criador?.nome || "Autor Desconhecido", avatar: authorAvatarUrl },
-      rating: Number(recipe.media_avaliacoes) || 0,
-      votes: Number(recipe.quantidade_avaliacoes) || 0,
+      // Agora os dados de avaliação vêm dentro de `resultados_avaliacao`
+      // Se não houver avaliação, deixamos null para que o frontend não mostre zeros
+      rating: (() => {
+        const r = Number(
+          recipe.resultados_avaliacao?.media_avaliacoes ?? recipe.media_avaliacoes ?? 0
+        );
+        return r > 0 ? r : null;
+      })(),
+      votes: (() => {
+        const v = Number(
+          recipe.resultados_avaliacao?.quantidade_comentarios ?? recipe.quantidade_avaliacoes ?? 0
+        );
+        return v > 0 ? v : null;
+      })(),
       tags: recipe.tags || [],
       category: recipe.categoria?.nome || "Sem Categoria",
     };

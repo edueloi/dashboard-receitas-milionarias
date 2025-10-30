@@ -52,7 +52,8 @@ function Ebooks() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [ebookToDelete, setEbookToDelete] = useState(null);
 
-  const canCreate = !uiPermissions.includes("afiliado");
+  // Somente usuários que não são afiliados devem conseguir criar ebooks
+  const canCreate = !!user && user.permissao !== "afiliado" && user.permissao !== "afiliado_pro";
 
   // --- Função de busca de Ebooks ---
   const fetchEbooks = useCallback(async () => {
