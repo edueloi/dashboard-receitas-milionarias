@@ -826,13 +826,14 @@ function AdminPanel() {
 
       {/* MODAL EXCLUIR */}
       <Modal open={isDeleteOpen} onClose={closeDelete}>
-        <Grow in={isDeleteOpen}>
-          <Box sx={{ ...centerModal, width: "min(480px, 92vw)" }}>
+        <Fade in={isDeleteOpen}>
+          <Box sx={centerModal}>
             <Card
               sx={{
                 borderRadius: 3,
                 border: `2px solid ${alpha("#f44336", 0.2)}`,
                 overflow: "hidden",
+                boxShadow: `0 8px 32px ${alpha("#f44336", 0.25)}`,
               }}
             >
               {/* Header */}
@@ -856,7 +857,7 @@ function AdminPanel() {
                     justifyContent: "center",
                   }}
                 >
-                  <Icon sx={{ fontSize: 28, color: "#fff" }}>warning</Icon>
+                  <Icon sx={{ fontSize: 28, color: "#fff" }}>delete_forever</Icon>
                 </MDBox>
                 <MDBox>
                   <MDTypography variant="h6" color="white" fontWeight="bold">
@@ -868,92 +869,175 @@ function AdminPanel() {
                 </MDBox>
               </MDBox>
 
-              <MDBox p={3}>
-                <MDBox
-                  sx={{
-                    p: 2.5,
-                    backgroundColor: alpha("#f44336", 0.08),
-                    borderRadius: 2,
-                    border: `1px solid ${alpha("#f44336", 0.2)}`,
-                    mb: 3,
-                  }}
-                >
-                  <MDTypography
-                    variant="body2"
+              {userToDelete && (
+                <MDBox p={3}>
+                  {/* Info do Usuário */}
+                  <MDBox
                     sx={{
-                      color: "#d32f2f",
-                      lineHeight: 1.6,
-                      fontSize: { xs: "0.875rem", sm: "0.95rem" },
+                      p: 2.5,
+                      mb: 2.5,
+                      backgroundColor: alpha(palette.green, 0.05),
+                      borderRadius: 2,
+                      border: `1px solid ${alpha(palette.green, 0.15)}`,
                     }}
                   >
-                    Tem certeza que deseja excluir o usuário{" "}
-                    <strong>
-                      {userToDelete?.nome} {userToDelete?.sobrenome}
-                    </strong>
-                    ?
-                    <br />
-                    <br />
-                    Todos os dados serão permanentemente removidos e não poderão ser recuperados.
-                  </MDTypography>
-                </MDBox>
+                    <Stack direction="row" spacing={2} alignItems="center">
+                      <MDBox
+                        sx={{
+                          width: 56,
+                          height: 56,
+                          borderRadius: 2,
+                          backgroundColor: alpha(palette.gold, 0.15),
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                        }}
+                      >
+                        <Icon sx={{ fontSize: 32, color: palette.gold }}>person</Icon>
+                      </MDBox>
+                      <MDBox sx={{ flex: 1, minWidth: 0 }}>
+                        <MDTypography
+                          variant="h6"
+                          sx={{
+                            color: palette.green,
+                            fontWeight: 700,
+                            mb: 0.5,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {userToDelete.nome} {userToDelete.sobrenome}
+                        </MDTypography>
+                        <MDTypography
+                          variant="caption"
+                          sx={{
+                            color: "text.secondary",
+                            display: "block",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {userToDelete.email}
+                        </MDTypography>
+                        <Stack direction="row" spacing={1} mt={0.5}>
+                          <MDBadge
+                            badgeContent={capitalize(userToDelete.roleName || "-")}
+                            color="info"
+                            variant="gradient"
+                            size="xs"
+                          />
+                          <MDBadge
+                            badgeContent={userToDelete.statusName || "-"}
+                            color={statusColor(userToDelete.statusName)}
+                            variant="gradient"
+                            size="xs"
+                          />
+                        </Stack>
+                      </MDBox>
+                    </Stack>
+                  </MDBox>
 
-                <Stack
-                  direction={{ xs: "column-reverse", sm: "row" }}
-                  spacing={1.5}
-                  justifyContent="flex-end"
-                >
-                  <MDButton
-                    onClick={closeDelete}
-                    fullWidth={true}
+                  {/* Aviso de Exclusão */}
+                  <MDBox
                     sx={{
-                      py: 1.2,
-                      px: 3,
+                      p: 2.5,
+                      backgroundColor: alpha("#f44336", 0.08),
                       borderRadius: 2,
-                      textTransform: "none",
-                      fontWeight: 600,
-                      color: palette.green,
-                      border: `2px solid ${alpha(palette.green, 0.3)}`,
-                      backgroundColor: "transparent",
-                      "&:hover": {
-                        backgroundColor: alpha(palette.green, 0.08),
-                        borderColor: palette.green,
-                      },
+                      border: `1px solid ${alpha("#f44336", 0.2)}`,
+                      mb: 3,
                     }}
                   >
-                    Cancelar
-                  </MDButton>
-                  <MDButton
-                    onClick={confirmDelete}
-                    fullWidth={true}
-                    sx={{
-                      py: 1.2,
-                      px: 3,
-                      borderRadius: 2,
-                      textTransform: "none",
-                      fontWeight: 600,
-                      background: `linear-gradient(135deg, #f44336 0%, ${alpha(
-                        "#f44336",
-                        0.85
-                      )} 100%)`,
-                      color: "#fff",
-                      boxShadow: `0 4px 12px ${alpha("#f44336", 0.3)}`,
-                      "&:hover": {
-                        background: `linear-gradient(135deg, ${alpha("#f44336", 0.9)} 0%, ${alpha(
+                    <Stack direction="row" spacing={1.5} alignItems="flex-start">
+                      <Icon sx={{ color: "#d32f2f", fontSize: 22, mt: 0.2 }}>warning_amber</Icon>
+                      <MDBox>
+                        <MDTypography
+                          variant="subtitle2"
+                          sx={{
+                            color: "#d32f2f",
+                            fontWeight: 700,
+                            mb: 0.5,
+                          }}
+                        >
+                          Atenção! Esta ação não pode ser desfeita.
+                        </MDTypography>
+                        <MDTypography
+                          variant="body2"
+                          sx={{
+                            color: "#d32f2f",
+                            lineHeight: 1.6,
+                            fontSize: "0.875rem",
+                          }}
+                        >
+                          Ao confirmar, todos os dados deste usuário serão{" "}
+                          <strong>permanentemente removidos</strong> do sistema e não poderão ser
+                          recuperados.
+                        </MDTypography>
+                      </MDBox>
+                    </Stack>
+                  </MDBox>
+
+                  {/* Botões de Ação */}
+                  <Stack
+                    direction={{ xs: "column-reverse", sm: "row" }}
+                    spacing={1.5}
+                    justifyContent="flex-end"
+                  >
+                    <MDButton
+                      onClick={closeDelete}
+                      fullWidth
+                      sx={{
+                        py: 1.2,
+                        px: 3,
+                        borderRadius: 2,
+                        textTransform: "none",
+                        fontWeight: 600,
+                        color: palette.green,
+                        border: `2px solid ${alpha(palette.green, 0.3)}`,
+                        backgroundColor: "transparent",
+                        "&:hover": {
+                          backgroundColor: alpha(palette.green, 0.08),
+                          borderColor: palette.green,
+                        },
+                      }}
+                    >
+                      Cancelar
+                    </MDButton>
+                    <MDButton
+                      onClick={confirmDelete}
+                      fullWidth
+                      sx={{
+                        py: 1.2,
+                        px: 3,
+                        borderRadius: 2,
+                        textTransform: "none",
+                        fontWeight: 600,
+                        background: `linear-gradient(135deg, #f44336 0%, ${alpha(
                           "#f44336",
-                          0.75
+                          0.85
                         )} 100%)`,
-                        boxShadow: `0 6px 16px ${alpha("#f44336", 0.4)}`,
-                        transform: "translateY(-2px)",
-                      },
-                    }}
-                  >
-                    Excluir Permanentemente
-                  </MDButton>
-                </Stack>
-              </MDBox>
+                        color: "#fff",
+                        boxShadow: `0 4px 12px ${alpha("#f44336", 0.3)}`,
+                        "&:hover": {
+                          background: `linear-gradient(135deg, ${alpha("#f44336", 0.9)} 0%, ${alpha(
+                            "#f44336",
+                            0.75
+                          )} 100%)`,
+                          boxShadow: `0 6px 16px ${alpha("#f44336", 0.4)}`,
+                          transform: "translateY(-2px)",
+                        },
+                      }}
+                    >
+                      Sim, Excluir Permanentemente
+                    </MDButton>
+                  </Stack>
+                </MDBox>
+              )}
             </Card>
           </Box>
-        </Grow>
+        </Fade>
       </Modal>
     </PageWrapper>
   );

@@ -76,11 +76,60 @@ function SignInSplit() {
 
       navigate("/dashboard");
     } catch (err) {
-      const errorMessage =
-        err.response?.data?.message || err.message || "E-mail ou senha inválidos.";
-      toast.error(errorMessage);
-      console.error("Erro de login:", err);
-    } finally {
+      // Verifica se é um usuário pendente que precisa pagar
+      if (err.response?.status === 403 && err.response?.data?.isPending) {
+        const userData = err.response.data.userData;
+
+        toast.error("Cadastro pendente. Redirecionando para pagamento...", {
+          duration: 3000,
+        });
+
+        // Aguarda 2 segundos e redireciona para o checkout do Stripe
+        setTimeout(async () => {
+          await redirectToStripeCheckout(userData);
+        }, 2000);
+      } else {
+        const errorMessage =
+          err.response?.data?.message || err.message || "E-mail ou senha inválidos.";
+        toast.error(errorMessage);
+        console.error("Erro de login:", err);
+        setLoading(false);
+      }
+    }
+  };
+
+  // Função para redirecionar para o checkout do Stripe
+  const redirectToStripeCheckout = async (userData) => {
+    try {
+      // Carrega o Stripe
+      const stripe = window.Stripe(
+        "pk_live_51SMf3SIDMhvKPy02zS4MR3PQR3l2uIESt1X0qTvabJjlYPn7tuoperw30O8qq8UGaSynVfrtSpQVYNKuFLaYRlZ400m2bDaWBv"
+      );
+
+      // Cria a sessão de checkout
+      const response = await api.post("/create-checkout-session", {
+        email: userData.email,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        affiliateId: userData.affiliateId || "",
+        success_url: `${window.location.origin}/dashboard`,
+        cancel_url: `${window.location.origin}/authentication/sign-in`,
+      });
+
+      const session = response.data;
+
+      // Redireciona para o Stripe
+      const { error } = await stripe.redirectToCheckout({
+        sessionId: session.id,
+      });
+
+      if (error) {
+        toast.error("Erro ao redirecionar para pagamento: " + error.message);
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error("Erro ao criar checkout:", error);
+      toast.error("Erro ao processar pagamento. Tente novamente.");
       setLoading(false);
     }
   };
