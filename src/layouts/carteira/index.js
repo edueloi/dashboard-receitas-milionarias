@@ -9,10 +9,6 @@ import ToggleButton from "@mui/material/ToggleButton";
 import Icon from "@mui/material/Icon";
 import IconButton from "@mui/material/IconButton";
 import Skeleton from "@mui/material/Skeleton";
-import Modal from "@mui/material/Modal";
-import Box from "@mui/material/Box";
-import TextField from "@mui/material/TextField";
-import MenuItem from "@mui/material/MenuItem";
 import Divider from "@mui/material/Divider";
 import { alpha } from "@mui/material/styles";
 import { CircularProgress } from "@mui/material";
@@ -25,28 +21,19 @@ import PageWrapper from "components/PageWrapper";
 import ReportsLineChart from "examples/Charts/LineCharts/ReportsLineChart";
 import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatisticsCard";
 import DataTable from "examples/Tables/DataTable";
+import VerticalBarChart from "examples/Charts/BarCharts/VerticalBarChart";
 
 // Data / API
 import api from "services/api";
 import toast from "react-hot-toast";
+import { useAuth } from "context/AuthContext";
 
 const palette = { gold: "#C9A635", green: "#1C3B32" };
 const brl = (v) =>
   typeof v === "number" ? v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : v;
 
-const withdrawModalStyle = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: 460,
-  bgcolor: "background.paper",
-  borderRadius: 14,
-  boxShadow: 24,
-  padding: 24,
-};
-
 function MinhaCarteira() {
+  const { user } = useAuth();
   const [period, setPeriod] = useState("30d");
   const [loading, setLoading] = useState(true);
   const [saldoDisponivel, setSaldoDisponivel] = useState(0);
@@ -54,71 +41,53 @@ function MinhaCarteira() {
   const [commissions, setCommissions] = useState([]);
   const [referredUsers, setReferredUsers] = useState([]);
   const [monthlyEarnings, setMonthlyEarnings] = useState([]);
+  const [connectedAccount, setConnectedAccount] = useState(null);
 
-  const [withdrawOpen, setWithdrawOpen] = useState(false);
-  const [withdrawAmount, setWithdrawAmount] = useState("");
-  const [withdrawMethod, setWithdrawMethod] = useState("pix");
-  const [withdrawing, setWithdrawing] = useState(false);
+  const isAdmin = user?.permissao === "admin";
 
   const fetchWallet = useCallback(async () => {
     try {
       setLoading(true);
-      const [{ data: balanceData }, { data: referredUsersData }, { data: monthlyEarningsData }] =
-        await Promise.all([
-          api.get("/wallet/balance"),
-          api.get("/users/referred"),
-          api.get("/earnings/monthly"),
-        ]);
+      const [
+        { data: balanceData },
+        { data: commissionsData },
+        { data: referredUsersData },
+        { data: monthlyEarningsData },
+        { data: accountData },
+      ] = await Promise.all([
+        api.get("/wallet/balance"),
+        api.get("/commissions").catch(() => ({ data: [] })),
+        api.get("/users/referred").catch(() => ({ data: [] })),
+        api.get("/earnings/monthly").catch(() => ({ data: [] })),
+        api.get("/stripe/connect/account").catch(() => ({ data: { connected: false } })),
+      ]);
 
-      if (balanceData.origem === "stripe") {
+      setConnectedAccount(accountData);
+
+      // Apenas admins veem ganhos pendentes
+      if (isAdmin && balanceData.origem === "stripe") {
         setSaldoDisponivel(balanceData.disponivel[0].valor);
         setGanhosPendentes(balanceData.pendente[0].valor);
       } else {
-        setSaldoDisponivel(balanceData.disponivel[0].valor);
-        setGanhosPendentes(0); // Não há ganhos pendentes para não-admins
+        setSaldoDisponivel(balanceData.disponivel[0]?.valor || 0);
+        setGanhosPendentes(0);
       }
 
-      setReferredUsers(referredUsersData);
-      setMonthlyEarnings(monthlyEarningsData);
+      // Garantir que sempre sejam arrays
+      setCommissions(Array.isArray(commissionsData) ? commissionsData : []);
+      setReferredUsers(Array.isArray(referredUsersData) ? referredUsersData : []);
+      setMonthlyEarnings(Array.isArray(monthlyEarningsData) ? monthlyEarningsData : []);
     } catch (e) {
       console.error(e);
       toast.error("Não foi possível carregar os dados da carteira.");
     } finally {
       setLoading(false);
     }
-  }, [period]);
+  }, [period, isAdmin]);
 
   useEffect(() => {
     fetchWallet();
   }, [fetchWallet, period]);
-
-  const handleOpenWithdraw = () => setWithdrawOpen(true);
-  const handleCloseWithdraw = () => {
-    if (!withdrawing) {
-      setWithdrawOpen(false);
-      setWithdrawAmount("");
-      setWithdrawMethod("pix");
-    }
-  };
-
-  const handleConfirmWithdraw = async () => {
-    const valor = Number(String(withdrawAmount).replace(",", "."));
-    if (!valor || valor <= 0) return toast.error("Informe um valor válido.");
-    if (valor > saldoDisponivel) return toast.error("Valor acima do saldo disponível.");
-
-    try {
-      setWithdrawing(true);
-      // await api.post("/wallet/withdraw", { valor, metodo: withdrawMethod });
-      toast.success("Solicitação de saque enviada!");
-      setSaldoDisponivel((prev) => prev - valor);
-      handleCloseWithdraw();
-    } catch (e) {
-      console.error(e);
-      toast.error("Não foi possível solicitar o saque.");
-    } finally {
-      setWithdrawing(false);
-    }
-  };
 
   const handleStripeConnect = async () => {
     try {
@@ -175,19 +144,6 @@ function MinhaCarteira() {
         >
           Atualizar
         </MDButton>
-
-        <MDButton
-          variant="gradient"
-          startIcon={<Icon>payment</Icon>}
-          onClick={handleOpenWithdraw}
-          sx={{
-            backgroundColor: `${palette.gold} !important`,
-            color: "#fff !important",
-            "&:hover": { backgroundColor: "#B5942E !important" },
-          }}
-        >
-          Solicitar Saque
-        </MDButton>
       </Stack>
     ),
     [period, fetchWallet]
@@ -199,23 +155,25 @@ function MinhaCarteira() {
       { Header: "valor", accessor: "valor", align: "center" },
       { Header: "data", accessor: "data", align: "center" },
     ],
-    rows: commissions.map((commission) => ({
-      afiliado: (
-        <MDTypography variant="caption" color="text" fontWeight="medium">
-          {commission.nome_pagador}
-        </MDTypography>
-      ),
-      valor: (
-        <MDTypography variant="caption" color="primary" fontWeight="medium">
-          {brl(commission.valor)}
-        </MDTypography>
-      ),
-      data: (
-        <MDTypography variant="caption" color="text" fontWeight="medium">
-          {new Date(commission.data_criacao).toLocaleDateString("pt-BR")}
-        </MDTypography>
-      ),
-    })),
+    rows: Array.isArray(commissions)
+      ? commissions.map((commission) => ({
+          afiliado: (
+            <MDTypography variant="caption" color="text" fontWeight="medium">
+              {commission.nome_pagador}
+            </MDTypography>
+          ),
+          valor: (
+            <MDTypography variant="caption" color="primary" fontWeight="medium">
+              {brl(commission.valor)}
+            </MDTypography>
+          ),
+          data: (
+            <MDTypography variant="caption" color="text" fontWeight="medium">
+              {new Date(commission.data_criacao).toLocaleDateString("pt-BR")}
+            </MDTypography>
+          ),
+        }))
+      : [],
   };
 
   const tabelaMeusAfiliados = {
@@ -224,44 +182,46 @@ function MinhaCarteira() {
       { Header: "email", accessor: "email", align: "center" },
       { Header: "data de cadastro", accessor: "data", align: "center" },
     ],
-    rows: referredUsers.map((user) => ({
-      nome: (
-        <MDTypography variant="caption" color="text" fontWeight="medium">
-          {user.nome}
-        </MDTypography>
-      ),
-      email: (
-        <MDTypography variant="caption" color="text" fontWeight="medium">
-          {user.email}
-        </MDTypography>
-      ),
-      data: (
-        <MDTypography variant="caption" color="text" fontWeight="medium">
-          {new Date(user.data_criacao).toLocaleDateString("pt-BR")}
-        </MDTypography>
-      ),
-    })),
+    rows: Array.isArray(referredUsers)
+      ? referredUsers.map((user) => ({
+          nome: (
+            <MDTypography variant="caption" color="text" fontWeight="medium">
+              {user.nome}
+            </MDTypography>
+          ),
+          email: (
+            <MDTypography variant="caption" color="text" fontWeight="medium">
+              {user.email}
+            </MDTypography>
+          ),
+          data: (
+            <MDTypography variant="caption" color="text" fontWeight="medium">
+              {new Date(user.data_criacao).toLocaleDateString("pt-BR")}
+            </MDTypography>
+          ),
+        }))
+      : [],
   };
 
   const ganhosMensaisChartData = {
-    labels: monthlyEarnings.map((e) => e.mes),
+    labels: Array.isArray(monthlyEarnings) ? monthlyEarnings.map((e) => e.mes) : [],
     datasets: {
       label: "Disponível",
-      data: monthlyEarnings.map((e) => e.disponivel),
+      data: Array.isArray(monthlyEarnings) ? monthlyEarnings.map((e) => e.disponivel) : [],
     },
   };
 
   return (
     <PageWrapper
       title="Minha Carteira"
-      subtitle="Acompanhe seu saldo, ganhos pendentes e histórico de comissões."
+      subtitle="Acompanhe seu saldo e comissões. Os pagamentos são processados automaticamente pelo Stripe."
       actions={headerActions}
     >
       {/* respiro lateral extra pra nada “encostar” nas bordas */}
       <MDBox px={{ xs: 0, md: 0 }}>
         {/* KPIs */}
         <Grid container spacing={3} mb={2}>
-          <Grid item xs={12} md={5}>
+          <Grid item xs={12} sm={6} md={isAdmin ? 5 : 6}>
             {loading ? (
               <Skeleton variant="rounded" height={134} />
             ) : (
@@ -270,163 +230,295 @@ function MinhaCarteira() {
                 icon="account_balance_wallet"
                 title="Saldo Disponível"
                 count={brl(saldoDisponivel)}
-                percentage={{ color: "info", amount: "", label: "Pronto para saque" }}
+                percentage={{
+                  color: "info",
+                  amount: "",
+                  label: "Pagamentos automáticos via Stripe",
+                }}
               />
             )}
           </Grid>
 
-          <Grid item xs={12} md={4}>
-            {loading ? (
-              <Skeleton variant="rounded" height={134} />
-            ) : (
-              <ComplexStatisticsCard
-                icon="hourglass_top"
-                title="Ganhos Pendentes"
-                count={brl(ganhosPendentes)}
-                percentage={{ color: "secondary", amount: "", label: "Aguardando liberação" }}
-              />
-            )}
-          </Grid>
+          {/* Ganhos Pendentes - APENAS para Admin */}
+          {isAdmin && (
+            <Grid item xs={12} sm={6} md={4}>
+              {loading ? (
+                <Skeleton variant="rounded" height={134} />
+              ) : (
+                <ComplexStatisticsCard
+                  icon="hourglass_top"
+                  title="Ganhos Pendentes"
+                  count={brl(ganhosPendentes)}
+                  percentage={{ color: "secondary", amount: "", label: "Aguardando liberação" }}
+                />
+              )}
+            </Grid>
+          )}
 
-          <Grid item xs={12} md={3}>
+          {/* Comissões - Apenas para afiliados */}
+          {!isAdmin && (
+            <Grid item xs={12} sm={6} md={6}>
+              {loading ? (
+                <Skeleton variant="rounded" height={134} />
+              ) : (
+                <ComplexStatisticsCard
+                  color="success"
+                  icon="payments"
+                  title="Total de Comissões"
+                  count={brl(
+                    Array.isArray(commissions)
+                      ? commissions.reduce((sum, c) => sum + (c.valor || 0), 0)
+                      : 0
+                  )}
+                  percentage={{
+                    color: "success",
+                    amount: `${Array.isArray(commissions) ? commissions.length : 0}`,
+                    label: "Comissões recebidas",
+                  }}
+                />
+              )}
+            </Grid>
+          )}
+
+          <Grid item xs={12} sm={6} md={isAdmin ? 3 : 12}>
             <Card
               sx={{
                 height: "100%",
+                minHeight: 134,
                 display: "flex",
+                flexDirection: "column",
                 justifyContent: "center",
                 alignItems: "center",
                 p: 2,
+                gap: 1,
               }}
             >
-              <MDButton
-                variant="outlined"
-                onClick={handleStripeConnect}
-                startIcon={<Icon>link</Icon>}
-                fullWidth
-                sx={{
-                  py: 1.25,
-                  color: palette.green,
-                  borderColor: palette.green,
-                  "&:hover": {
-                    backgroundColor: alpha(palette.green, 0.08),
+              {loading ? (
+                <CircularProgress size={24} />
+              ) : connectedAccount && connectedAccount.connected ? (
+                <>
+                  <Icon
+                    sx={{
+                      fontSize: "2.5rem !important",
+                      color: connectedAccount.account?.payouts_enabled
+                        ? palette.green
+                        : palette.gold,
+                    }}
+                  >
+                    {connectedAccount.account?.payouts_enabled ? "check_circle" : "pending"}
+                  </Icon>
+                  <MDTypography variant="button" fontWeight="medium" textAlign="center">
+                    {connectedAccount.account?.payouts_enabled
+                      ? "Stripe Conectado"
+                      : "Aguardando Aprovação"}
+                  </MDTypography>
+                  <MDTypography
+                    variant="caption"
+                    color="text"
+                    textAlign="center"
+                    sx={{ fontSize: "0.7rem" }}
+                  >
+                    {connectedAccount.account?.email || "Conta configurada"}
+                  </MDTypography>
+                  {connectedAccount.account?.payouts_enabled && (
+                    <MDTypography
+                      variant="caption"
+                      color="success"
+                      fontWeight="medium"
+                      textAlign="center"
+                    >
+                      ✓ Repasses habilitados
+                    </MDTypography>
+                  )}
+                </>
+              ) : (
+                <MDButton
+                  variant="outlined"
+                  onClick={handleStripeConnect}
+                  startIcon={<Icon>link</Icon>}
+                  fullWidth
+                  sx={{
+                    py: 1.25,
+                    color: palette.green,
                     borderColor: palette.green,
-                  },
-                }}
-              >
-                Conectar com o Stripe
-              </MDButton>
+                    "&:hover": {
+                      backgroundColor: alpha(palette.green, 0.08),
+                      borderColor: palette.green,
+                    },
+                  }}
+                >
+                  Conectar com o Stripe
+                </MDButton>
+              )}
             </Card>
           </Grid>
         </Grid>
 
-        {/* Gráfico — agora dentro de Card branco com padding */}
-        <Card sx={{ mb: 3, p: { xs: 2, md: 2.5 } }}>
-          <ReportsLineChart
-            color="primary"
-            title="Ganhos Mensais"
-            description={`Evolução dos ganhos de afiliados • período: ${period}`}
-            date="atualizado hoje"
-            chart={ganhosMensaisChartData}
-          />
-        </Card>
+        {/* Aviso informativo sobre pagamentos automáticos */}
+        {connectedAccount?.connected && connectedAccount?.account?.payouts_enabled && (
+          <Card
+            sx={{
+              mb: 3,
+              background: `linear-gradient(135deg, ${palette.green} 0%, ${palette.gold} 100%)`,
+              border: `2px solid ${alpha(palette.gold, 0.3)}`,
+            }}
+          >
+            <MDBox p={2.5} display="flex" alignItems="flex-start" gap={2}>
+              <Icon sx={{ fontSize: 32, color: "white", mt: 0.5 }}>info</Icon>
+              <MDBox flex={1}>
+                <MDTypography variant="h6" color="white" fontWeight="bold" mb={0.5}>
+                  💰 Como funciona o pagamento?
+                </MDTypography>
+                <MDTypography variant="body2" color="white" sx={{ opacity: 0.95, lineHeight: 1.6 }}>
+                  Seus pagamentos são <strong>automáticos via Stripe Connect</strong>. Quando você
+                  recebe comissões, o valor fica disponível no saldo acima e o Stripe transfere
+                  automaticamente para sua conta bancária cadastrada de acordo com o cronograma de
+                  repasses (geralmente a cada 2-7 dias). Não é necessário solicitar saques
+                  manualmente.
+                </MDTypography>
+              </MDBox>
+            </MDBox>
+          </Card>
+        )}
 
-        {/* Tabela */}
-        <Card sx={{ mb: 3 }}>
-          <MDBox display="flex" justifyContent="space-between" alignItems="center" p={2.5}>
-            <MDTypography variant="h6">Histórico de Ganhos por Afiliado</MDTypography>
-            <IconButton onClick={fetchWallet} size="small" sx={{ color: palette.green }}>
-              <Icon>refresh</Icon>
-            </IconButton>
-          </MDBox>
-          <Divider />
-          <MDBox>
-            <DataTable
-              table={tabelaAfiliados}
-              isSorted={false}
-              entriesPerPage={false}
-              showTotalEntries={false}
-              noEndBorder
-            />
-          </MDBox>
-        </Card>
+        {/* Gráficos Responsivos */}
+        <Grid container spacing={3} mb={3}>
+          {/* Gráfico de Ganhos Mensais */}
+          <Grid item xs={12} md={Array.isArray(referredUsers) && referredUsers.length > 0 ? 6 : 12}>
+            <Card sx={{ p: { xs: 2, md: 2.5 }, height: "100%" }}>
+              {Array.isArray(monthlyEarnings) && monthlyEarnings.length > 0 ? (
+                <ReportsLineChart
+                  color="primary"
+                  title="💰 Ganhos Mensais"
+                  description={`Evolução dos ganhos de afiliados • período: ${period}`}
+                  date="atualizado hoje"
+                  chart={ganhosMensaisChartData}
+                />
+              ) : (
+                <MDBox textAlign="center" py={6}>
+                  <Icon sx={{ fontSize: 64, color: "text.secondary", mb: 2 }}>trending_up</Icon>
+                  <MDTypography variant="h6" color="text" mb={1}>
+                    Sem dados de ganhos ainda
+                  </MDTypography>
+                  <MDTypography variant="caption" color="text">
+                    Suas comissões aparecerão aqui quando começar a receber pagamentos
+                  </MDTypography>
+                </MDBox>
+              )}
+            </Card>
+          </Grid>
 
-        <Card>
-          <MDBox display="flex" justifyContent="space-between" alignItems="center" p={2.5}>
-            <MDTypography variant="h6">Meus Afiliados</MDTypography>
-            <IconButton onClick={fetchWallet} size="small" sx={{ color: palette.green }}>
-              <Icon>refresh</Icon>
-            </IconButton>
-          </MDBox>
-          <Divider />
-          <MDBox>
-            <DataTable
-              table={tabelaMeusAfiliados}
-              isSorted={false}
-              entriesPerPage={false}
-              showTotalEntries={false}
-              noEndBorder
-            />
-          </MDBox>
-        </Card>
+          {/* Gráfico de Afiliados - Se houver afiliados */}
+          {Array.isArray(referredUsers) && referredUsers.length > 0 && (
+            <Grid item xs={12} md={6}>
+              <Card sx={{ p: { xs: 2, md: 2.5 }, height: "100%" }}>
+                <VerticalBarChart
+                  icon={{ component: "group", color: "info" }}
+                  title="👥 Meus Afiliados"
+                  description={`Total de ${referredUsers.length} afiliado${
+                    referredUsers.length > 1 ? "s" : ""
+                  } cadastrado${referredUsers.length > 1 ? "s" : ""}`}
+                  height="19.125rem"
+                  chart={{
+                    labels: referredUsers
+                      .slice(0, 10)
+                      .map((u) => u.nome.split(" ")[0] || "Afiliado"),
+                    datasets: [
+                      {
+                        label: "Afiliados",
+                        color: "info",
+                        data: referredUsers.slice(0, 10).map(() => 1),
+                      },
+                    ],
+                  }}
+                />
+              </Card>
+            </Grid>
+          )}
+        </Grid>
+
+        {/* Tabela de Comissões - Apenas se houver */}
+        {Array.isArray(commissions) && commissions.length > 0 ? (
+          <Card sx={{ mb: 3 }}>
+            <MDBox display="flex" justifyContent="space-between" alignItems="center" p={2.5}>
+              <MDTypography variant="h6">Histórico de Comissões</MDTypography>
+              <IconButton onClick={fetchWallet} size="small" sx={{ color: palette.green }}>
+                <Icon>refresh</Icon>
+              </IconButton>
+            </MDBox>
+            <Divider />
+            <MDBox>
+              <DataTable
+                table={tabelaAfiliados}
+                isSorted={false}
+                entriesPerPage={false}
+                showTotalEntries={false}
+                noEndBorder
+              />
+            </MDBox>
+          </Card>
+        ) : (
+          <Card sx={{ mb: 3, textAlign: "center", py: 6 }}>
+            <MDTypography variant="h6" color="text" mb={1}>
+              Nenhuma comissão registrada
+            </MDTypography>
+            <MDTypography variant="caption" color="text">
+              Suas comissões aparecerão aqui quando você receber pagamentos de afiliados
+            </MDTypography>
+          </Card>
+        )}
+
+        {/* Tabela de Afiliados */}
+        {Array.isArray(referredUsers) && referredUsers.length > 0 ? (
+          <Card>
+            <MDBox display="flex" justifyContent="space-between" alignItems="center" p={2.5}>
+              <MDTypography variant="h6">Meus Afiliados ({referredUsers.length})</MDTypography>
+              <IconButton onClick={fetchWallet} size="small" sx={{ color: palette.green }}>
+                <Icon>refresh</Icon>
+              </IconButton>
+            </MDBox>
+            <Divider />
+            <MDBox>
+              <DataTable
+                table={tabelaMeusAfiliados}
+                isSorted={false}
+                entriesPerPage={false}
+                showTotalEntries={false}
+                noEndBorder
+              />
+            </MDBox>
+          </Card>
+        ) : (
+          <Card sx={{ textAlign: "center", py: 6 }}>
+            <Icon sx={{ fontSize: 64, color: "text.secondary", mb: 2 }}>people_outline</Icon>
+            <MDTypography variant="h6" color="text" mb={1}>
+              Você ainda não tem afiliados
+            </MDTypography>
+            <MDTypography variant="caption" color="text" mb={3}>
+              Compartilhe seu código de afiliado e comece a ganhar comissões
+            </MDTypography>
+            {user?.codigo_afiliado_proprio && (
+              <MDBox
+                sx={{
+                  display: "inline-block",
+                  backgroundColor: alpha(palette.gold, 0.1),
+                  border: `2px dashed ${palette.gold}`,
+                  borderRadius: 2,
+                  px: 3,
+                  py: 1.5,
+                }}
+              >
+                <MDTypography variant="caption" color="text" fontWeight="medium">
+                  Seu código:
+                </MDTypography>
+                <MDTypography variant="h6" color="text" fontWeight="bold">
+                  {user.codigo_afiliado_proprio}
+                </MDTypography>
+              </MDBox>
+            )}
+          </Card>
+        )}
       </MDBox>
-
-      {/* Modal de Saque */}
-      <Modal open={withdrawOpen} onClose={handleCloseWithdraw}>
-        <Box sx={withdrawModalStyle}>
-          <MDTypography variant="h5" fontWeight="medium" mb={0.5}>
-            Solicitar Saque
-          </MDTypography>
-          <MDTypography variant="body2" color="text" mb={2}>
-            Saldo disponível: <strong>{brl(saldoDisponivel)}</strong>
-          </MDTypography>
-
-          <Stack spacing={2}>
-            <TextField
-              label="Valor (R$)"
-              placeholder="Ex.: 150,00"
-              value={withdrawAmount}
-              onChange={(e) => setWithdrawAmount(e.target.value)}
-              fullWidth
-            />
-            <TextField
-              select
-              label="Método"
-              value={withdrawMethod}
-              onChange={(e) => setWithdrawMethod(e.target.value)}
-              fullWidth
-            >
-              <MenuItem value="pix">PIX</MenuItem>
-              <MenuItem value="transfer">Transferência Bancária</MenuItem>
-              <MenuItem value="paypal">PayPal</MenuItem>
-            </TextField>
-          </Stack>
-
-          <Stack direction="row" spacing={1} justifyContent="flex-end" mt={3}>
-            <MDButton color="secondary" onClick={handleCloseWithdraw} disabled={withdrawing}>
-              Cancelar
-            </MDButton>
-            <MDButton
-              variant="gradient"
-              onClick={handleConfirmWithdraw}
-              disabled={withdrawing}
-              sx={{
-                backgroundColor: `${palette.gold} !important`,
-                color: "#fff !important",
-                "&:hover": { backgroundColor: "#B5942E !important" },
-              }}
-              startIcon={
-                withdrawing ? (
-                  <CircularProgress size={18} sx={{ color: "#fff" }} />
-                ) : (
-                  <Icon>send</Icon>
-                )
-              }
-            >
-              {withdrawing ? "Enviando..." : "Confirmar Saque"}
-            </MDButton>
-          </Stack>
-        </Box>
-      </Modal>
     </PageWrapper>
   );
 }

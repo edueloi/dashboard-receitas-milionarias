@@ -23,7 +23,10 @@ import {
   Stack,
   useMediaQuery,
   useTheme,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 
 // MD
 import MDBox from "components/MDBox";
@@ -33,11 +36,14 @@ import MDButton from "components/MDButton";
 // Layout & table
 import PageWrapper from "components/PageWrapper";
 import DataTable from "examples/Tables/DataTable";
+import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatisticsCard";
 
 // Data & components
 import recipesTableData from "./data/recipesTableData";
 import UserRecipeCard from "./components/UserRecipeCard";
 import getFullImageUrl from "utils/imageUrlHelper";
+
+const palette = { gold: "#C9A635", green: "#1C3B32" };
 
 const modalStyle = {
   position: "absolute",
@@ -154,8 +160,8 @@ function MinhasReceitas() {
       image: imageUrl,
       description: recipe.resumo,
       author: { name: recipe.criador?.nome || "Autor Desconhecido", avatar: authorAvatarUrl },
-      rating: recipe.avaliacao_media || 0,
-      votes: recipe.total_avaliacoes || 0,
+      rating: recipe.resultados_avaliacao?.media_avaliacoes || 0,
+      votes: recipe.resultados_avaliacao?.quantidade_comentarios || 0,
       tags: recipe.tags || [],
       category: recipe.categoria?.nome || "Sem Categoria",
       status: recipe.status,
@@ -197,17 +203,42 @@ function MinhasReceitas() {
   // ações do header
   const headerActions = useMemo(
     () => (
-      <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap">
+      <Stack
+        direction="row"
+        spacing={1.25}
+        alignItems="center"
+        justifyContent="center"
+        flexWrap="wrap"
+      >
         <ToggleButtonGroup
           value={view}
           exclusive
           onChange={(_e, v) => v && updatePreference("recipeView", v)}
+          size="small"
+          sx={{
+            "& .MuiToggleButtonGroup-grouped": {
+              px: 2,
+              borderColor: alpha(palette.green, 0.25),
+              color: palette.green,
+              "&.Mui-selected": {
+                backgroundColor: palette.gold,
+                color: "#fff",
+                borderColor: palette.gold,
+                "&:hover": { backgroundColor: palette.gold },
+              },
+              "&:hover": {
+                backgroundColor: alpha(palette.green, 0.05),
+              },
+            },
+          }}
         >
           <ToggleButton value="card" aria-label="Cartões">
-            <Icon>grid_view</Icon>
+            <Icon sx={{ mr: 0.5 }}>grid_view</Icon>
+            {!isMobile && "Cartões"}
           </ToggleButton>
           <ToggleButton value="table" aria-label="Tabela">
-            <Icon>table_rows</Icon>
+            <Icon sx={{ mr: 0.5 }}>table_rows</Icon>
+            {!isMobile && "Tabela"}
           </ToggleButton>
         </ToggleButtonGroup>
 
@@ -216,22 +247,16 @@ function MinhasReceitas() {
           onClick={() => navigate("/receitas/adicionar")}
           startIcon={<Icon>add</Icon>}
           sx={{
-            backgroundColor: "#C9A635 !important",
+            backgroundColor: `${palette.gold} !important`,
             color: "#fff !important",
-            textTransform: "uppercase",
-            fontWeight: 700,
-            "& .MuiButton-startIcon": { mr: 1 },
-            "& .MuiSvgIcon-root, & .material-icons": {
-              color: "#fff !important",
-            },
-            "&:hover": { backgroundColor: "#B5942E !important" },
+            "&:hover": { backgroundColor: `${palette.green} !important` },
           }}
         >
-          Nova Receita
+          {isMobile ? "Nova" : "Nova Receita"}
         </MDButton>
       </Stack>
     ),
-    [view, navigate, updatePreference]
+    [view, navigate, updatePreference, isMobile]
   );
 
   return (
@@ -241,61 +266,299 @@ function MinhasReceitas() {
       subtitle="Gerencie, edite e organize as receitas que você criou."
       actions={headerActions}
     >
-      {/* Filtros */}
-      <Card>
-        <MDBox p={{ xs: 2, md: 3 }}>
-          <Stack
-            direction={{ xs: "column", md: "row" }}
-            spacing={2}
-            alignItems={{ xs: "stretch", md: "center" }}
-            justifyContent="space-between"
-          >
-            <TextField
-              label="Buscar pelo nome..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              sx={{ width: { xs: "100%", md: 280 } }}
-            />
+      <MDBox px={{ xs: 0, md: 0 }}>
+        {/* KPIs - Estatísticas Rápidas */}
+        {!loading && (
+          <Grid container spacing={3} mb={3}>
+            <Grid item xs={12} sm={6} md={3}>
+              <ComplexStatisticsCard
+                color="primary"
+                icon="restaurant"
+                title="Total de Receitas"
+                count={allUserRecipes.length}
+                percentage={{
+                  color: "success",
+                  amount:
+                    filteredRecipes.length !== allUserRecipes.length
+                      ? `${filteredRecipes.length} filtradas`
+                      : "",
+                  label:
+                    filteredRecipes.length !== allUserRecipes.length
+                      ? "Exibindo apenas"
+                      : "Todas suas receitas",
+                }}
+              />
+            </Grid>
 
-            <Autocomplete
-              disablePortal
-              options={listaCategorias}
-              getOptionLabel={(o) => o.nome}
-              value={listaCategorias.find((c) => c.nome === categoryFilter) || null}
-              onChange={(_e, v) => setCategoryFilter(v ? v.nome : "Todos")}
-              sx={{ width: { xs: "100%", md: 240 } }}
-              renderInput={(params) => <TextField {...params} label="Categoria" />}
-            />
+            <Grid item xs={12} sm={6} md={3}>
+              <ComplexStatisticsCard
+                color="success"
+                icon="check_circle"
+                title="Publicadas"
+                count={
+                  allUserRecipes.filter((r) => r.status === "ativa" || r.status === "ativo").length
+                }
+                percentage={{
+                  color: "success",
+                  amount: "",
+                  label: "Receitas ativas no site",
+                }}
+              />
+            </Grid>
 
-            <Autocomplete
-              multiple
-              options={listaTags}
-              getOptionLabel={(o) => o.nome}
-              value={tagsFilter}
-              onChange={(_e, v) => setTagsFilter(v)}
-              sx={{ width: { xs: "100%", md: 360 } }}
-              renderTags={(value, getTagProps) =>
-                value.map((option, index) => (
-                  <Chip
-                    key={option.id}
-                    label={option.nome}
-                    sx={{ backgroundColor: "#C9A635", color: "#fff" }}
-                    {...getTagProps({ index })}
+            <Grid item xs={12} sm={6} md={3}>
+              <ComplexStatisticsCard
+                color="warning"
+                icon="pending"
+                title="Pendentes"
+                count={allUserRecipes.filter((r) => r.status === "pendente").length}
+                percentage={{
+                  color: "warning",
+                  amount: "",
+                  label: "Aguardando aprovação",
+                }}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={3}>
+              <ComplexStatisticsCard
+                color="info"
+                icon="star"
+                title="Avaliação Média"
+                count={(() => {
+                  const receitasComAvaliacoes = allUserRecipes.filter(
+                    (r) => (r.resultados_avaliacao?.quantidade_comentarios || 0) > 0
+                  );
+                  if (receitasComAvaliacoes.length === 0) return "0.0";
+
+                  const totalNotas = receitasComAvaliacoes.reduce(
+                    (sum, r) =>
+                      sum +
+                      (r.resultados_avaliacao?.media_avaliacoes || 0) *
+                        (r.resultados_avaliacao?.quantidade_comentarios || 0),
+                    0
+                  );
+                  const totalAvaliacoes = receitasComAvaliacoes.reduce(
+                    (sum, r) => sum + (r.resultados_avaliacao?.quantidade_comentarios || 0),
+                    0
+                  );
+                  return (totalNotas / totalAvaliacoes).toFixed(1);
+                })()}
+                percentage={{
+                  color: "info",
+                  amount: `${allUserRecipes.reduce(
+                    (sum, r) => sum + (r.resultados_avaliacao?.quantidade_comentarios || 0),
+                    0
+                  )}`,
+                  label: "Total de avaliações",
+                }}
+              />
+            </Grid>
+          </Grid>
+        )}
+
+        {/* Filtros */}
+        <Card
+          sx={{
+            mb: 3,
+            border: `1px solid ${alpha(palette.green, 0.1)}`,
+            boxShadow: `0 4px 12px ${alpha(palette.green, 0.08)}`,
+          }}
+        >
+          <MDBox p={{ xs: 2, md: 2.5 }}>
+            <MDBox display="flex" alignItems="center" mb={2}>
+              <Icon sx={{ color: palette.green, mr: 1 }}>filter_list</Icon>
+              <MDTypography variant="h6" fontWeight="medium">
+                Filtros
+              </MDTypography>
+            </MDBox>
+            <Stack
+              direction={{ xs: "column", md: "row" }}
+              spacing={2}
+              alignItems={{ xs: "stretch", md: "center" }}
+            >
+              <TextField
+                label="Buscar pelo nome..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                size="small"
+                fullWidth
+                sx={{
+                  maxWidth: { md: 300 },
+                  "& .MuiOutlinedInput-root": {
+                    "&.Mui-focused fieldset": { borderColor: palette.green },
+                  },
+                  "& .MuiInputLabel-root.Mui-focused": { color: palette.green },
+                }}
+                InputProps={{
+                  startAdornment: <Icon sx={{ mr: 1, color: "text.secondary" }}>search</Icon>,
+                  endAdornment: searchTerm && (
+                    <IconButton size="small" onClick={() => setSearchTerm("")}>
+                      <Icon fontSize="small">close</Icon>
+                    </IconButton>
+                  ),
+                }}
+              />
+
+              <Autocomplete
+                disablePortal
+                options={listaCategorias}
+                getOptionLabel={(o) => o.nome}
+                value={listaCategorias.find((c) => c.nome === categoryFilter) || null}
+                onChange={(_e, v) => setCategoryFilter(v ? v.nome : "Todos")}
+                size="small"
+                fullWidth
+                sx={{
+                  maxWidth: { md: 240 },
+                  "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                    borderColor: palette.green,
+                  },
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Categoria"
+                    InputProps={{
+                      ...params.InputProps,
+                      startAdornment: <Icon sx={{ mr: 1, color: "text.secondary" }}>category</Icon>,
+                    }}
                   />
-                ))
-              }
-              renderInput={(params) => <TextField {...params} label="Tags" placeholder="Tags" />}
-            />
-          </Stack>
-        </MDBox>
-      </Card>
+                )}
+              />
 
-      {/* Lista */}
-      <MDBox mt={2}>
-        <Card>
+              <Autocomplete
+                multiple
+                options={listaTags}
+                getOptionLabel={(o) => o.nome}
+                value={tagsFilter}
+                onChange={(_e, v) => setTagsFilter(v)}
+                size="small"
+                fullWidth
+                sx={{
+                  maxWidth: { md: 360 },
+                  "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                    borderColor: palette.green,
+                  },
+                }}
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => (
+                    <Chip
+                      key={option.id}
+                      label={option.nome}
+                      size="small"
+                      sx={{
+                        backgroundColor: palette.gold,
+                        color: "#fff",
+                        "& .MuiChip-deleteIcon": { color: "rgba(255,255,255,0.7)" },
+                      }}
+                      {...getTagProps({ index })}
+                    />
+                  ))
+                }
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Tags"
+                    placeholder={tagsFilter.length === 0 ? "Selecione tags" : ""}
+                    InputProps={{
+                      ...params.InputProps,
+                      startAdornment: (
+                        <>
+                          <Icon sx={{ mr: 1, color: "text.secondary" }}>label</Icon>
+                          {params.InputProps.startAdornment}
+                        </>
+                      ),
+                    }}
+                  />
+                )}
+              />
+
+              {(searchTerm || categoryFilter !== "Todos" || tagsFilter.length > 0) && (
+                <Tooltip title="Limpar filtros">
+                  <IconButton
+                    onClick={() => {
+                      setSearchTerm("");
+                      setCategoryFilter("Todos");
+                      setTagsFilter([]);
+                    }}
+                    sx={{
+                      color: palette.gold,
+                      border: `1px solid ${alpha(palette.gold, 0.3)}`,
+                      "&:hover": {
+                        backgroundColor: alpha(palette.gold, 0.1),
+                      },
+                    }}
+                  >
+                    <Icon>clear_all</Icon>
+                  </IconButton>
+                </Tooltip>
+              )}
+            </Stack>
+
+            {/* Resultado dos filtros */}
+            {(searchTerm || categoryFilter !== "Todos" || tagsFilter.length > 0) && (
+              <MDBox mt={2} display="flex" alignItems="center" gap={1} flexWrap="wrap">
+                <MDTypography variant="caption" color="text">
+                  <strong>{filteredRecipes.length}</strong>{" "}
+                  {filteredRecipes.length === 1 ? "receita encontrada" : "receitas encontradas"}
+                </MDTypography>
+              </MDBox>
+            )}
+          </MDBox>
+        </Card>
+
+        {/* Lista */}
+        <Card
+          sx={{
+            border: `1px solid ${alpha(palette.green, 0.1)}`,
+            boxShadow: `0 4px 12px ${alpha(palette.green, 0.08)}`,
+          }}
+        >
           {loading ? (
-            <MDBox display="flex" justifyContent="center" p={5}>
-              <CircularProgress sx={{ color: "#C9A635" }} />
+            <MDBox display="flex" flexDirection="column" alignItems="center" py={8}>
+              <CircularProgress sx={{ color: palette.gold, mb: 2 }} size={48} />
+              <MDTypography variant="button" color="text">
+                Carregando receitas...
+              </MDTypography>
+            </MDBox>
+          ) : filteredRecipes.length === 0 ? (
+            <MDBox textAlign="center" py={8} px={3}>
+              <Icon
+                sx={{
+                  fontSize: 80,
+                  color: "text.secondary",
+                  mb: 2,
+                  opacity: 0.4,
+                }}
+              >
+                {searchTerm || categoryFilter !== "Todos" || tagsFilter.length > 0
+                  ? "search_off"
+                  : "restaurant_menu"}
+              </Icon>
+              <MDTypography variant="h5" color="text" mb={1}>
+                {searchTerm || categoryFilter !== "Todos" || tagsFilter.length > 0
+                  ? "Nenhuma receita encontrada"
+                  : "Você ainda não tem receitas"}
+              </MDTypography>
+              <MDTypography variant="body2" color="text" mb={3}>
+                {searchTerm || categoryFilter !== "Todos" || tagsFilter.length > 0
+                  ? "Tente ajustar os filtros para ver mais resultados"
+                  : "Comece criando sua primeira receita e compartilhe com a comunidade"}
+              </MDTypography>
+              {!searchTerm && categoryFilter === "Todos" && tagsFilter.length === 0 && (
+                <MDButton
+                  variant="gradient"
+                  onClick={() => navigate("/receitas/adicionar")}
+                  startIcon={<Icon>add</Icon>}
+                  sx={{
+                    backgroundColor: `${palette.gold} !important`,
+                    color: "#fff !important",
+                    "&:hover": { backgroundColor: `${palette.green} !important` },
+                  }}
+                >
+                  Criar Primeira Receita
+                </MDButton>
+              )}
             </MDBox>
           ) : view === "table" ? (
             <DataTable
@@ -313,7 +576,7 @@ function MinhasReceitas() {
                     <UserRecipeCard
                       recipe={mapRecipeData(recipe)}
                       onEdit={handleEdit}
-                      onDelete={openDeleteModal} // abre modal
+                      onDelete={openDeleteModal}
                       size="tall"
                     />
                   </Grid>
@@ -324,21 +587,36 @@ function MinhasReceitas() {
         </Card>
       </MDBox>
 
-      {/* Modal de confirmação (igual padrão das Categorias) */}
+      {/* Modal de confirmação */}
       <Modal open={deleteOpen} onClose={closeDeleteModal}>
         <Box sx={modalStyle}>
-          <MDTypography variant="h5" fontWeight="medium">
-            Confirmar Exclusão
+          <MDBox display="flex" alignItems="center" mb={2}>
+            <Icon sx={{ color: "error.main", fontSize: 32, mr: 1.5 }}>warning</Icon>
+            <MDTypography variant="h5" fontWeight="medium">
+              Confirmar Exclusão
+            </MDTypography>
+          </MDBox>
+          <MDTypography variant="body2" color="text" mb={3}>
+            Tem certeza que deseja excluir esta receita? Esta ação é irreversível e todos os dados
+            serão perdidos permanentemente.
           </MDTypography>
-          <MDTypography variant="body2" color="text" mt={2} mb={3}>
-            Tem certeza que deseja excluir esta receita? Esta ação é irreversível.
-          </MDTypography>
-          <MDBox display="flex" justifyContent="flex-end" gap={1}>
-            <MDButton color="secondary" onClick={closeDeleteModal}>
+          <MDBox display="flex" justifyContent="flex-end" gap={1.5}>
+            <MDButton
+              color="secondary"
+              onClick={closeDeleteModal}
+              sx={{
+                "&:hover": { backgroundColor: alpha(palette.green, 0.08) },
+              }}
+            >
               Cancelar
             </MDButton>
-            <MDButton variant="gradient" color="error" onClick={confirmDelete}>
-              Deletar
+            <MDButton
+              variant="gradient"
+              color="error"
+              onClick={confirmDelete}
+              startIcon={<Icon>delete</Icon>}
+            >
+              Excluir Receita
             </MDButton>
           </MDBox>
         </Box>

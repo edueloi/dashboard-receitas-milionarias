@@ -27,7 +27,32 @@ function configs(labels, datasets) {
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          display: false,
+          display: true,
+          position: "top",
+          align: "end",
+          labels: {
+            boxWidth: 12,
+            boxHeight: 12,
+            padding: 15,
+            font: {
+              size: 12,
+              family: typography.fontFamily,
+              weight: "500",
+            },
+            color: "#344767",
+            usePointStyle: true,
+            pointStyle: "rect",
+          },
+        },
+        tooltip: {
+          backgroundColor: "#ffffff",
+          titleColor: "#344767",
+          bodyColor: "#344767",
+          borderColor: "#e9ecef",
+          borderWidth: 1,
+          padding: 12,
+          displayColors: true,
+          boxPadding: 6,
         },
       },
       scales: {
@@ -38,6 +63,7 @@ function configs(labels, datasets) {
             drawOnChartArea: true,
             drawTicks: false,
             borderDash: [5, 5],
+            color: "rgba(0, 0, 0, 0.05)",
           },
           ticks: {
             display: true,

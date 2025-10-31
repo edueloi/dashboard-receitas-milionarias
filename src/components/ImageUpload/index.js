@@ -7,7 +7,9 @@ import MDButton from "components/MDButton";
 
 // --- Styled Components ---
 
-const DropzoneContainer = styled(Box)(({ theme, hasImage }) => ({
+const DropzoneContainer = styled(Box, {
+  shouldForwardProp: (prop) => prop !== "hasImage",
+})(({ theme, hasImage }) => ({
   border: `2px dashed ${theme.palette.grey[400]} `,
   borderRadius: theme.shape.borderRadius,
   padding: hasImage ? theme.spacing(2) : theme.spacing(6), // Menos padding com imagem, mais sem
