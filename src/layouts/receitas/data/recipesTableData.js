@@ -122,7 +122,7 @@ function recipesTableData(recipes, isAdmin, onDelete, onEdit) {
           </MDBox>
         ) : (
           <MDBox textAlign="center">
-            <MDTypography variant="caption" color="text.secondary" fontStyle="italic">
+            <MDTypography variant="caption" fontStyle="italic" sx={{ color: "text.secondary" }}>
               Sem avaliações
             </MDTypography>
           </MDBox>
@@ -160,7 +160,7 @@ function recipesTableData(recipes, isAdmin, onDelete, onEdit) {
             />
           )}
           {(!recipe.tags || recipe.tags.length === 0) && (
-            <MDTypography variant="caption" color="text.secondary" fontStyle="italic">
+            <MDTypography variant="caption" fontStyle="italic" sx={{ color: "text.secondary" }}>
               Sem tags
             </MDTypography>
           )}

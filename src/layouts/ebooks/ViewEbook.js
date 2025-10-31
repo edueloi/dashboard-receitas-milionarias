@@ -83,7 +83,7 @@ function ViewEbook() {
           variant="filled" // Alterado para 'filled' para mais destaque
         />
       )}
-      <MDTypography variant="body2" color="text.secondary">
+      <MDTypography variant="body2" sx={{ color: "text.secondary" }}>
         Por: {ebook.autor_nome}
       </MDTypography>
     </Stack>

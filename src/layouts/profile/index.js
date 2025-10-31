@@ -3,13 +3,12 @@
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import Grid from "@mui/material/Grid";
-import Divider from "@mui/material/Divider";
 import Icon from "@mui/material/Icon";
 import Tooltip from "@mui/material/Tooltip";
 import FacebookIcon from "@mui/icons-material/Facebook";
 import TwitterIcon from "@mui/icons-material/Twitter";
 import InstagramIcon from "@mui/icons-material/Instagram";
-import { Card } from "@mui/material";
+import { Card, alpha } from "@mui/material";
 
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
@@ -21,16 +20,43 @@ import Header from "./components/Header";
 import EditProfileForm from "./components/EditProfileForm";
 import api from "services/api";
 
+const palette = {
+  gold: "#C9A635",
+  green: "#1C3B32",
+};
+
 // --- Helper Components ---
 function InfoLine({ label, value }) {
   return (
-    <MDBox display="flex" alignItems="center" py={1.2}>
-      <MDTypography variant="button" fontWeight="bold" textTransform="capitalize">
-        {label}:&nbsp;
+    <MDBox display="flex" flexDirection={{ xs: "column", sm: "row" }} py={1}>
+      <MDTypography
+        variant="button"
+        fontWeight="bold"
+        sx={{
+          color: palette.green,
+          fontSize: { xs: "0.75rem", md: "0.8125rem" },
+          minWidth: { sm: 140 },
+        }}
+      >
+        {label}:
       </MDTypography>
-      <MDTypography variant="button" fontWeight="regular" color="text">
-        {value || "Não informado"}
-      </MDTypography>
+      <Tooltip title={value || "Não informado"} placement="top">
+        <MDTypography
+          variant="button"
+          fontWeight="regular"
+          sx={{
+            color: "text.secondary",
+            fontSize: { xs: "0.75rem", md: "0.8125rem" },
+            ml: { sm: 1 },
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            maxWidth: { xs: "100%", sm: 300 },
+          }}
+        >
+          {value || "Não informado"}
+        </MDTypography>
+      </Tooltip>
     </MDBox>
   );
 }
@@ -56,30 +82,50 @@ function Socials() {
   ];
 
   return (
-    <MDBox display="flex" alignItems="center" mt={2}>
-      <MDTypography variant="button" fontWeight="bold">
-        Redes Sociais:&nbsp;
+    <MDBox mt={2}>
+      <MDTypography
+        variant="button"
+        fontWeight="bold"
+        sx={{ color: palette.green, fontSize: { xs: "0.75rem", md: "0.8125rem" }, mb: 1.5 }}
+      >
+        Redes Sociais
       </MDTypography>
-      {socialData.map(({ link, icon, color }) => (
-        <Tooltip title={color} placement="top" key={color}>
-          <MDBox
-            component="a"
-            href={link}
-            target="_blank"
-            rel="noreferrer"
-            fontSize="1.5rem"
-            color={color}
-            px={1}
-            lineHeight={1}
-            sx={{
-              transition: "all 0.2s ease-in-out",
-              "&:hover": { transform: "scale(1.2)", opacity: 0.8 },
-            }}
+      <MDBox display="flex" gap={1.5} flexWrap="wrap">
+        {socialData.map(({ link, icon, color }) => (
+          <Tooltip
+            title={color.charAt(0).toUpperCase() + color.slice(1)}
+            placement="top"
+            key={color}
           >
-            {icon}
-          </MDBox>
-        </Tooltip>
-      ))}
+            <MDBox
+              component="a"
+              href={link}
+              target="_blank"
+              rel="noreferrer"
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: { xs: 36, md: 40 },
+                height: { xs: 36, md: 40 },
+                borderRadius: "50%",
+                backgroundColor: alpha(palette.green, 0.08),
+                color: palette.green,
+                fontSize: { xs: "1.25rem", md: "1.4rem" },
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  backgroundColor: palette.gold,
+                  color: "#fff",
+                  transform: "translateY(-4px) scale(1.1)",
+                  boxShadow: `0 8px 16px ${alpha(palette.gold, 0.4)}`,
+                },
+              }}
+            >
+              {icon}
+            </MDBox>
+          </Tooltip>
+        ))}
+      </MDBox>
     </MDBox>
   );
 }
@@ -153,29 +199,48 @@ function Overview() {
     }
 
     return (
-      <Grid container spacing={3} justifyContent="center">
+      <Grid container spacing={3}>
         {/* Card Biografia */}
         <Grid item xs={12} md={5} xl={4}>
           <Card
-            sx={{ height: "100%", borderRadius: "1rem", boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}
+            sx={{
+              height: "100%",
+              borderRadius: { xs: 2, md: 3 },
+              boxShadow: `0 4px 20px ${alpha(palette.green, 0.08)}`,
+              border: `1px solid ${alpha(palette.green, 0.08)}`,
+            }}
           >
-            <MDBox
-              variant="gradient"
-              bgColor="primary"
-              borderRadius="lg"
-              coloredShadow="primary"
-              p={2}
-              mt={-3}
-              mx={2}
-            >
-              <MDTypography variant="h6" color="white">
-                Biografia
-              </MDTypography>
-            </MDBox>
-            <MDBox p={3}>
-              <MDTypography variant="body2" color="text" mt={2}>
-                {userData.biografia || "Nenhuma biografia para mostrar."}
-              </MDTypography>
+            <MDBox p={{ xs: 2, sm: 2.5, md: 3 }}>
+              <MDBox sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2.5 }}>
+                <Icon sx={{ fontSize: { xs: 22, md: 24 }, color: palette.gold }}>article</Icon>
+                <MDTypography
+                  variant="h6"
+                  fontWeight="bold"
+                  sx={{ color: palette.green, fontSize: { xs: "1rem", md: "1.0625rem" } }}
+                >
+                  Biografia
+                </MDTypography>
+              </MDBox>
+              <MDBox
+                sx={{
+                  p: { xs: 2, md: 2.5 },
+                  backgroundColor: alpha(palette.green, 0.03),
+                  borderRadius: 2,
+                  border: `1px solid ${alpha(palette.green, 0.1)}`,
+                  minHeight: 120,
+                }}
+              >
+                <MDTypography
+                  variant="body2"
+                  sx={{
+                    color: "text.secondary",
+                    fontSize: { xs: "0.8125rem", md: "0.875rem" },
+                    lineHeight: 1.7,
+                  }}
+                >
+                  {userData.biografia || "Nenhuma biografia para mostrar."}
+                </MDTypography>
+              </MDBox>
             </MDBox>
           </Card>
         </Grid>
@@ -183,70 +248,114 @@ function Overview() {
         {/* Card Informações */}
         <Grid item xs={12} md={7} xl={8}>
           <Card
-            sx={{ height: "100%", borderRadius: "1rem", boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}
+            sx={{
+              height: "100%",
+              borderRadius: { xs: 2, md: 3 },
+              boxShadow: `0 4px 20px ${alpha(palette.green, 0.08)}`,
+              border: `1px solid ${alpha(palette.green, 0.08)}`,
+            }}
           >
-            <MDBox
-              variant="gradient"
-              bgColor="primary"
-              borderRadius="lg"
-              coloredShadow="primary"
-              p={2}
-              mt={-3}
-              mx={2}
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-            >
-              <MDTypography variant="h6" color="white">
-                Informações do Perfil
-              </MDTypography>
-              <Tooltip title="Editar Perfil" placement="top">
-                <MDButton
-                  variant="outlined"
-                  color="white"
-                  size="small"
-                  onClick={() => setIsEditing(true)}
-                  sx={{ textTransform: "none" }}
-                >
-                  <Icon sx={{ mr: 0.5 }}>edit</Icon> Editar
-                </MDButton>
-              </Tooltip>
-            </MDBox>
-            <Divider />
-            <MDBox p={3}>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <InfoLine
-                    label="Nome Completo"
-                    value={`${userData.nome} ${userData.sobrenome}`}
-                  />
+            <MDBox p={{ xs: 2, sm: 2.5, md: 3 }}>
+              <MDBox
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  mb: 2.5,
+                  flexWrap: "wrap",
+                  gap: 1,
+                }}
+              >
+                <MDBox sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <Icon sx={{ fontSize: { xs: 22, md: 24 }, color: palette.green }}>person</Icon>
+                  <MDTypography
+                    variant="h6"
+                    fontWeight="bold"
+                    sx={{ color: palette.green, fontSize: { xs: "1rem", md: "1.0625rem" } }}
+                  >
+                    Informações do Perfil
+                  </MDTypography>
+                </MDBox>
+                <Tooltip title="Editar Perfil" placement="top">
+                  <MDButton
+                    onClick={() => setIsEditing(true)}
+                    variant="outlined"
+                    size="small"
+                    startIcon={<Icon sx={{ fontSize: 18 }}>edit</Icon>}
+                    sx={{
+                      fontSize: { xs: "0.75rem", md: "0.8125rem" },
+                      py: { xs: 0.5, md: 0.625 },
+                      px: { xs: 1.25, md: 1.5 },
+                      borderColor: alpha(palette.green, 0.3),
+                      color: palette.green,
+                      "&:hover": {
+                        borderColor: palette.green,
+                        backgroundColor: alpha(palette.green, 0.05),
+                      },
+                    }}
+                  >
+                    <MDBox component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                      Editar Perfil
+                    </MDBox>
+                    <MDBox component="span" sx={{ display: { xs: "inline", sm: "none" } }}>
+                      Editar
+                    </MDBox>
+                  </MDButton>
+                </Tooltip>
+              </MDBox>
+
+              <MDBox
+                sx={{
+                  p: { xs: 2, md: 2.5 },
+                  backgroundColor: alpha(palette.green, 0.02),
+                  borderRadius: 2,
+                  border: `1px solid ${alpha(palette.green, 0.08)}`,
+                }}
+              >
+                <Grid container spacing={{ xs: 1.5, md: 2 }}>
+                  <Grid item xs={12} sm={6}>
+                    <InfoLine
+                      label="Nome Completo"
+                      value={`${userData.nome} ${userData.sobrenome}`}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <InfoLine label="Email" value={userData.email} />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <InfoLine label="Telefone" value={userData.telefone} />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <InfoLine label="Função" value={userData.permissao} />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <InfoLine
+                      label="Endereço"
+                      value={
+                        userData.endereco ? `${userData.endereco}, ${userData.numero_endereco}` : ""
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <InfoLine
+                      label="Cidade"
+                      value={userData.cidade ? `${userData.cidade} - ${userData.estado}` : ""}
+                    />
+                  </Grid>
                 </Grid>
-                <Grid item xs={12} sm={6}>
-                  <InfoLine label="Email" value={userData.email} />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <InfoLine label="Telefone" value={userData.telefone} />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <InfoLine label="Função" value={userData.permissao} />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <InfoLine
-                    label="Endereço"
-                    value={
-                      userData.endereco ? `${userData.endereco}, ${userData.numero_endereco}` : ""
-                    }
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <InfoLine
-                    label="Cidade"
-                    value={userData.cidade ? `${userData.cidade} - ${userData.estado}` : ""}
-                  />
-                </Grid>
-              </Grid>
-              <Divider sx={{ my: 2 }} />
-              <Socials />
+              </MDBox>
+
+              <MDBox
+                sx={{
+                  mt: 3,
+                  p: { xs: 2, md: 2.5 },
+                  backgroundColor: alpha(palette.gold, 0.05),
+                  borderRadius: 2,
+                  border: `1px solid ${alpha(palette.gold, 0.15)}`,
+                }}
+              >
+                <Socials />
+              </MDBox>
             </MDBox>
           </Card>
         </Grid>

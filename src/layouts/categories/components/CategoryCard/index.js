@@ -9,6 +9,11 @@ import MDTypography from "components/MDTypography";
 import MDButton from "components/MDButton";
 import { alpha } from "@mui/material/styles";
 
+const palette = {
+  gold: "#C9A635",
+  green: "#1C3B32",
+};
+
 function CategoryCard({ category, isAdmin, onDelete }) {
   const { id, name, image, description } = category;
   const navigate = useNavigate();
@@ -30,30 +35,52 @@ function CategoryCard({ category, isAdmin, onDelete }) {
       onKeyDown={onCardKeyDown}
       sx={{
         position: "relative",
-        borderRadius: 3,
+        borderRadius: { xs: 2, md: 3 },
         overflow: "hidden",
-        aspectRatio: "16 / 9",
+        height: { xs: 200, sm: 220, md: 240 },
         cursor: "pointer",
-        // visual
-        border: (t) => `1px solid ${alpha(t.palette.common.black, 0.06)}`,
-        boxShadow: (t) => `0 8px 24px ${alpha(t.palette.common.black, 0.08)}`,
-        backgroundColor: "#0f1a17",
-        transition: "transform .28s ease, box-shadow .28s ease",
-        willChange: "transform",
+        border: `1px solid ${alpha(palette.green, 0.1)}`,
+        boxShadow: `0 4px 20px ${alpha(palette.green, 0.1)}`,
+        backgroundColor: "#fff",
+        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
         "&:hover": {
-          transform: "translateY(-2px)",
-          boxShadow: (t) => `0 14px 30px ${alpha(t.palette.common.black, 0.16)}`,
+          transform: "translateY(-8px)",
+          boxShadow: `0 12px 32px ${alpha(palette.green, 0.2)}`,
+          "& .category-image": {
+            transform: "scale(1.08)",
+          },
+          "& .category-overlay": {
+            background: `linear-gradient(180deg, ${alpha("#000", 0.3)} 0%, ${alpha(
+              "#000",
+              0.75
+            )} 100%)`,
+          },
+          "& .category-badge": {
+            opacity: 1,
+          },
         },
-        // evita “pulos” no grid no hover
-        contain: "layout paint size",
       }}
     >
+      {/* Barra superior com gradiente */}
+      <MDBox
+        sx={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 4,
+          background: `linear-gradient(90deg, ${palette.gold}, ${alpha(palette.gold, 0.6)})`,
+          zIndex: 2,
+        }}
+      />
+
       {/* Imagem de fundo */}
       <MDBox
         component="img"
         src={image}
         alt={name}
         loading="lazy"
+        className="category-image"
         sx={{
           position: "absolute",
           inset: 0,
@@ -61,69 +88,109 @@ function CategoryCard({ category, isAdmin, onDelete }) {
           height: "100%",
           objectFit: "cover",
           objectPosition: "center",
-          transform: "scale(1)",
-          transition: "transform .4s ease",
-          ".MuiCard-root:hover &": { transform: "scale(1.05)" },
+          transition: "transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
         }}
       />
 
-      {/* Gradiente + blur para legibilidade */}
+      {/* Overlay com gradiente */}
       <MDBox
-        className="overlay"
+        className="category-overlay"
         sx={{
           position: "absolute",
           inset: 0,
-          display: "grid",
-          placeItems: "center",
-          background:
-            "linear-gradient(180deg, rgba(0,0,0,.15) 0%, rgba(0,0,0,.45) 65%, rgba(0,0,0,.65) 100%)",
-          backdropFilter: "blur(1.5px)",
-          transition: "background .3s ease",
-          p: 2,
+          background: `linear-gradient(180deg, ${alpha("#000", 0.2)} 0%, ${alpha(
+            "#000",
+            0.7
+          )} 100%)`,
+          transition: "background 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        }}
+      />
+
+      {/* Badge com ícone */}
+      <MDBox
+        className="category-badge"
+        sx={{
+          position: "absolute",
+          top: 16,
+          left: 16,
+          display: "flex",
+          alignItems: "center",
+          gap: 0.5,
+          backgroundColor: alpha(palette.gold, 0.9),
+          backdropFilter: "blur(10px)",
+          px: 1.5,
+          py: 0.75,
+          borderRadius: "12px",
+          boxShadow: `0 4px 12px ${alpha(palette.gold, 0.3)}`,
+          zIndex: 1,
+          opacity: 0.95,
+          transition: "opacity 0.3s ease",
         }}
       >
-        <MDBox sx={{ textAlign: "center", px: 2 }}>
-          <MDTypography
-            variant="h5"
-            fontWeight="bold"
-            color="white"
-            sx={{
-              textShadow: "0 2px 6px rgba(0,0,0,.45)",
-              lineHeight: 1.25,
-              letterSpacing: ".2px",
-            }}
-          >
-            {name}
-          </MDTypography>
-
-          {description ? (
-            <MDTypography
-              variant="caption"
-              color="white"
-              sx={{
-                mt: 0.8,
-                opacity: 0.9,
-                display: { xs: "none", sm: "-webkit-box" },
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: "vertical",
-                overflow: "hidden",
-              }}
-            >
-              {description}
-            </MDTypography>
-          ) : null}
-        </MDBox>
+        <Icon sx={{ fontSize: 16, color: "#fff" }}>restaurant</Icon>
+        <MDTypography
+          variant="caption"
+          fontWeight="bold"
+          sx={{ fontSize: "0.7rem", color: "#fff" }}
+        >
+          Categoria
+        </MDTypography>
       </MDBox>
 
-      {/* Botões de ação: fora da área da imagem, com z-index alto */}
+      {/* Conteúdo de texto */}
+      <MDBox
+        sx={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          p: { xs: 2, md: 2.5 },
+          zIndex: 1,
+        }}
+      >
+        <MDTypography
+          variant="h6"
+          fontWeight="bold"
+          sx={{
+            fontSize: { xs: "1rem", sm: "1.125rem", md: "1.25rem" },
+            color: "#fff",
+            textShadow: "0 2px 12px rgba(0,0,0,0.8), 0 1px 3px rgba(0,0,0,0.9)",
+            lineHeight: 1.3,
+            mb: 0.5,
+          }}
+        >
+          {name}
+        </MDTypography>
+
+        {description && (
+          <MDTypography
+            variant="caption"
+            sx={{
+              display: { xs: "none", sm: "-webkit-box" },
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              color: "#fff",
+              fontSize: { xs: "0.75rem", md: "0.8125rem" },
+              textShadow: "0 2px 8px rgba(0,0,0,0.8), 0 1px 3px rgba(0,0,0,0.9)",
+              lineHeight: 1.5,
+            }}
+          >
+            {description}
+          </MDTypography>
+        )}
+      </MDBox>
+
+      {/* Botões de ação */}
       {isAdmin && (
         <MDBox
           className="action-buttons"
           onClick={(e) => e.stopPropagation()}
           sx={{
             position: "absolute",
-            top: 10,
-            right: 10,
+            top: 12,
+            right: 12,
             display: "flex",
             gap: 1,
             zIndex: 2,
@@ -138,43 +205,52 @@ function CategoryCard({ category, isAdmin, onDelete }) {
               variant="contained"
               size="small"
               sx={{
-                minWidth: 36,
-                height: 36,
-                borderRadius: "12px",
+                minWidth: { xs: 32, md: 36 },
+                height: { xs: 32, md: 36 },
+                borderRadius: "10px",
                 p: 0,
-                backgroundColor: "#C9A635",
-                color: "#fff",
-                "&:hover": { backgroundColor: "#b4952e" },
+                backgroundColor: alpha("#fff", 0.95),
+                backdropFilter: "blur(10px)",
+                color: palette.green,
+                boxShadow: `0 2px 8px ${alpha("#000", 0.15)}`,
+                transition: "all 0.2s ease",
+                "&:hover": {
+                  backgroundColor: palette.gold,
+                  color: "#fff",
+                  transform: "scale(1.08)",
+                },
               }}
               onMouseDown={(e) => e.stopPropagation()}
             >
-              <Icon fontSize="small">edit</Icon>
+              <Icon sx={{ fontSize: { xs: 16, md: 18 } }}>edit</Icon>
             </MDButton>
           </Tooltip>
 
           <Tooltip title="Excluir categoria" arrow enterDelay={250}>
             <MDButton
               aria-label={`Excluir categoria ${name}`}
-              variant="outlined"
-              color="error"
+              variant="contained"
               size="small"
               onClick={() => onDelete(category)}
               sx={{
-                minWidth: 36,
-                height: 36,
-                borderRadius: "12px",
+                minWidth: { xs: 32, md: 36 },
+                height: { xs: 32, md: 36 },
+                borderRadius: "10px",
                 p: 0,
-                backdropFilter: "saturate(140%)",
-                backgroundColor: (t) => alpha(t.palette.background.paper, 0.1),
-                borderColor: (t) => alpha(t.palette.error.main, 0.4),
+                backgroundColor: alpha("#fff", 0.95),
+                backdropFilter: "blur(10px)",
+                color: "#d32f2f",
+                boxShadow: `0 2px 8px ${alpha("#000", 0.15)}`,
+                transition: "all 0.2s ease",
                 "&:hover": {
-                  borderColor: (t) => t.palette.error.main,
-                  backgroundColor: (t) => alpha(t.palette.error.main, 0.06),
+                  backgroundColor: "#d32f2f",
+                  color: "#fff",
+                  transform: "scale(1.08)",
                 },
               }}
               onMouseDown={(e) => e.stopPropagation()}
             >
-              <Icon fontSize="small">delete</Icon>
+              <Icon sx={{ fontSize: { xs: 16, md: 18 } }}>delete</Icon>
             </MDButton>
           </Tooltip>
         </MDBox>

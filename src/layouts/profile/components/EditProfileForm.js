@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import Grid from "@mui/material/Grid";
 import Card from "@mui/material/Card";
+import Icon from "@mui/material/Icon";
+import { alpha } from "@mui/material/styles";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDInput from "components/MDInput";
@@ -11,7 +13,11 @@ import toast from "react-hot-toast";
 import MDAvatar from "components/MDAvatar";
 import getFullImageUrl from "utils/imageUrlHelper";
 import iconUserBlack from "assets/images/icon_user_black.png";
-import Divider from "@mui/material/Divider";
+
+const palette = {
+  gold: "#C9A635",
+  green: "#1C3B32",
+};
 
 function EditProfileForm({ userData, onSave, onCancel }) {
   const [formData, setFormData] = useState({});
@@ -97,173 +103,510 @@ function EditProfileForm({ userData, onSave, onCancel }) {
   };
 
   return (
-    <Card>
-      <MDBox p={3} display="flex" justifyContent="space-between" alignItems="center">
-        <MDTypography variant="h5">Editar Perfil</MDTypography>
-        <MDBox display="flex" alignItems="center">
-          <MDAvatar src={previewUrl || iconUserBlack} alt="Avatar" size="xl" shadow="sm" />
-          <MDButton
-            variant="outlined"
-            color="info"
-            size="small"
-            sx={{ ml: 2 }}
-            onClick={() => fileInputRef.current.click()}
-          >
-            Trocar Foto
-          </MDButton>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            style={{ display: "none" }}
-            accept="image/*"
-          />
+    <Card
+      sx={{
+        borderRadius: { xs: 2, md: 3 },
+        boxShadow: `0 4px 20px ${alpha(palette.green, 0.08)}`,
+        border: `1px solid ${alpha(palette.green, 0.08)}`,
+      }}
+    >
+      <MDBox p={{ xs: 2, sm: 2.5, md: 3 }}>
+        {/* Header */}
+        <MDBox
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            justifyContent: "space-between",
+            alignItems: { xs: "flex-start", sm: "center" },
+            gap: 2,
+            mb: 3,
+          }}
+        >
+          <MDBox sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Icon sx={{ fontSize: { xs: 22, md: 24 }, color: palette.green }}>edit</Icon>
+            <MDTypography
+              variant="h5"
+              fontWeight="bold"
+              sx={{ color: palette.green, fontSize: { xs: "1.125rem", md: "1.25rem" } }}
+            >
+              Editar Perfil
+            </MDTypography>
+          </MDBox>
+
+          <MDBox sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <MDBox
+              sx={{
+                position: "relative",
+                "&::after": {
+                  content: '""',
+                  position: "absolute",
+                  top: -3,
+                  left: -3,
+                  right: -3,
+                  bottom: -3,
+                  borderRadius: "50%",
+                  border: `2px solid ${alpha(palette.gold, 0.3)}`,
+                  zIndex: 0,
+                },
+              }}
+            >
+              <MDAvatar
+                src={previewUrl || iconUserBlack}
+                alt="Avatar"
+                size="lg"
+                shadow="md"
+                sx={{
+                  width: { xs: 60, md: 70 },
+                  height: { xs: 60, md: 70 },
+                  border: `3px solid #fff`,
+                  position: "relative",
+                  zIndex: 1,
+                }}
+              />
+            </MDBox>
+            <MDButton
+              variant="outlined"
+              size="small"
+              startIcon={<Icon sx={{ fontSize: 16 }}>photo_camera</Icon>}
+              onClick={() => fileInputRef.current.click()}
+              sx={{
+                fontSize: { xs: "0.75rem", md: "0.8125rem" },
+                py: { xs: 0.625, md: 0.75 },
+                px: { xs: 1.25, md: 1.5 },
+                borderColor: alpha(palette.gold, 0.4),
+                color: palette.gold,
+                "&:hover": {
+                  borderColor: palette.gold,
+                  backgroundColor: alpha(palette.gold, 0.08),
+                },
+              }}
+            >
+              Trocar Foto
+            </MDButton>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              style={{ display: "none" }}
+              accept="image/*"
+            />
+          </MDBox>
         </MDBox>
-      </MDBox>
-      <MDBox component="form" p={3} pt={0}>
-        <Grid container spacing={3}>
-          {/* Informações Pessoais */}
-          <Grid item xs={12}>
-            <MDTypography variant="h6" mt={2} mb={1}>
+
+        {/* Seção: Informações Pessoais */}
+        <MDBox
+          sx={{
+            p: { xs: 2, md: 2.5 },
+            backgroundColor: alpha(palette.green, 0.02),
+            borderRadius: 2,
+            border: `1px solid ${alpha(palette.green, 0.08)}`,
+            mb: 3,
+          }}
+        >
+          <MDBox sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2.5 }}>
+            <Icon sx={{ fontSize: 20, color: palette.green }}>person</Icon>
+            <MDTypography
+              variant="h6"
+              fontWeight="bold"
+              sx={{ color: palette.green, fontSize: { xs: "0.9375rem", md: "1rem" } }}
+            >
               Informações Pessoais
             </MDTypography>
-            <Divider />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <MDInput
-              name="nome"
-              label="Nome"
-              value={formData.nome}
-              onChange={handleChange}
-              fullWidth
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <MDInput
-              name="sobrenome"
-              label="Sobrenome"
-              value={formData.sobrenome}
-              onChange={handleChange}
-              fullWidth
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <MDInput
-              name="telefone"
-              label="Telefone"
-              value={formData.telefone}
-              onChange={handleChange}
-              fullWidth
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <MDInput
-              name="profissao"
-              label="Profissão"
-              value={formData.profissao}
-              onChange={handleChange}
-              fullWidth
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <MDInput
-              name="escolaridade"
-              label="Escolaridade"
-              value={formData.escolaridade}
-              onChange={handleChange}
-              fullWidth
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <MDInput
-              name="biografia"
-              label="Biografia"
-              value={formData.biografia}
-              onChange={handleChange}
-              fullWidth
-              multiline
-              rows={3}
-            />
-          </Grid>
+          </MDBox>
 
-          {/* Endereço */}
-          <Grid item xs={12}>
-            <MDTypography variant="h6" mt={2} mb={1}>
+          <Grid container spacing={{ xs: 2, md: 2.5 }}>
+            <Grid item xs={12} sm={6}>
+              <MDInput
+                name="nome"
+                label="Nome"
+                value={formData.nome}
+                onChange={handleChange}
+                fullWidth
+                InputProps={{
+                  sx: {
+                    fontSize: { xs: "0.875rem", md: "0.9375rem" },
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: alpha(palette.green, 0.2),
+                    },
+                    "&:hover .MuiOutlinedInput-notchedOutline": {
+                      borderColor: alpha(palette.green, 0.4),
+                    },
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                      borderColor: palette.gold,
+                      borderWidth: 2,
+                    },
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <MDInput
+                name="sobrenome"
+                label="Sobrenome"
+                value={formData.sobrenome}
+                onChange={handleChange}
+                fullWidth
+                InputProps={{
+                  sx: {
+                    fontSize: { xs: "0.875rem", md: "0.9375rem" },
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: alpha(palette.green, 0.2),
+                    },
+                    "&:hover .MuiOutlinedInput-notchedOutline": {
+                      borderColor: alpha(palette.green, 0.4),
+                    },
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                      borderColor: palette.gold,
+                      borderWidth: 2,
+                    },
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <MDInput
+                name="telefone"
+                label="Telefone"
+                value={formData.telefone}
+                onChange={handleChange}
+                fullWidth
+                InputProps={{
+                  sx: {
+                    fontSize: { xs: "0.875rem", md: "0.9375rem" },
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: alpha(palette.green, 0.2),
+                    },
+                    "&:hover .MuiOutlinedInput-notchedOutline": {
+                      borderColor: alpha(palette.green, 0.4),
+                    },
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                      borderColor: palette.gold,
+                      borderWidth: 2,
+                    },
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <MDInput
+                name="profissao"
+                label="Profissão"
+                value={formData.profissao}
+                onChange={handleChange}
+                fullWidth
+                InputProps={{
+                  sx: {
+                    fontSize: { xs: "0.875rem", md: "0.9375rem" },
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: alpha(palette.green, 0.2),
+                    },
+                    "&:hover .MuiOutlinedInput-notchedOutline": {
+                      borderColor: alpha(palette.green, 0.4),
+                    },
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                      borderColor: palette.gold,
+                      borderWidth: 2,
+                    },
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <MDInput
+                name="escolaridade"
+                label="Escolaridade"
+                value={formData.escolaridade}
+                onChange={handleChange}
+                fullWidth
+                InputProps={{
+                  sx: {
+                    fontSize: { xs: "0.875rem", md: "0.9375rem" },
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: alpha(palette.green, 0.2),
+                    },
+                    "&:hover .MuiOutlinedInput-notchedOutline": {
+                      borderColor: alpha(palette.green, 0.4),
+                    },
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                      borderColor: palette.gold,
+                      borderWidth: 2,
+                    },
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <MDInput
+                name="biografia"
+                label="Biografia"
+                value={formData.biografia}
+                onChange={handleChange}
+                fullWidth
+                multiline
+                rows={3}
+                InputProps={{
+                  sx: {
+                    fontSize: { xs: "0.875rem", md: "0.9375rem" },
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: alpha(palette.green, 0.2),
+                    },
+                    "&:hover .MuiOutlinedInput-notchedOutline": {
+                      borderColor: alpha(palette.green, 0.4),
+                    },
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                      borderColor: palette.gold,
+                      borderWidth: 2,
+                    },
+                  },
+                }}
+              />
+            </Grid>
+          </Grid>
+        </MDBox>
+
+        {/* Seção: Endereço */}
+        <MDBox
+          sx={{
+            p: { xs: 2, md: 2.5 },
+            backgroundColor: alpha(palette.gold, 0.04),
+            borderRadius: 2,
+            border: `1px solid ${alpha(palette.gold, 0.15)}`,
+            mb: 3,
+          }}
+        >
+          <MDBox sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2.5 }}>
+            <Icon sx={{ fontSize: 20, color: palette.gold }}>location_on</Icon>
+            <MDTypography
+              variant="h6"
+              fontWeight="bold"
+              sx={{ color: palette.green, fontSize: { xs: "0.9375rem", md: "1rem" } }}
+            >
               Endereço
             </MDTypography>
-            <Divider />
+          </MDBox>
+
+          <Grid container spacing={{ xs: 2, md: 2.5 }}>
+            <Grid item xs={12} sm={8}>
+              <MDInput
+                name="endereco"
+                label="Endereço"
+                value={formData.endereco}
+                onChange={handleChange}
+                fullWidth
+                InputProps={{
+                  sx: {
+                    fontSize: { xs: "0.875rem", md: "0.9375rem" },
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: alpha(palette.green, 0.2),
+                    },
+                    "&:hover .MuiOutlinedInput-notchedOutline": {
+                      borderColor: alpha(palette.green, 0.4),
+                    },
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                      borderColor: palette.gold,
+                      borderWidth: 2,
+                    },
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <MDInput
+                name="numero_endereco"
+                label="Número"
+                value={formData.numero_endereco}
+                onChange={handleChange}
+                fullWidth
+                InputProps={{
+                  sx: {
+                    fontSize: { xs: "0.875rem", md: "0.9375rem" },
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: alpha(palette.green, 0.2),
+                    },
+                    "&:hover .MuiOutlinedInput-notchedOutline": {
+                      borderColor: alpha(palette.green, 0.4),
+                    },
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                      borderColor: palette.gold,
+                      borderWidth: 2,
+                    },
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <MDInput
+                name="complemento"
+                label="Complemento"
+                value={formData.complemento}
+                onChange={handleChange}
+                fullWidth
+                InputProps={{
+                  sx: {
+                    fontSize: { xs: "0.875rem", md: "0.9375rem" },
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: alpha(palette.green, 0.2),
+                    },
+                    "&:hover .MuiOutlinedInput-notchedOutline": {
+                      borderColor: alpha(palette.green, 0.4),
+                    },
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                      borderColor: palette.gold,
+                      borderWidth: 2,
+                    },
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <MDInput
+                name="bairro"
+                label="Bairro"
+                value={formData.bairro}
+                onChange={handleChange}
+                fullWidth
+                InputProps={{
+                  sx: {
+                    fontSize: { xs: "0.875rem", md: "0.9375rem" },
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: alpha(palette.green, 0.2),
+                    },
+                    "&:hover .MuiOutlinedInput-notchedOutline": {
+                      borderColor: alpha(palette.green, 0.4),
+                    },
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                      borderColor: palette.gold,
+                      borderWidth: 2,
+                    },
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <MDInput
+                name="cidade"
+                label="Cidade"
+                value={formData.cidade}
+                onChange={handleChange}
+                fullWidth
+                InputProps={{
+                  sx: {
+                    fontSize: { xs: "0.875rem", md: "0.9375rem" },
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: alpha(palette.green, 0.2),
+                    },
+                    "&:hover .MuiOutlinedInput-notchedOutline": {
+                      borderColor: alpha(palette.green, 0.4),
+                    },
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                      borderColor: palette.gold,
+                      borderWidth: 2,
+                    },
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={3}>
+              <MDInput
+                name="estado"
+                label="Estado"
+                value={formData.estado}
+                onChange={handleChange}
+                fullWidth
+                InputProps={{
+                  sx: {
+                    fontSize: { xs: "0.875rem", md: "0.9375rem" },
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: alpha(palette.green, 0.2),
+                    },
+                    "&:hover .MuiOutlinedInput-notchedOutline": {
+                      borderColor: alpha(palette.green, 0.4),
+                    },
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                      borderColor: palette.gold,
+                      borderWidth: 2,
+                    },
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} sm={3}>
+              <MDInput
+                name="cep"
+                label="CEP"
+                value={formData.cep}
+                onChange={handleChange}
+                fullWidth
+                InputProps={{
+                  sx: {
+                    fontSize: { xs: "0.875rem", md: "0.9375rem" },
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: alpha(palette.green, 0.2),
+                    },
+                    "&:hover .MuiOutlinedInput-notchedOutline": {
+                      borderColor: alpha(palette.green, 0.4),
+                    },
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                      borderColor: palette.gold,
+                      borderWidth: 2,
+                    },
+                  },
+                }}
+              />
+            </Grid>
           </Grid>
-          <Grid item xs={12} sm={8}>
-            <MDInput
-              name="endereco"
-              label="Endereço"
-              value={formData.endereco}
-              onChange={handleChange}
-              fullWidth
-            />
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <MDInput
-              name="numero_endereco"
-              label="Número"
-              value={formData.numero_endereco}
-              onChange={handleChange}
-              fullWidth
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <MDInput
-              name="complemento"
-              label="Complemento"
-              value={formData.complemento}
-              onChange={handleChange}
-              fullWidth
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <MDInput
-              name="bairro"
-              label="Bairro"
-              value={formData.bairro}
-              onChange={handleChange}
-              fullWidth
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <MDInput
-              name="cidade"
-              label="Cidade"
-              value={formData.cidade}
-              onChange={handleChange}
-              fullWidth
-            />
-          </Grid>
-          <Grid item xs={12} sm={3}>
-            <MDInput
-              name="estado"
-              label="Estado"
-              value={formData.estado}
-              onChange={handleChange}
-              fullWidth
-            />
-          </Grid>
-          <Grid item xs={12} sm={3}>
-            <MDInput
-              name="cep"
-              label="CEP"
-              value={formData.cep}
-              onChange={handleChange}
-              fullWidth
-            />
-          </Grid>
-        </Grid>
+        </MDBox>
 
         {/* Ações */}
-        <MDBox mt={4} display="flex" justifyContent="flex-end">
-          <MDButton variant="text" color="error" onClick={onCancel} sx={{ mr: 2 }}>
+        <MDBox
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column-reverse", sm: "row" },
+            justifyContent: "flex-end",
+            gap: 2,
+          }}
+        >
+          <MDButton
+            onClick={onCancel}
+            startIcon={<Icon>close</Icon>}
+            fullWidth
+            sx={{
+              fontSize: { xs: "0.8125rem", md: "0.875rem" },
+              py: { xs: 1.125, md: 1.25 },
+              px: { xs: 2, md: 3 },
+              color: "#6c757d",
+              borderColor: "#6c757d",
+              border: "1px solid",
+              backgroundColor: "transparent",
+              width: { xs: "100%", sm: "auto" },
+              "&:hover": {
+                backgroundColor: alpha("#6c757d", 0.08),
+                borderColor: "#5a6268",
+              },
+            }}
+          >
             Cancelar
           </MDButton>
-          <MDButton variant="gradient" color="info" onClick={handleSaveChanges}>
+          <MDButton
+            onClick={handleSaveChanges}
+            startIcon={<Icon>save</Icon>}
+            fullWidth
+            sx={{
+              fontSize: { xs: "0.8125rem", md: "0.875rem" },
+              py: { xs: 1.125, md: 1.25 },
+              px: { xs: 2, md: 3 },
+              backgroundColor: palette.green,
+              color: "#fff !important",
+              fontWeight: 600,
+              width: { xs: "100%", sm: "auto" },
+              boxShadow: `0 4px 12px ${alpha(palette.green, 0.3)}`,
+              "&:hover": {
+                backgroundColor: alpha(palette.green, 0.9),
+                transform: "translateY(-2px)",
+                boxShadow: `0 8px 20px ${alpha(palette.green, 0.4)}`,
+              },
+            }}
+          >
             Salvar Alterações
           </MDButton>
         </MDBox>

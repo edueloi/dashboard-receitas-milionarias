@@ -285,7 +285,7 @@ function TodasAsReceitas() {
             <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
               <Box display="flex" alignItems="center" gap={1}>
                 <Icon sx={{ color: palette.gold, fontSize: "24px" }}>filter_alt</Icon>
-                <MDTypography variant="h6" fontWeight="medium" color={palette.green}>
+                <MDTypography variant="h6" fontWeight="medium" sx={{ color: palette.green }}>
                   Filtros
                 </MDTypography>
               </Box>
@@ -415,10 +415,10 @@ function TodasAsReceitas() {
           <Icon sx={{ fontSize: 64, color: alpha(palette.green, 0.3), mb: 2 }}>
             restaurant_menu
           </Icon>
-          <MDTypography variant="h5" color={palette.green} fontWeight="medium" mb={1}>
+          <MDTypography variant="h5" fontWeight="medium" mb={1} sx={{ color: palette.green }}>
             {hasFilters ? "Nenhuma receita encontrada" : "Nenhuma receita disponível"}
           </MDTypography>
-          <MDTypography variant="body2" color="text.secondary">
+          <MDTypography variant="body2" sx={{ color: "text.secondary" }}>
             {hasFilters
               ? "Tente ajustar os filtros para encontrar mais receitas."
               : "As receitas aparecerão aqui quando forem publicadas."}

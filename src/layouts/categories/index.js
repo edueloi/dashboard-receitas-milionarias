@@ -105,8 +105,9 @@ function Categories() {
     setModalType(type);
     setEditingItem(item);
     if (item) {
-      setNewItemName(item.name);
-      setNewItemDescription(item.description);
+      // Tags usam 'nome', categorias usam 'name'
+      setNewItemName(item.name || item.nome);
+      setNewItemDescription(item.description || item.descricao || "");
       setNewCategoryImage(null);
       setImageToDelete(false);
     }
@@ -232,23 +233,34 @@ function Categories() {
   const confirmDelete = async () => {
     if (!itemToDelete) return;
 
+    const isCategory = itemToDelete.descricao !== undefined;
+    const endpoint = isCategory ? `/categories/${itemToDelete.id}` : `/tags/${itemToDelete.id}`;
+    const itemType = isCategory ? "Categoria" : "Tag";
+
     try {
-      await api.delete(`/categories/${itemToDelete.id}`);
-      toast.success(`Categoria "${itemToDelete.name}" excluída com sucesso!`);
+      await api.delete(endpoint);
+      toast.success(
+        `${itemType} "${itemToDelete.name || itemToDelete.nome}" excluída com sucesso!`
+      );
       fetchAndSetData();
     } catch (error) {
-      console.error("Erro ao excluir categoria:", error);
+      console.error(`Erro ao excluir ${itemType.toLowerCase()}:`, error);
       if (error.response && error.response.status === 409) {
         const message =
           error.response.data?.message ||
-          "Não é possível deletar esta categoria porque existem receitas associadas a ela.";
+          `Não é possível deletar esta ${itemType.toLowerCase()} porque existem receitas associadas a ela.`;
         toast.error(message);
       } else {
-        toast.error("Não foi possível excluir a categoria.");
+        toast.error(`Não foi possível excluir a ${itemType.toLowerCase()}.`);
       }
     } finally {
       handleCloseDeleteModal();
     }
+  };
+
+  const handleDeleteTag = (tag) => {
+    setItemToDelete({ ...tag, name: tag.nome, id: tag.id });
+    setDeleteModalOpen(true);
   };
 
   const mapCategoryData = (category) => {
@@ -588,14 +600,20 @@ function Categories() {
                   <Icon sx={{ fontSize: 64, color: alpha(palette.green, 0.3), mb: 2 }}>
                     label_off
                   </Icon>
-                  <MDTypography variant="h6" color="text.secondary">
+                  <MDTypography variant="h6" sx={{ color: "text.secondary" }}>
                     Nenhuma tag encontrada
                   </MDTypography>
                 </MDBox>
               ) : (
                 <MDBox display="flex" flexWrap="wrap" gap={2}>
                   {filteredTags.map((tag) => (
-                    <TagCard tag={tag} key={tag.id} onEdit={() => handleModalOpen("tag", tag)} />
+                    <TagCard
+                      tag={tag}
+                      key={tag.id}
+                      isAdmin={isAdmin}
+                      onEdit={() => handleModalOpen("tag", tag)}
+                      onDelete={handleDeleteTag}
+                    />
                   ))}
                 </MDBox>
               )}
@@ -643,7 +661,12 @@ function Categories() {
                 onChange={(e) => setNewItemDescription(e.target.value)}
               />
               <MDBox mt={2}>
-                <MDTypography variant="caption" color="text.secondary" mb={1} display="block">
+                <MDTypography
+                  variant="caption"
+                  mb={1}
+                  display="block"
+                  sx={{ color: "text.secondary" }}
+                >
                   Imagem da Categoria
                 </MDTypography>
                 <ImageUpload

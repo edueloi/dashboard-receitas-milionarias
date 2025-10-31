@@ -8,16 +8,7 @@ import toast from "react-hot-toast";
 import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
 import Icon from "@mui/material/Icon";
-import {
-  CircularProgress,
-  TextField,
-  Stack,
-  Autocomplete,
-  Modal,
-  Box,
-  Divider,
-} from "@mui/material"; // Adicionei Divider
-import FilterListIcon from "@mui/icons-material/FilterList"; // Ícone para filtro
+import { CircularProgress, TextField, Stack, Autocomplete, Modal, Box, alpha } from "@mui/material";
 
 // MD
 import MDBox from "components/MDBox";
@@ -26,18 +17,25 @@ import MDButton from "components/MDButton";
 
 // Layout & Components
 import PageWrapper from "components/PageWrapper";
+import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatisticsCard";
 import EbookCard from "./components/EbookCard";
+
+const palette = {
+  gold: "#C9A635",
+  green: "#1C3B32",
+};
 
 const modalStyle = {
   position: "absolute",
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  width: { xs: "90%", sm: 440 }, // Adaptativo para mobile
+  width: { xs: "85%", sm: 380, md: 420 },
+  maxWidth: 450,
   bgcolor: "background.paper",
   borderRadius: 2,
   boxShadow: 24,
-  p: 3,
+  p: { xs: 2, sm: 2.5, md: 3 },
 };
 
 function Ebooks() {
@@ -150,9 +148,26 @@ function Ebooks() {
             variant="gradient"
             color="success"
             onClick={() => navigate("/ebooks/criar")}
-            startIcon={<Icon>add</Icon>}
+            startIcon={<Icon sx={{ fontSize: { xs: 18, sm: 20 } }}>add</Icon>}
+            sx={{
+              fontSize: { xs: "0.75rem", sm: "0.875rem" },
+              px: { xs: 1.5, sm: 2 },
+              py: { xs: 0.6, sm: 0.75 },
+              background: `linear-gradient(195deg, ${palette.gold}, ${alpha(palette.gold, 0.8)})`,
+              "&:hover": {
+                background: `linear-gradient(195deg, ${alpha(palette.gold, 0.9)}, ${alpha(
+                  palette.gold,
+                  0.7
+                )})`,
+              },
+            }}
           >
-            Novo Ebook
+            <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+              Novo Ebook
+            </Box>
+            <Box component="span" sx={{ display: { xs: "inline", sm: "none" } }}>
+              Novo
+            </Box>
           </MDButton>
         )}
       </Stack>
@@ -166,8 +181,55 @@ function Ebooks() {
       subtitle="Explore, leia e baixe ebooks exclusivos."
       actions={headerActions}
     >
+      {/* --- KPIs --- */}
+      <Grid container spacing={3} mb={3}>
+        <Grid item xs={12} sm={6} md={4}>
+          <ComplexStatisticsCard
+            color="primary"
+            icon="menu_book"
+            title="Total de Ebooks"
+            count={ebooks.length}
+            percentage={{
+              color: "success",
+              amount: filteredEbooks.length,
+              label: "exibidos",
+            }}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <ComplexStatisticsCard
+            color="success"
+            icon="category"
+            title="Categorias"
+            count={categories.length}
+            percentage={{
+              color: "info",
+              amount: categoryFilter ? "1" : "todas",
+              label: "filtradas",
+            }}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <ComplexStatisticsCard
+            icon="import_contacts"
+            title="Biblioteca"
+            count={filteredEbooks.length}
+            percentage={{
+              color: "warning",
+              amount: "",
+              label: "disponíveis",
+            }}
+          />
+        </Grid>
+      </Grid>
+
       {/* --- Card de Filtros --- */}
-      <Card>
+      <Card
+        sx={{
+          border: `1px solid ${alpha(palette.green, 0.1)}`,
+          boxShadow: `0 4px 20px ${alpha(palette.green, 0.08)}`,
+        }}
+      >
         <MDBox p={{ xs: 2, md: 3 }}>
           <MDTypography
             variant="h6"
@@ -176,11 +238,14 @@ function Ebooks() {
             display="flex"
             alignItems="center"
             gap={1}
-            color="text.primary"
+            sx={{
+              color: palette.green,
+              fontSize: { xs: "1rem", md: "1.125rem" },
+            }}
           >
-            <FilterListIcon fontSize="small" /> Filtros de Busca
+            <Icon sx={{ fontSize: { xs: 20, md: 22 } }}>filter_list</Icon>
+            Filtros de Busca
           </MDTypography>
-          <Divider sx={{ mb: 2 }} />
           <Stack
             direction={{ xs: "column", md: "row" }}
             spacing={2}
@@ -191,7 +256,23 @@ function Ebooks() {
               label="Buscar pelo nome..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              sx={{ flexGrow: 1 }} // Permite que o campo de busca ocupe mais espaço
+              size="small"
+              sx={{
+                flexGrow: 1,
+                "& .MuiOutlinedInput-root": {
+                  "&.Mui-focused fieldset": {
+                    borderColor: palette.gold,
+                  },
+                },
+                "& .MuiInputLabel-root.Mui-focused": {
+                  color: palette.gold,
+                },
+              }}
+              InputProps={{
+                startAdornment: (
+                  <Icon sx={{ mr: 1, color: palette.green, fontSize: 20 }}>search</Icon>
+                ),
+              }}
             />
 
             {/* Filtro por Categoria */}
@@ -202,13 +283,30 @@ function Ebooks() {
               onChange={(event, newValue) => setCategoryFilter(newValue)}
               isOptionEqualToValue={(option, value) => option.id === value.id}
               loading={loadingCategories}
-              sx={{ width: { xs: "100%", md: 250 } }} // Largura fixa para o Autocomplete
+              sx={{ width: { xs: "100%", md: 280 } }}
               renderInput={(params) => (
                 <TextField
                   {...params}
                   label="Filtrar por Categoria"
+                  size="small"
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      "&.Mui-focused fieldset": {
+                        borderColor: palette.gold,
+                      },
+                    },
+                    "& .MuiInputLabel-root.Mui-focused": {
+                      color: palette.gold,
+                    },
+                  }}
                   InputProps={{
                     ...params.InputProps,
+                    startAdornment: (
+                      <>
+                        <Icon sx={{ mr: 0.5, color: palette.green, fontSize: 20 }}>category</Icon>
+                        {params.InputProps.startAdornment}
+                      </>
+                    ),
                     endAdornment: (
                       <>
                         {loadingCategories ? <CircularProgress color="inherit" size={20} /> : null}
@@ -219,6 +317,33 @@ function Ebooks() {
                 />
               )}
             />
+
+            {/* Botão Limpar Filtros */}
+            {(searchTerm || categoryFilter) && (
+              <MDButton
+                variant="outlined"
+                onClick={() => {
+                  setSearchTerm("");
+                  setCategoryFilter(null);
+                }}
+                sx={{
+                  fontSize: { xs: "0.75rem", sm: "0.8125rem" },
+                  px: { xs: 1.5, sm: 2 },
+                  py: { xs: 0.6, sm: 0.75 },
+                  borderColor: alpha(palette.green, 0.3),
+                  color: palette.green,
+                  "&:hover": {
+                    borderColor: palette.green,
+                    backgroundColor: alpha(palette.green, 0.05),
+                  },
+                }}
+                startIcon={<Icon sx={{ fontSize: { xs: 16, sm: 18 } }}>clear</Icon>}
+              >
+                <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                  Limpar
+                </Box>
+              </MDButton>
+            )}
           </Stack>
         </MDBox>
       </Card>
@@ -228,7 +353,7 @@ function Ebooks() {
         {loading ? (
           <MDBox display="flex" justifyContent="center" p={5}>
             <CircularProgress color="info" />
-            <MDTypography variant="body1" color="text.secondary" ml={2}>
+            <MDTypography variant="body1" ml={2} sx={{ color: "text.secondary" }}>
               Carregando ebooks...
             </MDTypography>
           </MDBox>
@@ -240,6 +365,7 @@ function Ebooks() {
                   image={absUrl(ebook.capa_url)}
                   title={ebook.titulo}
                   description={ebook.descricao_curta}
+                  category={ebook.categoria_nome}
                   onRead={() => navigate(`/ebooks/${ebook.id}`)}
                   onDownload={() => handleDownload(ebook.id)}
                   onEdit={
@@ -257,33 +383,65 @@ function Ebooks() {
             ))}
           </Grid>
         ) : (
-          /* NOVO: Mensagem para lista vazia */
-          <Card>
+          // Estado vazio melhorado
+          <Card
+            sx={{
+              border: `1px solid ${alpha(palette.green, 0.1)}`,
+              boxShadow: `0 4px 20px ${alpha(palette.green, 0.08)}`,
+            }}
+          >
             <MDBox
-              p={4}
+              p={{ xs: 4, md: 5 }}
               display="flex"
               flexDirection="column"
               alignItems="center"
               justifyContent="center"
             >
-              <Icon fontSize="large" color="text" sx={{ mb: 2, color: "text.secondary" }}>
-                search_off
+              <Icon
+                sx={{
+                  fontSize: { xs: 56, md: 64 },
+                  color: alpha(palette.green, 0.3),
+                  mb: 2,
+                }}
+              >
+                menu_book
               </Icon>
-              <MDTypography variant="h5" color="text.primary">
-                Nenhum ebook encontrado!
+              <MDTypography
+                variant="h5"
+                color="text.primary"
+                sx={{ fontSize: { xs: "1.25rem", md: "1.5rem" } }}
+              >
+                Nenhum ebook encontrado
               </MDTypography>
-              <MDTypography variant="body2" color="text.secondary" mt={1} textAlign="center">
-                Ajuste os filtros de busca ou tente um termo diferente.
+              <MDTypography
+                variant="body2"
+                color="text.secondary"
+                mt={1}
+                textAlign="center"
+                sx={{ fontSize: { xs: "0.875rem", md: "1rem" } }}
+              >
+                {searchTerm || categoryFilter
+                  ? "Ajuste os filtros de busca ou tente um termo diferente."
+                  : "Não há ebooks disponíveis no momento."}
               </MDTypography>
               {(searchTerm || categoryFilter) && (
                 <MDButton
                   variant="outlined"
-                  color="secondary"
                   onClick={() => {
                     setSearchTerm("");
                     setCategoryFilter(null);
                   }}
-                  sx={{ mt: 3 }}
+                  sx={{
+                    mt: 3,
+                    fontSize: { xs: "0.8125rem", sm: "0.875rem" },
+                    borderColor: alpha(palette.green, 0.3),
+                    color: palette.green,
+                    "&:hover": {
+                      borderColor: palette.green,
+                      backgroundColor: alpha(palette.green, 0.05),
+                    },
+                  }}
+                  startIcon={<Icon>clear_all</Icon>}
                 >
                   Limpar Filtros
                 </MDButton>
@@ -293,21 +451,58 @@ function Ebooks() {
         )}
       </MDBox>
 
-      {/* Modal de confirmação (mantido) */}
+      {/* Modal de confirmação */}
       <Modal open={deleteOpen} onClose={closeDeleteModal}>
         <Box sx={modalStyle}>
-          <MDTypography variant="h5" fontWeight="medium">
+          <MDTypography
+            variant="h6"
+            fontWeight="bold"
+            mb={2}
+            sx={{ fontSize: { xs: "1rem", sm: "1.125rem" } }}
+          >
             Confirmar Exclusão
           </MDTypography>
-          <MDTypography variant="body2" color="text" mt={2} mb={3}>
+          <MDTypography
+            variant="body2"
+            color="text.secondary"
+            sx={{ fontSize: { xs: "0.8125rem", sm: "0.875rem" } }}
+          >
             Tem certeza que deseja excluir este ebook? Esta ação é irreversível.
           </MDTypography>
-          <MDBox display="flex" justifyContent="flex-end" gap={1}>
-            <MDButton color="secondary" onClick={closeDeleteModal}>
+          <MDBox display="flex" justifyContent="flex-end" gap={1.5} mt={3}>
+            <MDButton
+              variant="outlined"
+              color="dark"
+              onClick={closeDeleteModal}
+              sx={{
+                fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                px: { xs: 2, sm: 2.5 },
+                py: { xs: 0.6, sm: 0.75 },
+                color: "text.secondary",
+                borderColor: "divider",
+                "&:hover": {
+                  borderColor: "text.secondary",
+                  backgroundColor: alpha("#000", 0.04),
+                },
+              }}
+            >
               Cancelar
             </MDButton>
-            <MDButton variant="gradient" color="error" onClick={confirmDelete}>
-              Deletar
+            <MDButton
+              variant="contained"
+              onClick={confirmDelete}
+              sx={{
+                fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                px: { xs: 2, sm: 2.5 },
+                py: { xs: 0.6, sm: 0.75 },
+                backgroundColor: "#d32f2f",
+                color: "#fff",
+                "&:hover": {
+                  backgroundColor: "#c62828",
+                },
+              }}
+            >
+              Excluir
             </MDButton>
           </MDBox>
         </Box>
