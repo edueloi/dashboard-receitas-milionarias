@@ -18,7 +18,9 @@ import {
   ToggleButtonGroup,
   ToggleButton,
   Stack,
-  Skeleton, // Importado para o loading state
+  Skeleton,
+  alpha,
+  IconButton,
 } from "@mui/material";
 
 // Material Dashboard 2 React components
@@ -32,22 +34,29 @@ import getFullImageUrl from "utils/imageUrlHelper";
 // Material Dashboard 2 React example components
 import PageWrapper from "components/PageWrapper";
 import DataTable from "examples/Tables/DataTable";
+import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatisticsCard";
 
 // Data & Components
 import categoriesTableData from "./data/categoriesTableData";
 import CategoryCard from "./components/CategoryCard";
 import TagCard from "./components/TagCard";
 
-const style = {
+const palette = {
+  gold: "#C9A635",
+  green: "#1C3B32",
+};
+
+const modalStyle = {
   position: "absolute",
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  width: 400,
+  width: { xs: "85%", sm: 380, md: 420 },
+  maxWidth: 450,
   bgcolor: "background.paper",
-  borderRadius: "8px", // Borda arredondada para o modal
+  borderRadius: 2,
   boxShadow: 24,
-  p: 4,
+  p: { xs: 2, sm: 2.5, md: 3 },
 };
 
 function Categories() {
@@ -279,63 +288,217 @@ function Categories() {
       title="Categorias e Tags"
       subtitle="Organize e gerencie o conteúdo das suas receitas."
     >
-      <MDBox pt={1} pb={2}>
-        <Card>
-          <MDBox p={3}>
-            {/* Header da Página */}
+      {/* KPIs */}
+      <Grid container spacing={3} mb={3}>
+        <Grid item xs={12} sm={6} md={4}>
+          <ComplexStatisticsCard
+            color="primary"
+            icon="category"
+            title="Total de Categorias"
+            count={categories.length}
+            percentage={{
+              color: "success",
+              amount: filteredCategories.length,
+              label: "exibidas",
+            }}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <ComplexStatisticsCard
+            color="success"
+            icon="label"
+            title="Total de Tags"
+            count={tags.length}
+            percentage={{
+              color: "info",
+              amount: filteredTags.length,
+              label: "exibidas",
+            }}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <ComplexStatisticsCard
+            icon="restaurant_menu"
+            title="Organização"
+            count={categories.length + tags.length}
+            percentage={{
+              color: "warning",
+              amount: "",
+              label: "elementos totais",
+            }}
+          />
+        </Grid>
+      </Grid>
 
-            <Tabs value={tabValue} onChange={handleTabChange} sx={{ mb: 3 }}>
-              <Tab label="Categorias" />
-              <Tab label="Tags" />
-            </Tabs>
+      <Card
+        sx={{
+          border: `1px solid ${alpha(palette.green, 0.1)}`,
+          boxShadow: `0 4px 20px ${alpha(palette.green, 0.08)}`,
+        }}
+      >
+        <MDBox p={{ xs: 2, md: 3 }}>
+          {/* Tabs */}
+          <Tabs
+            value={tabValue}
+            onChange={handleTabChange}
+            sx={{
+              mb: 3,
+              "& .MuiTab-root": {
+                fontSize: { xs: "0.85rem", md: "0.9rem" },
+                fontWeight: 600,
+                color: "text.secondary",
+                minHeight: { xs: 42, md: 48 },
+                "&.Mui-selected": {
+                  color: palette.gold,
+                },
+              },
+              "& .MuiTabs-indicator": {
+                backgroundColor: palette.gold,
+                height: 3,
+              },
+            }}
+          >
+            <Tab
+              label="Categorias"
+              icon={<Icon sx={{ mb: 0.5 }}>category</Icon>}
+              iconPosition="start"
+            />
+            <Tab label="Tags" icon={<Icon sx={{ mb: 0.5 }}>label</Icon>} iconPosition="start" />
+          </Tabs>
 
-            {tabValue === 0 && (
-              <MDBox>
-                {/* Cabeçalho de Ações para Categorias */}
-                <Stack
-                  direction={{ xs: "column", sm: "row" }}
-                  spacing={2}
-                  justifyContent="space-between"
-                  alignItems="center"
-                  mb={3}
-                >
-                  <TextField
-                    label="Buscar Categoria"
-                    variant="outlined"
-                    value={categorySearch}
-                    onChange={(e) => setCategorySearch(e.target.value)}
-                    sx={{ width: { xs: "100%", sm: "250px" } }}
-                  />
-                  <Stack direction="row" spacing={2} alignItems="center">
-                    <ToggleButtonGroup
-                      color="primary"
-                      value={view}
-                      exclusive
-                      onChange={handleViewChange}
+          {tabValue === 0 && (
+            <MDBox>
+              {/* Cabeçalho de Ações para Categorias */}
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={2}
+                justifyContent="space-between"
+                alignItems="center"
+                mb={3}
+              >
+                <TextField
+                  label="Buscar Categoria"
+                  variant="outlined"
+                  size="small"
+                  value={categorySearch}
+                  onChange={(e) => setCategorySearch(e.target.value)}
+                  sx={{ width: { xs: "100%", sm: 280 } }}
+                  InputProps={{
+                    startAdornment: <Icon sx={{ mr: 1, color: palette.green }}>search</Icon>,
+                  }}
+                />
+                <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
+                  <ToggleButtonGroup
+                    value={view}
+                    exclusive
+                    onChange={handleViewChange}
+                    size="small"
+                    sx={{
+                      "& .MuiToggleButton-root": {
+                        borderColor: palette.green,
+                        color: palette.green,
+                        px: { xs: 1.5, sm: 2 },
+                        "&.Mui-selected": {
+                          backgroundColor: palette.gold,
+                          color: "#fff",
+                          "&:hover": {
+                            backgroundColor: alpha(palette.gold, 0.9),
+                          },
+                        },
+                      },
+                    }}
+                  >
+                    <ToggleButton value="card">
+                      <Icon sx={{ fontSize: { xs: 20, sm: 24 } }}>grid_view</Icon>
+                      <Box component="span" sx={{ display: { xs: "none", sm: "inline" }, ml: 1 }}>
+                        Cards
+                      </Box>
+                    </ToggleButton>
+                    <ToggleButton value="table">
+                      <Icon sx={{ fontSize: { xs: 20, sm: 24 } }}>table_rows</Icon>
+                      <Box component="span" sx={{ display: { xs: "none", sm: "inline" }, ml: 1 }}>
+                        Tabela
+                      </Box>
+                    </ToggleButton>
+                  </ToggleButtonGroup>
+                  {isAdmin && (
+                    <MDButton
+                      variant="gradient"
+                      color="success"
+                      onClick={() => handleModalOpen("category")}
+                      startIcon={<Icon sx={{ fontSize: { xs: 18, sm: 20 } }}>add</Icon>}
+                      sx={{
+                        fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                        px: { xs: 1.5, sm: 2 },
+                        py: { xs: 0.6, sm: 0.75 },
+                        minWidth: { xs: "auto", sm: "auto" },
+                        background: `linear-gradient(195deg, ${palette.gold}, ${alpha(
+                          palette.gold,
+                          0.8
+                        )})`,
+                        "&:hover": {
+                          background: `linear-gradient(195deg, ${alpha(palette.gold, 0.9)}, ${alpha(
+                            palette.gold,
+                            0.7
+                          )})`,
+                        },
+                      }}
                     >
-                      <ToggleButton value="table">
-                        <Icon>table_rows</Icon>
-                      </ToggleButton>
-                      <ToggleButton value="card">
-                        <Icon>grid_view</Icon>
-                      </ToggleButton>
-                    </ToggleButtonGroup>
-                    {isAdmin && (
-                      <MDButton
-                        variant="gradient"
-                        color="primary"
-                        onClick={() => handleModalOpen("category")}
-                      >
-                        <Icon sx={{ mr: 1 }}>add</Icon>
+                      <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
                         Nova Categoria
-                      </MDButton>
-                    )}
-                  </Stack>
+                      </Box>
+                      <Box component="span" sx={{ display: { xs: "inline", sm: "none" } }}>
+                        Nova
+                      </Box>
+                    </MDButton>
+                  )}
                 </Stack>
-                {/* Conteúdo */}
-                {loading ? (
-                  renderSkeletons()
-                ) : view === "table" ? (
+              </Stack>
+              {/* Conteúdo */}
+              {loading ? (
+                renderSkeletons()
+              ) : view === "table" ? (
+                <MDBox
+                  sx={{
+                    "& .MuiTableContainer-root": {
+                      border: `1px solid ${alpha(palette.green, 0.15)}`,
+                      borderRadius: "8px",
+                      overflow: "hidden",
+                    },
+                    "& .MuiTable-root": {
+                      "& thead": {
+                        "& tr": {
+                          "& th": {
+                            backgroundColor: alpha(palette.green, 0.05),
+                            borderBottom: `2px solid ${alpha(palette.green, 0.2)}`,
+                            fontSize: { xs: "0.75rem", md: "0.85rem" },
+                            fontWeight: 700,
+                            color: palette.green,
+                            textTransform: "uppercase",
+                            letterSpacing: "0.5px",
+                            py: { xs: 1.5, md: 2 },
+                          },
+                        },
+                      },
+                      "& tbody": {
+                        "& tr": {
+                          borderBottom: `1px solid ${alpha(palette.green, 0.08)}`,
+                          transition: "background-color 0.2s ease",
+                          "&:hover": {
+                            backgroundColor: alpha(palette.gold, 0.05),
+                          },
+                          "&:last-child": {
+                            borderBottom: "none",
+                          },
+                          "& td": {
+                            py: { xs: 1.5, md: 2 },
+                            fontSize: { xs: "0.75rem", md: "0.875rem" },
+                          },
+                        },
+                      },
+                    },
+                  }}
+                >
                   <DataTable
                     table={{ columns, rows }}
                     isSorted={false}
@@ -344,76 +507,115 @@ function Categories() {
                     canSearch={false}
                     pagination={{ variant: "gradient", color: "primary" }}
                   />
-                ) : (
-                  <Grid container spacing={3}>
-                    {filteredCategories.map((cat) => (
-                      <Grid item xs={12} sm={6} md={4} lg={3} key={cat.id}>
-                        <CategoryCard
-                          category={mapCategoryData(cat)}
-                          isAdmin={isAdmin}
-                          onDelete={handleDelete}
-                          onEdit={() => handleModalOpen("category", cat)}
-                        />
-                      </Grid>
-                    ))}
-                  </Grid>
-                )}
-              </MDBox>
-            )}
+                </MDBox>
+              ) : (
+                <Grid container spacing={3}>
+                  {filteredCategories.map((cat) => (
+                    <Grid item xs={12} sm={6} md={4} lg={3} key={cat.id}>
+                      <CategoryCard
+                        category={mapCategoryData(cat)}
+                        isAdmin={isAdmin}
+                        onDelete={handleDelete}
+                        onEdit={() => handleModalOpen("category", cat)}
+                      />
+                    </Grid>
+                  ))}
+                </Grid>
+              )}
+            </MDBox>
+          )}
 
-            {tabValue === 1 && (
-              <MDBox>
-                {/* Cabeçalho de Ações para Tags */}
-                <Stack
-                  direction={{ xs: "column", sm: "row" }}
-                  spacing={2}
-                  justifyContent="space-between"
-                  alignItems="center"
-                  mb={3}
-                >
-                  <TextField
-                    label="Buscar Tag"
-                    variant="outlined"
-                    value={tagSearch}
-                    onChange={(e) => setTagSearch(e.target.value)}
-                    sx={{ width: { xs: "100%", sm: "250px" } }}
-                  />
-                  {isAdmin && (
-                    <MDButton
-                      variant="gradient"
-                      color="primary"
-                      onClick={() => handleModalOpen("tag")}
-                    >
-                      <Icon sx={{ mr: 1 }}>add</Icon>
+          {tabValue === 1 && (
+            <MDBox>
+              {/* Cabeçalho de Ações para Tags */}
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={2}
+                justifyContent="space-between"
+                alignItems="center"
+                mb={3}
+              >
+                <TextField
+                  label="Buscar Tag"
+                  variant="outlined"
+                  size="small"
+                  value={tagSearch}
+                  onChange={(e) => setTagSearch(e.target.value)}
+                  sx={{ width: { xs: "100%", sm: 280 } }}
+                  InputProps={{
+                    startAdornment: <Icon sx={{ mr: 1, color: palette.green }}>search</Icon>,
+                  }}
+                />
+                {isAdmin && (
+                  <MDButton
+                    variant="gradient"
+                    color="success"
+                    onClick={() => handleModalOpen("tag")}
+                    startIcon={<Icon sx={{ fontSize: { xs: 18, sm: 20 } }}>add</Icon>}
+                    sx={{
+                      fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                      px: { xs: 1.5, sm: 2 },
+                      py: { xs: 0.6, sm: 0.75 },
+                      minWidth: { xs: "auto", sm: "auto" },
+                      background: `linear-gradient(195deg, ${palette.gold}, ${alpha(
+                        palette.gold,
+                        0.8
+                      )})`,
+                      "&:hover": {
+                        background: `linear-gradient(195deg, ${alpha(palette.gold, 0.9)}, ${alpha(
+                          palette.gold,
+                          0.7
+                        )})`,
+                      },
+                    }}
+                  >
+                    <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
                       Nova Tag
-                    </MDButton>
-                  )}
-                </Stack>
-                {/* Conteúdo */}
-                {loading ? (
-                  <MDBox display="flex" justifyContent="center" p={5}>
-                    <Skeleton variant="rectangular" width="100%" height={100} />
-                  </MDBox>
-                ) : (
-                  <MDBox display="flex" flexWrap="wrap" gap={2}>
-                    {filteredTags.map((tag) => (
-                      <TagCard tag={tag} key={tag.id} onEdit={() => handleModalOpen("tag", tag)} />
-                    ))}
-                  </MDBox>
+                    </Box>
+                    <Box component="span" sx={{ display: { xs: "inline", sm: "none" } }}>
+                      Nova
+                    </Box>
+                  </MDButton>
                 )}
-              </MDBox>
-            )}
-          </MDBox>
-        </Card>
-      </MDBox>
+              </Stack>
+              {/* Conteúdo */}
+              {loading ? (
+                <MDBox display="flex" justifyContent="center" p={5}>
+                  <Skeleton variant="rectangular" width="100%" height={100} />
+                </MDBox>
+              ) : filteredTags.length === 0 ? (
+                <MDBox textAlign="center" py={5}>
+                  <Icon sx={{ fontSize: 64, color: alpha(palette.green, 0.3), mb: 2 }}>
+                    label_off
+                  </Icon>
+                  <MDTypography variant="h6" color="text.secondary">
+                    Nenhuma tag encontrada
+                  </MDTypography>
+                </MDBox>
+              ) : (
+                <MDBox display="flex" flexWrap="wrap" gap={2}>
+                  {filteredTags.map((tag) => (
+                    <TagCard tag={tag} key={tag.id} onEdit={() => handleModalOpen("tag", tag)} />
+                  ))}
+                </MDBox>
+              )}
+            </MDBox>
+          )}
+        </MDBox>
+      </Card>
 
       {/* Create/Edit Modal */}
       <Modal open={modalOpen} onClose={handleModalClose}>
-        <Box sx={style}>
-          <MDTypography variant="h6">
+        <Box sx={modalStyle}>
+          <MDTypography
+            variant="h6"
+            fontWeight="bold"
+            mb={2}
+            sx={{ fontSize: { xs: "1rem", sm: "1.125rem" } }}
+          >
             {editingItem
               ? `Editar ${modalType === "category" ? "Categoria" : "Tag"}`
-              : `Criar Nova ${modalType === "category" ? "Categoria" : "Tag"}`}
+              : `Criar ${modalType === "category" ? "Categoria" : "Tag"}`}
           </MDTypography>
           <TextField
             autoFocus
@@ -421,7 +623,8 @@ function Categories() {
             label="Nome"
             type="text"
             fullWidth
-            variant="standard"
+            variant="outlined"
+            size="small"
             value={newItemName}
             onChange={(e) => setNewItemName(e.target.value)}
           />
@@ -432,11 +635,17 @@ function Categories() {
                 label="Descrição"
                 type="text"
                 fullWidth
-                variant="standard"
+                size="small"
+                variant="outlined"
+                multiline
+                rows={3}
                 value={newItemDescription}
                 onChange={(e) => setNewItemDescription(e.target.value)}
               />
               <MDBox mt={2}>
+                <MDTypography variant="caption" color="text.secondary" mb={1} display="block">
+                  Imagem da Categoria
+                </MDTypography>
                 <ImageUpload
                   onImageChange={handleImageChange}
                   onImageDelete={handleImageDelete}
@@ -445,12 +654,40 @@ function Categories() {
               </MDBox>
             </>
           )}
-          <MDBox mt={4} display="flex" justifyContent="flex-end">
-            <MDButton color="secondary" onClick={handleModalClose} sx={{ mr: 1 }}>
+          <MDBox display="flex" justifyContent="flex-end" gap={1.5} mt={3}>
+            <MDButton
+              variant="outlined"
+              color="dark"
+              onClick={handleModalClose}
+              sx={{
+                fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                px: { xs: 2, sm: 2.5 },
+                py: { xs: 0.6, sm: 0.75 },
+                color: "text.secondary",
+                borderColor: "divider",
+                "&:hover": {
+                  borderColor: "text.secondary",
+                  backgroundColor: alpha("#000", 0.04),
+                },
+              }}
+            >
               Cancelar
             </MDButton>
-            <MDButton variant="gradient" color="primary" onClick={handleCreateOrUpdateItem}>
-              Salvar
+            <MDButton
+              variant="contained"
+              onClick={handleCreateOrUpdateItem}
+              sx={{
+                fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                px: { xs: 2, sm: 2.5 },
+                py: { xs: 0.6, sm: 0.75 },
+                backgroundColor: palette.green,
+                color: "#fff",
+                "&:hover": {
+                  backgroundColor: alpha(palette.green, 0.9),
+                },
+              }}
+            >
+              {editingItem ? "Atualizar" : "Criar"}
             </MDButton>
           </MDBox>
         </Box>
@@ -458,19 +695,56 @@ function Categories() {
 
       {/* Delete Confirmation Modal */}
       <Modal open={deleteModalOpen} onClose={handleCloseDeleteModal}>
-        <Box sx={style}>
-          <MDTypography variant="h5" fontWeight="medium">
+        <Box sx={modalStyle}>
+          <MDTypography
+            variant="h6"
+            fontWeight="bold"
+            mb={2}
+            sx={{ fontSize: { xs: "1rem", sm: "1.125rem" } }}
+          >
             Confirmar Exclusão
           </MDTypography>
-          <MDTypography variant="body2" color="text" mt={2} mb={3}>
-            Tem certeza que deseja excluir a categoria &quot;<b>{itemToDelete?.name}</b>&quot;? Esta
+          <MDTypography
+            variant="body2"
+            color="text.secondary"
+            sx={{ fontSize: { xs: "0.8125rem", sm: "0.875rem" } }}
+          >
+            Tem certeza que deseja excluir &quot;<strong>{itemToDelete?.name}</strong>&quot;? Esta
             ação é irreversível.
           </MDTypography>
-          <MDBox display="flex" justifyContent="flex-end">
-            <MDButton color="secondary" onClick={handleCloseDeleteModal} sx={{ mr: 1 }}>
+          <MDBox display="flex" justifyContent="flex-end" gap={1.5} mt={3}>
+            <MDButton
+              variant="outlined"
+              color="dark"
+              onClick={handleCloseDeleteModal}
+              sx={{
+                fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                px: { xs: 2, sm: 2.5 },
+                py: { xs: 0.6, sm: 0.75 },
+                color: "text.secondary",
+                borderColor: "divider",
+                "&:hover": {
+                  borderColor: "text.secondary",
+                  backgroundColor: alpha("#000", 0.04),
+                },
+              }}
+            >
               Cancelar
             </MDButton>
-            <MDButton variant="gradient" color="error" onClick={confirmDelete}>
+            <MDButton
+              variant="contained"
+              onClick={confirmDelete}
+              sx={{
+                fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                px: { xs: 2, sm: 2.5 },
+                py: { xs: 0.6, sm: 0.75 },
+                backgroundColor: "#d32f2f",
+                color: "#fff",
+                "&:hover": {
+                  backgroundColor: "#c62828",
+                },
+              }}
+            >
               Excluir
             </MDButton>
           </MDBox>

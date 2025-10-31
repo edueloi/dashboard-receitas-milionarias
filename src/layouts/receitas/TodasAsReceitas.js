@@ -436,7 +436,31 @@ function TodasAsReceitas() {
           )}
         </Card>
       ) : view === "table" ? (
-        <Card>
+        <Card
+          sx={{
+            border: `1px solid ${alpha(palette.green, 0.1)}`,
+            boxShadow: `0 4px 12px ${alpha(palette.green, 0.08)}`,
+            "& .MuiTableContainer-root": {
+              overflowX: "auto",
+            },
+            "& .MuiTable-root": {
+              minWidth: { xs: 650, md: 750 },
+            },
+            "& .MuiTableCell-root": {
+              borderBottom: `1px solid ${alpha(palette.green, 0.05)}`,
+              py: { xs: 2, md: 2.5 },
+              px: { xs: 1.5, md: 2 },
+            },
+            "& .MuiTableHead-root .MuiTableCell-root": {
+              backgroundColor: alpha(palette.green, 0.03),
+              color: palette.green,
+              fontWeight: 600,
+              fontSize: { xs: "0.75rem", md: "0.8rem" },
+              textTransform: "uppercase",
+              letterSpacing: "0.5px",
+            },
+          }}
+        >
           <DataTable
             table={{ columns, rows }}
             isSorted={false}
