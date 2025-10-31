@@ -1,5 +1,6 @@
 // src/layouts/profile/components/Header/index.js
 
+import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
@@ -11,6 +12,7 @@ import MDAvatar from "components/MDAvatar";
 import backgroundImage from "assets/images/bg-profile.jpeg";
 import getFullImageUrl from "utils/imageUrlHelper";
 import iconUserBlack from "assets/images/icon_user_black.png";
+import api from "services/api";
 
 const palette = {
   gold: "#C9A635",
@@ -18,6 +20,9 @@ const palette = {
 };
 
 function Header({ children, userData }) {
+  const [stats, setStats] = useState(null);
+  const [loadingStats, setLoadingStats] = useState(true);
+
   const fullName =
     userData?.nome && userData?.sobrenome ? `${userData.nome} ${userData.sobrenome}` : "Usuário";
   const userRole = userData?.permissao || "Função não informada";
@@ -29,35 +34,76 @@ function Header({ children, userData }) {
   // A URL do avatar agora vem da API e precisa ser construída
   const avatarUrl = userData?.foto_perfil_url ? getFullImageUrl(userData.foto_perfil_url) : null;
 
+  // Verificar se o usuário é afiliado (tem código de afiliado)
+  const isAffiliate = userData?.codigo_afiliado_proprio;
+
   // Format member since date
-  const memberSince = userData?.data_cadastro
-    ? new Date(userData.data_cadastro).toLocaleDateString("pt-BR", {
+  const memberSince = userData?.data_criacao
+    ? new Date(userData.data_criacao).toLocaleDateString("pt-BR", {
         month: "short",
         year: "numeric",
       })
     : "N/A";
 
-  // Stats data
-  const stats = [
-    {
-      icon: "menu_book",
-      label: "Receitas",
-      value: userData?.total_receitas || 0,
-      color: palette.gold,
-    },
-    {
-      icon: "auto_stories",
-      label: "E-books",
-      value: userData?.total_ebooks || 0,
-      color: palette.green,
-    },
-    {
-      icon: "calendar_today",
-      label: "Membro desde",
-      value: memberSince,
-      color: palette.gold,
-    },
-  ];
+  // Buscar estatísticas do usuário
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (!userData?.id || isAffiliate) {
+        setLoadingStats(false);
+        return;
+      }
+
+      try {
+        setLoadingStats(true);
+
+        // Buscar receitas e ebooks do usuário
+        const [recipesRes, ebooksRes] = await Promise.all([
+          api.get("/recipes?allStatus=true&populate=criador").catch(() => ({ data: [] })),
+          api.get("/ebooks").catch(() => ({ data: [] })),
+        ]);
+
+        // Contar apenas receitas criadas por este usuário
+        const userRecipes = recipesRes.data.filter(
+          (recipe) => recipe.criador?.id === userData.id || recipe.id_criador === userData.id
+        );
+
+        // Contar apenas ebooks criados por este usuário
+        const userEbooks = ebooksRes.data.filter(
+          (ebook) => ebook.criador?.id === userData.id || ebook.id_criador === userData.id
+        );
+
+        const statsData = [
+          {
+            icon: "menu_book",
+            label: "Receitas",
+            value: userRecipes.length,
+            color: palette.gold,
+          },
+          {
+            icon: "auto_stories",
+            label: "E-books",
+            value: userEbooks.length,
+            color: palette.green,
+          },
+          {
+            icon: "calendar_today",
+            label: "Membro desde",
+            value: memberSince,
+            color: palette.gold,
+          },
+        ];
+
+        setStats(statsData);
+      } catch (error) {
+        console.error("Erro ao buscar estatísticas:", error);
+        setStats(null);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+
+    fetchStats();
+  }, [userData, isAffiliate, memberSince]);
 
   return (
     <MDBox position="relative" mb={5}>
@@ -179,71 +225,73 @@ function Header({ children, userData }) {
           </Grid>
         </Grid>
 
-        {/* Stats Cards */}
-        <Grid container spacing={{ xs: 1.5, sm: 2, md: 2.5 }} sx={{ mt: { xs: 1.5, sm: 2 } }}>
-          {stats.map((stat, index) => (
-            <Grid item xs={12} sm={4} key={index}>
-              <MDBox
-                sx={{
-                  p: { xs: 1.5, sm: 2 },
-                  borderRadius: 2,
-                  backgroundColor: alpha(stat.color, 0.06),
-                  border: `1px solid ${alpha(stat.color, 0.15)}`,
-                  transition: "all 0.3s ease",
-                  "&:hover": {
-                    backgroundColor: alpha(stat.color, 0.1),
-                    border: `1px solid ${alpha(stat.color, 0.3)}`,
-                    transform: "translateY(-2px)",
-                    boxShadow: `0 4px 12px ${alpha(stat.color, 0.2)}`,
-                  },
-                }}
-              >
-                <MDBox display="flex" alignItems="center" gap={1.5}>
-                  <MDBox
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: { xs: 36, md: 40 },
-                      height: { xs: 36, md: 40 },
-                      borderRadius: 1.5,
-                      backgroundColor: alpha(stat.color, 0.15),
-                      color: stat.color,
-                    }}
-                  >
-                    <Icon sx={{ fontSize: { xs: 20, md: 22 } }}>{stat.icon}</Icon>
-                  </MDBox>
-                  <MDBox flex={1}>
-                    <MDTypography
-                      variant="caption"
-                      fontWeight="medium"
+        {/* Stats Cards - Only for non-affiliate users */}
+        {!isAffiliate && !loadingStats && stats && (
+          <Grid container spacing={{ xs: 1.5, sm: 2, md: 2.5 }} sx={{ mt: { xs: 1.5, sm: 2 } }}>
+            {stats.map((stat, index) => (
+              <Grid item xs={12} sm={4} key={index}>
+                <MDBox
+                  sx={{
+                    p: { xs: 1.5, sm: 2 },
+                    borderRadius: 2,
+                    backgroundColor: alpha(stat.color, 0.06),
+                    border: `1px solid ${alpha(stat.color, 0.15)}`,
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      backgroundColor: alpha(stat.color, 0.1),
+                      border: `1px solid ${alpha(stat.color, 0.3)}`,
+                      transform: "translateY(-2px)",
+                      boxShadow: `0 4px 12px ${alpha(stat.color, 0.2)}`,
+                    },
+                  }}
+                >
+                  <MDBox display="flex" alignItems="center" gap={1.5}>
+                    <MDBox
                       sx={{
-                        color: "text.secondary",
-                        fontSize: { xs: "0.6875rem", md: "0.75rem" },
-                        textTransform: "uppercase",
-                        letterSpacing: 0.5,
-                      }}
-                    >
-                      {stat.label}
-                    </MDTypography>
-                    <MDTypography
-                      variant="h6"
-                      fontWeight="bold"
-                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: { xs: 36, md: 40 },
+                        height: { xs: 36, md: 40 },
+                        borderRadius: 1.5,
+                        backgroundColor: alpha(stat.color, 0.15),
                         color: stat.color,
-                        fontSize: { xs: "1rem", md: "1.125rem" },
-                        lineHeight: 1.2,
-                        mt: 0.25,
                       }}
                     >
-                      {stat.value}
-                    </MDTypography>
+                      <Icon sx={{ fontSize: { xs: 20, md: 22 } }}>{stat.icon}</Icon>
+                    </MDBox>
+                    <MDBox flex={1}>
+                      <MDTypography
+                        variant="caption"
+                        fontWeight="medium"
+                        sx={{
+                          color: "text.secondary",
+                          fontSize: { xs: "0.6875rem", md: "0.75rem" },
+                          textTransform: "uppercase",
+                          letterSpacing: 0.5,
+                        }}
+                      >
+                        {stat.label}
+                      </MDTypography>
+                      <MDTypography
+                        variant="h6"
+                        fontWeight="bold"
+                        sx={{
+                          color: stat.color,
+                          fontSize: { xs: "1rem", md: "1.125rem" },
+                          lineHeight: 1.2,
+                          mt: 0.25,
+                        }}
+                      >
+                        {stat.value}
+                      </MDTypography>
+                    </MDBox>
                   </MDBox>
                 </MDBox>
-              </MDBox>
-            </Grid>
-          ))}
-        </Grid>
+              </Grid>
+            ))}
+          </Grid>
+        )}
 
         {children && <MDBox mt={{ xs: 2.5, sm: 3 }}>{children}</MDBox>}
       </Card>
