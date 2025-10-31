@@ -1,5 +1,6 @@
 // src/layouts/dashboard/index.js
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 // @mui
@@ -45,6 +46,7 @@ const toBRL = (value) => {
 
 function Dashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [connectedAccount, setConnectedAccount] = useState(null);
@@ -66,7 +68,6 @@ function Dashboard() {
         }
         setStats(response.data);
       } catch (error) {
-        console.error("Erro ao carregar dados do painel:", error);
         toast.error("Erro ao carregar dados do painel.");
       } finally {
         setLoading(false);
@@ -90,7 +91,6 @@ function Dashboard() {
             setShowStripeModal(true);
           }
         } catch (err) {
-          console.warn("Não foi possível carregar status da conta conectada:", err.message || err);
           setConnectedAccount(null);
 
           // Se erro e não for admin, também mostrar modal (se não foi dispensado)
@@ -345,7 +345,6 @@ function Dashboard() {
       }
     } catch (error) {
       if (popup) popup.close();
-      console.error("Erro ao iniciar onboarding Stripe:", error);
       toast.error("Não foi possível iniciar o processo de conexão com o Stripe.");
     }
   };
@@ -797,12 +796,25 @@ function Dashboard() {
                   </Grid>
                 </Grid>
                 <MDTypography variant="body2" color="white" mb={3} sx={{ opacity: 0.9 }}>
-                  💡 <strong>Dica:</strong> Quanto mais você compartilha, mais você ganha! Comece
-                  agora e veja seus ganhos crescerem.
+                  {user?.id_permissao === 6 ? (
+                    <>
+                      🎯 <strong>Comece a Compartilhar:</strong> Explore nossas receitas e
+                      compartilhe com seus seguidores para ganhar comissões!
+                    </>
+                  ) : (
+                    <>
+                      💡 <strong>Dica:</strong> Quanto mais você compartilha, mais você ganha!
+                      Comece agora e veja seus ganhos crescerem.
+                    </>
+                  )}
                 </MDTypography>
                 <MDButton
                   variant="contained"
-                  onClick={() => (window.location.href = "/receitas")}
+                  onClick={() => {
+                    const isAfiliadoComum = user?.id_permissao === 6;
+                    const targetRoute = isAfiliadoComum ? "/todas-as-receitas" : "/receitas";
+                    navigate(targetRoute);
+                  }}
                   sx={{
                     background: "white",
                     color: "#1C3B32",
@@ -820,7 +832,7 @@ function Dashboard() {
                   }}
                 >
                   <Icon sx={{ mr: 1 }}>menu_book</Icon>
-                  Ver Minhas Receitas
+                  {user?.id_permissao === 6 ? "Explorar Receitas" : "Ver Minhas Receitas"}
                 </MDButton>
               </MDBox>
             </MDBox>

@@ -16,35 +16,160 @@ import MDButton from "components/MDButton";
 
 // Context
 import { useUserPreferences } from "context/UserPreferencesContext";
+import { useAuth } from "context/AuthContext";
 
 const palette = {
   gold: "#C9A635",
   green: "#1C3B32",
 };
 
-function NotificationSettings() {
-  const { preferences, updatePreference, loading } = useUserPreferences();
+// Mapeamento de IDs de permissão para nomes
+const ROLE_MAP = {
+  1: "admin",
+  2: "sub-admin",
+  3: "produtor",
+  4: "editor",
+  5: "afiliado pro",
+  6: "afiliado",
+};
 
-  const [notifications, setNotifications] = useState({
-    newRecipes: false,
-    comments: false,
+// Configurações de notificações por permissão
+const getNotificationsByRole = (roleId) => {
+  const roleName = ROLE_MAP[roleId] || "";
+
+  const notifications = [];
+
+  // 1. Nova Receita - TODOS veem
+  notifications.push({
+    name: "nova_receita",
+    label: "Novas Receitas Publicadas 🍳",
+    description: "Receba alerta quando uma nova receita for adicionada à plataforma",
+    icon: "restaurant_menu",
+    availableFor: [1, 2, 3, 4, 5, 6], // Todos
   });
 
+  // 2. Comentários nas Receitas - Apenas quem pode criar receitas
+  if ([1, 2, 3, 4, 5].includes(roleId)) {
+    notifications.push({
+      name: "comentario",
+      label: "Comentários nas suas Receitas 💬",
+      description: "Seja notificado quando alguém comentar em uma de suas receitas",
+      icon: "comment",
+      availableFor: [1, 2, 3, 4, 5], // Todos exceto afiliado comum
+    });
+  }
+
+  // 3. Novo Afiliado - Apenas quem pode ter afiliados
+  if ([1, 2, 3, 4, 5].includes(roleId)) {
+    notifications.push({
+      name: "novo_afiliado",
+      label: "Novos Afiliados 🎉",
+      description: "Receba alerta quando alguém se cadastrar usando seu código de afiliado",
+      icon: "person_add",
+      availableFor: [1, 2, 3, 4, 5], // Todos exceto afiliado comum
+    });
+  }
+
+  // 4. Novo Usuário - Apenas Admin
+  if (roleId === 1) {
+    notifications.push({
+      name: "novo_usuario",
+      label: "Novos Usuários no Sistema 👤",
+      description: "Seja notificado quando um novo usuário se cadastrar",
+      icon: "group_add",
+      availableFor: [1], // Apenas Admin
+    });
+  }
+
+  // 5. Nova Categoria - Apenas Admin
+  if (roleId === 1) {
+    notifications.push({
+      name: "nova_categoria",
+      label: "Novas Categorias 📁",
+      description: "Receba alerta quando uma nova categoria for criada",
+      icon: "category",
+      availableFor: [1], // Apenas Admin
+    });
+  }
+
+  // 6. Nova Tag - Apenas Admin
+  if (roleId === 1) {
+    notifications.push({
+      name: "nova_tag",
+      label: "Novas Tags 🏷️",
+      description: "Seja notificado quando uma nova tag for adicionada",
+      icon: "label",
+      availableFor: [1], // Apenas Admin
+    });
+  }
+
+  // 7. Saída de Usuário - Apenas Admin
+  if (roleId === 1) {
+    notifications.push({
+      name: "saida_usuario",
+      label: "Usuários Desativados ❌",
+      description: "Receba alerta quando um usuário for desativado do sistema",
+      icon: "person_remove",
+      availableFor: [1], // Apenas Admin
+    });
+  }
+
+  // 8. Novo eBook - TODOS veem
+  notifications.push({
+    name: "novo_ebook",
+    label: "Novos eBooks Publicados 📚",
+    description: "Receba alerta quando um novo eBook for publicado",
+    icon: "menu_book",
+    availableFor: [1, 2, 3, 4, 5, 6], // Todos
+  });
+
+  // 9. Pagamento/Comissão - Todos exceto afiliado comum
+  if ([1, 2, 3, 4, 5].includes(roleId)) {
+    notifications.push({
+      name: "pagamento",
+      label: "Pagamentos e Comissões 💰",
+      description: "Seja notificado sobre pagamentos e comissões recebidas",
+      icon: "payments",
+      availableFor: [1, 2, 3, 4, 5], // Todos exceto afiliado comum
+    });
+  }
+
+  // 10. Atualizações do Sistema - TODOS veem
+  notifications.push({
+    name: "atualizacao",
+    label: "Atualizações do Sistema 🔄",
+    description: "Receba alertas sobre novas funcionalidades e melhorias",
+    icon: "update",
+    availableFor: [1, 2, 3, 4, 5, 6], // Todos
+  });
+
+  return notifications;
+};
+
+function NotificationSettings() {
+  const { preferences, updatePreference, loading } = useUserPreferences();
+  const { user } = useAuth();
+
+  const [notifications, setNotifications] = useState({});
   const [initialState, setInitialState] = useState({});
   const [isDirty, setIsDirty] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // Obter permissão do usuário
+  const userRoleId = user?.id_permissao || user?.role || 6; // Default: afiliado
+  const availableNotifications = getNotificationsByRole(userRoleId);
+
   useEffect(() => {
-    if (!loading) {
-      const initialPrefs = {
-        // se não existir no backend, padrão = false
-        newRecipes: preferences?.newRecipes ?? false,
-        comments: preferences?.comments ?? false,
-      };
+    if (!loading && availableNotifications.length > 0) {
+      const initialPrefs = {};
+      availableNotifications.forEach((notif) => {
+        // Por padrão, todas as notificações estão ATIVADAS
+        initialPrefs[notif.name] = preferences?.[notif.name] ?? true;
+      });
       setNotifications(initialPrefs);
       setInitialState(initialPrefs);
     }
-  }, [preferences, loading]);
+  }, [preferences, loading, userRoleId]);
 
   useEffect(() => {
     setIsDirty(JSON.stringify(initialState) !== JSON.stringify(notifications));
@@ -69,7 +194,6 @@ function NotificationSettings() {
       toast.success("Preferências de notificação salvas!");
     } catch (error) {
       toast.error("Erro ao salvar as preferências.");
-      console.error("Save notification preferences error:", error);
     } finally {
       setSaving(false);
     }
@@ -183,62 +307,70 @@ function NotificationSettings() {
               Notificações
             </MDTypography>
             <MDTypography variant="caption" color="white" sx={{ opacity: 0.9 }}>
-              Escolha como e quando você quer ser notificado
+              Escolha quais notificações você deseja receber
             </MDTypography>
           </MDBox>
         </MDBox>
 
         <MDBox p={3}>
-          <MDBox sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <SettingRow
-              name="newRecipes"
-              label="Novas Receitas Publicadas"
-              description="Receba um alerta quando uma nova receita for adicionada à plataforma"
-              checked={notifications.newRecipes}
-              onChange={handleToggle}
-              icon="restaurant"
-            />
-
-            <SettingRow
-              name="comments"
-              label="Comentários nas suas Receitas"
-              description="Seja notificado quando alguém comentar em uma de suas receitas"
-              checked={notifications.comments}
-              onChange={handleToggle}
-              icon="comment"
-            />
-          </MDBox>
+          {availableNotifications.length === 0 ? (
+            <MDBox textAlign="center" py={4}>
+              <Icon sx={{ fontSize: 48, color: alpha(palette.green, 0.3), mb: 2 }}>
+                notifications_off
+              </Icon>
+              <MDTypography variant="body2" color="text.secondary">
+                Nenhuma configuração de notificação disponível para seu perfil.
+              </MDTypography>
+            </MDBox>
+          ) : (
+            <MDBox sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              {availableNotifications.map((notif) => (
+                <SettingRow
+                  key={notif.name}
+                  name={notif.name}
+                  label={notif.label}
+                  description={notif.description}
+                  checked={notifications[notif.name] ?? true}
+                  onChange={handleToggle}
+                  icon={notif.icon}
+                />
+              ))}
+            </MDBox>
+          )}
         </MDBox>
 
-        <Divider />
-
-        <MDBox p={3} display="flex" justifyContent="space-between" alignItems="center">
-          <MDTypography variant="caption" color="text.secondary">
-            {isDirty ? "Há alterações não salvas" : "Tudo salvo"}
-          </MDTypography>
-          <MDButton
-            variant="gradient"
-            color="dark"
-            disabled={!isDirty || saving || loading}
-            onClick={handleSave}
-            startIcon={<Icon>{saving ? "hourglass_top" : "save"}</Icon>}
-            sx={{
-              minWidth: 180,
-              background: `linear-gradient(135deg, ${palette.gold} 0%, ${alpha(
-                palette.gold,
-                0.8
-              )} 100%)`,
-              "&:hover": {
-                background: `linear-gradient(135deg, ${alpha(palette.gold, 0.9)} 0%, ${alpha(
-                  palette.gold,
-                  0.7
-                )} 100%)`,
-              },
-            }}
-          >
-            {saving ? "Salvando..." : "Salvar Alterações"}
-          </MDButton>
-        </MDBox>
+        {availableNotifications.length > 0 && (
+          <>
+            <Divider />
+            <MDBox p={3} display="flex" justifyContent="space-between" alignItems="center">
+              <MDTypography variant="caption" color="text.secondary">
+                {isDirty ? "Há alterações não salvas" : "Tudo salvo"}
+              </MDTypography>
+              <MDButton
+                variant="gradient"
+                color="dark"
+                disabled={!isDirty || saving || loading}
+                onClick={handleSave}
+                startIcon={<Icon>{saving ? "hourglass_top" : "save"}</Icon>}
+                sx={{
+                  minWidth: 180,
+                  background: `linear-gradient(135deg, ${palette.gold} 0%, ${alpha(
+                    palette.gold,
+                    0.8
+                  )} 100%)`,
+                  "&:hover": {
+                    background: `linear-gradient(135deg, ${alpha(palette.gold, 0.9)} 0%, ${alpha(
+                      palette.gold,
+                      0.7
+                    )} 100%)`,
+                  },
+                }}
+              >
+                {saving ? "Salvando..." : "Salvar Alterações"}
+              </MDButton>
+            </MDBox>
+          </>
+        )}
       </Card>
     </MDBox>
   );

@@ -91,14 +91,6 @@ const routes = [
   },
   {
     type: "collapse",
-    name: "Categorias de Ebooks",
-    key: "ebook-categories",
-    icon: <Icon fontSize="small">class</Icon>,
-    route: "/ebook-categories",
-    component: <EbookCategories />,
-  },
-  {
-    type: "collapse",
     name: "Relatórios",
     key: "relatorios",
     icon: <Icon fontSize="small">analytics</Icon>,
@@ -147,6 +139,11 @@ const routes = [
   },
 
   // --- ROTAS SEM ITEM NO MENU LATERAL ---
+  {
+    key: "ebook-categories",
+    route: "/ebook-categories",
+    component: <EbookCategories />,
+  },
   {
     key: "adicionar-receita",
     route: "/receitas/adicionar",

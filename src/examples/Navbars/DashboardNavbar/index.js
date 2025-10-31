@@ -39,6 +39,7 @@ import { useUserPreferences } from "context/UserPreferencesContext";
 import { useAuth } from "context/AuthContext";
 import getFullImageUrl from "utils/imageUrlHelper";
 import iconUserBlack from "assets/images/icon_user_black.png";
+import NotificationDropdown from "components/NotificationDropdown";
 
 const palette = {
   gold: "#C9A635",
@@ -180,34 +181,8 @@ function DashboardNavbar({ absolute, light }) {
               </IconButton>
             </Tooltip>
 
-            {/* Notifications Button */}
-            <Tooltip title="Notificações" placement="bottom">
-              <IconButton
-                size="small"
-                sx={{
-                  p: { xs: 0.75, md: 1 },
-                  borderRadius: 2,
-                  backgroundColor: "transparent",
-                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                  "&:hover": {
-                    backgroundColor: alpha(palette.green, 0.1),
-                    transform: "scale(1.1)",
-                  },
-                }}
-              >
-                <Badge
-                  badgeContent={3}
-                  color="error"
-                  sx={{ "& .MuiBadge-badge": { fontSize: "0.625rem" } }}
-                >
-                  <Icon
-                    sx={{ ...iconsStyle, fontSize: "1.25rem !important", color: palette.green }}
-                  >
-                    notifications
-                  </Icon>
-                </Badge>
-              </IconButton>
-            </Tooltip>
+            {/* Notifications Dropdown */}
+            <NotificationDropdown />
 
             {/* Profile Avatar Button */}
             <Tooltip title={`Perfil: ${userName}`} placement="bottom">

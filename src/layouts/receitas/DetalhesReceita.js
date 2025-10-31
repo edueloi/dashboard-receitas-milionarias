@@ -46,9 +46,9 @@ const modalStyle = {
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
-  width: { xs: "90%", sm: 400 },
+  width: { xs: "90%", sm: 500 },
   bgcolor: "background.paper",
-  borderRadius: "8px",
+  borderRadius: 3,
   boxShadow: 24,
   p: 4,
 };
@@ -86,7 +86,7 @@ function DetalhesReceita() {
       const response = await api.get(`/recipes/${id}/comments`);
       setComments(response.data);
     } catch (error) {
-      console.error("Erro ao buscar comentários:", error);
+      // Erro ao buscar comentários
     }
   };
 
@@ -99,7 +99,7 @@ function DetalhesReceita() {
         setRecipe(recipeRes.data);
         fetchComments();
       } catch (error) {
-        console.error("Erro ao buscar detalhes da receita:", error);
+        // Erro ao buscar detalhes da receita
       } finally {
         setLoading(false);
       }
@@ -202,38 +202,29 @@ function DetalhesReceita() {
         () => {
           toast.success("Link de compartilhamento copiado!");
         },
-        (err) => {
-          console.error("Erro ao copiar o link: ", err);
+        () => {
           toast.error("Não foi possível copiar o link.");
         }
       );
     };
 
     return (
-      <Stack
-        direction="row"
-        spacing={1}
-        alignItems="center"
-        flexWrap="wrap"
-        justifyContent="center"
+      <MDButton
+        variant="contained"
+        color="success"
+        startIcon={<Icon>share</Icon>}
+        onClick={handleShare}
       >
-        <MDButton
-          variant="gradient"
-          color="success"
-          startIcon={<Icon>share</Icon>}
-          onClick={handleShare}
-        >
-          Copiar Link de Afiliado
-        </MDButton>
-      </Stack>
+        Compartilhar
+      </MDButton>
     );
   }, [recipe, id, user]);
 
   if (loading) {
     return (
       <PageWrapper title="Carregando..." subtitle="">
-        <MDBox display="flex" justifyContent="center" p={6}>
-          <CircularProgress sx={{ color: color.gold }} />
+        <MDBox display="flex" justifyContent="center" alignItems="center" p={8}>
+          <CircularProgress size={60} sx={{ color: color.gold }} />
         </MDBox>
       </PageWrapper>
     );
@@ -242,9 +233,15 @@ function DetalhesReceita() {
   if (!recipe) {
     return (
       <PageWrapper title="Receita não encontrada" subtitle="">
-        <MDTypography variant="body1" color="text">
-          Verifique o link e tente novamente.
-        </MDTypography>
+        <Card sx={{ p: 5, textAlign: "center" }}>
+          <Icon sx={{ fontSize: 80, color: alpha(color.gray, 0.3), mb: 2 }}>restaurant_menu</Icon>
+          <MDTypography variant="h5" color="text" mb={1}>
+            Receita não encontrada
+          </MDTypography>
+          <MDTypography variant="body2" color="text">
+            Verifique o link e tente novamente.
+          </MDTypography>
+        </Card>
       </PageWrapper>
     );
   }
@@ -255,83 +252,166 @@ function DetalhesReceita() {
 
   return (
     <PageWrapper title={recipe.titulo} subtitle={subtitle} actions={headerActions}>
+      {/* Hero Section com Imagem Grande */}
+      <Card
+        sx={{
+          mb: 3,
+          position: "relative",
+          overflow: "hidden",
+          borderRadius: 3,
+          boxShadow: `0 8px 40px ${alpha(color.green, 0.15)}`,
+        }}
+      >
+        <MDBox
+          component="img"
+          src={mainImage}
+          alt={recipe.titulo}
+          sx={{
+            width: "100%",
+            height: { xs: 250, sm: 350, md: 450 },
+            objectFit: "cover",
+            display: "block",
+          }}
+        />
+        <MDBox
+          sx={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            background: `linear-gradient(180deg, transparent 0%, ${alpha(color.green, 0.95)} 100%)`,
+            p: { xs: 2, md: 4 },
+            color: "white",
+          }}
+        >
+          <Stack direction="row" spacing={1} mb={2} flexWrap="wrap" useFlexGap>
+            {recipe.categoria?.nome && (
+              <Chip
+                label={recipe.categoria.nome}
+                size="small"
+                sx={{
+                  bgcolor: alpha(color.gold, 0.9),
+                  color: "white",
+                  fontWeight: 600,
+                  border: `2px solid ${alpha(color.white, 0.3)}`,
+                }}
+              />
+            )}
+            {recipe.tempo_preparo_min && (
+              <Chip
+                icon={<Icon sx={{ fontSize: 16, color: "white !important" }}>schedule</Icon>}
+                label={`${recipe.tempo_preparo_min} min`}
+                size="small"
+                sx={{ bgcolor: alpha(color.white, 0.2), color: "white", fontWeight: 600 }}
+              />
+            )}
+            {recipe.dificuldade && (
+              <Chip
+                icon={<Icon sx={{ fontSize: 16, color: "white !important" }}>terrain</Icon>}
+                label={recipe.dificuldade}
+                size="small"
+                sx={{ bgcolor: alpha(color.white, 0.2), color: "white", fontWeight: 600 }}
+              />
+            )}
+          </Stack>
+          <MDTypography variant="h3" color="white" fontWeight="bold" mb={1}>
+            {recipe.titulo}
+          </MDTypography>
+          {recipe.resumo && (
+            <MDTypography variant="body1" color="white" sx={{ opacity: 0.95 }}>
+              {recipe.resumo}
+            </MDTypography>
+          )}
+        </MDBox>
+      </Card>
+
       <Grid container spacing={3}>
         <Grid item xs={12} lg={7}>
-          <Card sx={{ p: { xs: 2, md: 3 } }}>
-            <Stack direction="row" spacing={1} mb={2} flexWrap="wrap" useFlexGap>
-              {recipe.categoria?.nome && (
-                <Chip
-                  label={recipe.categoria.nome}
-                  size="small"
-                  sx={{ bgcolor: alpha(color.green, 0.08), color: color.green, fontWeight: 600 }}
-                />
-              )}
-              {recipe.tempo_preparo_min && (
-                <Chip
-                  icon={<Icon sx={{ fontSize: 16 }}>schedule</Icon>}
-                  label={`${recipe.tempo_preparo_min} min`}
-                  size="small"
-                  variant="outlined"
-                />
-              )}
-              {recipe.dificuldade && (
-                <Chip
-                  icon={<Icon sx={{ fontSize: 16 }}>terrain</Icon>}
-                  label={recipe.dificuldade}
-                  size="small"
-                  variant="outlined"
-                />
-              )}
-              <Chip
-                icon={<Icon sx={{ fontSize: 16, color: "#ffb400" }}>star</Icon>}
-                label={`${(recipe.avaliacao_media || 0).toFixed(1)} (${
-                  recipe.total_avaliacoes || 0
-                })`}
-                size="small"
-                variant="outlined"
-              />
-            </Stack>
-
-            <ImageCarousel images={[mainImage]} />
-
-            <Divider sx={{ my: 3 }} />
-
-            <MDTypography variant="h4" fontWeight="bold" sx={{ color: color.green }} mb={2}>
-              Ingredientes
-            </MDTypography>
+          <Card
+            sx={{
+              p: { xs: 2, md: 3 },
+              borderRadius: 3,
+              boxShadow: `0 4px 20px ${alpha(color.green, 0.08)}`,
+            }}
+          >
+            <MDBox display="flex" alignItems="center" gap={1.5} mb={3}>
+              <MDBox
+                sx={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: "16px",
+                  background: "#FFFFFF",
+                  border: `2px solid ${color.green}`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: `0 4px 12px ${alpha(color.green, 0.15)}`,
+                }}
+              >
+                <Icon sx={{ color: color.green, fontSize: 32 }}>restaurant</Icon>
+              </MDBox>
+              <MDTypography variant="h4" fontWeight="bold" sx={{ color: color.green }}>
+                Ingredientes
+              </MDTypography>
+            </MDBox>
             {recipe.grupos_ingredientes?.length ? (
-              recipe.grupos_ingredientes.map((group) => (
+              recipe.grupos_ingredientes.map((group, idx) => (
                 <Card
                   key={group.id}
                   sx={{
-                    p: 2,
+                    p: 2.5,
                     mb: 2,
-                    background: alpha("#000", 0.02),
-                    border: (t) => `1px solid ${alpha(t.palette.common.black, 0.06)}`,
-                    borderRadius: 2,
+                    background: "#FFFFFF",
+                    border: `1px solid ${alpha(color.green, 0.2)}`,
+                    borderRadius: 3,
+                    transition: "all 0.3s ease",
+                    "&:hover": {
+                      borderColor: color.gold,
+                      transform: "translateY(-2px)",
+                      boxShadow: `0 8px 24px ${alpha(color.green, 0.12)}`,
+                    },
                   }}
                 >
                   {group.titulo && (
-                    <MDTypography
-                      variant="h6"
-                      fontWeight="medium"
-                      sx={{ color: color.green }}
-                      mb={1}
-                    >
-                      {group.titulo}
-                    </MDTypography>
+                    <MDBox display="flex" alignItems="center" gap={1} mb={2}>
+                      <MDBox
+                        sx={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: "8px",
+                          background: color.gold,
+                          color: "white",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontWeight: 700,
+                          fontSize: "0.9rem",
+                        }}
+                      >
+                        {idx + 1}
+                      </MDBox>
+                      <MDTypography variant="h6" fontWeight="bold" sx={{ color: color.green }}>
+                        {group.titulo}
+                      </MDTypography>
+                    </MDBox>
                   )}
-                  <MDBox component="ul" m={0} pl={2} sx={{ listStyle: "none" }}>
+                  <MDBox component="ul" m={0} pl={0} sx={{ listStyle: "none" }}>
                     {group.ingredientes.map((ing) => (
                       <MDBox
                         component="li"
                         key={ing.id}
                         display="flex"
                         alignItems="center"
-                        mb={0.75}
+                        mb={1.25}
+                        sx={{
+                          transition: "all 0.2s ease",
+                          "&:hover": {
+                            transform: "translateX(5px)",
+                          },
+                        }}
                       >
-                        <Icon sx={{ fontSize: 16, mr: 1, color: color.gold }}>check_circle</Icon>
-                        <MDTypography variant="body2" color="text">
+                        <Icon sx={{ fontSize: 20, mr: 1.5, color: color.gold }}>check_circle</Icon>
+                        <MDTypography variant="body1" color="text" fontWeight="medium">
                           {ing.descricao}
                         </MDTypography>
                       </MDBox>
@@ -340,45 +420,94 @@ function DetalhesReceita() {
                 </Card>
               ))
             ) : (
-              <MDTypography variant="body2" color="text">
-                Nenhum ingrediente informado.
-              </MDTypography>
+              <MDBox textAlign="center" py={4}>
+                <Icon sx={{ fontSize: 64, color: alpha(color.gray, 0.3), mb: 1 }}>
+                  info_outline
+                </Icon>
+                <MDTypography variant="body2" color="text">
+                  Nenhum ingrediente informado.
+                </MDTypography>
+              </MDBox>
             )}
 
-            <Divider sx={{ my: 3 }} />
-
-            <MDTypography variant="h4" fontWeight="bold" sx={{ color: color.green }} mb={2}>
-              Modo de Preparo
-            </MDTypography>
+            <MDBox display="flex" alignItems="center" gap={1.5} mb={3}>
+              <MDBox
+                sx={{
+                  width: 56,
+                  height: 56,
+                  borderRadius: "16px",
+                  background: "#FFFFFF",
+                  border: `2px solid ${color.green}`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: `0 4px 12px ${alpha(color.green, 0.15)}`,
+                }}
+              >
+                <Icon sx={{ color: color.green, fontSize: 32 }}>format_list_numbered</Icon>
+              </MDBox>
+              <MDTypography variant="h4" fontWeight="bold" sx={{ color: color.green }}>
+                Modo de Preparo
+              </MDTypography>
+            </MDBox>
             <MDBox>
               {recipe.passos_preparo?.length ? (
                 recipe.passos_preparo.map((step) => (
-                  <Stack key={step.id} direction="row" spacing={2} alignItems="flex-start" mb={2}>
-                    <MDBox
-                      sx={{
-                        width: 32,
-                        height: 32,
-                        borderRadius: "50%",
-                        background: color.gold,
-                        color: color.white,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontWeight: 700,
-                        flexShrink: 0,
-                      }}
-                    >
-                      {step.ordem}
-                    </MDBox>
-                    <MDTypography variant="body2" color="text">
-                      {step.descricao}
-                    </MDTypography>
-                  </Stack>
+                  <Card
+                    key={step.id}
+                    sx={{
+                      p: 2.5,
+                      mb: 2,
+                      background: "#FFFFFF",
+                      border: `1px solid ${alpha(color.gold, 0.25)}`,
+                      borderRadius: 3,
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        borderColor: color.gold,
+                        transform: "translateX(5px)",
+                        boxShadow: `0 6px 20px ${alpha(color.gold, 0.15)}`,
+                      },
+                    }}
+                  >
+                    <Stack direction="row" spacing={2} alignItems="flex-start">
+                      <MDBox
+                        sx={{
+                          width: 42,
+                          height: 42,
+                          borderRadius: "50%",
+                          background: color.gold,
+                          color: "white",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontWeight: 700,
+                          fontSize: "1.1rem",
+                          flexShrink: 0,
+                          boxShadow: `0 4px 12px ${alpha(color.gold, 0.25)}`,
+                        }}
+                      >
+                        {step.ordem}
+                      </MDBox>
+                      <MDTypography
+                        variant="body1"
+                        color="text"
+                        fontWeight="medium"
+                        sx={{ pt: 0.5 }}
+                      >
+                        {step.descricao}
+                      </MDTypography>
+                    </Stack>
+                  </Card>
                 ))
               ) : (
-                <MDTypography variant="body2" color="text">
-                  Nenhum passo de preparo informado.
-                </MDTypography>
+                <MDBox textAlign="center" py={4}>
+                  <Icon sx={{ fontSize: 64, color: alpha(color.gray, 0.3), mb: 1 }}>
+                    info_outline
+                  </Icon>
+                  <MDTypography variant="body2" color="text">
+                    Nenhum passo de preparo informado.
+                  </MDTypography>
+                </MDBox>
               )}
             </MDBox>
           </Card>
@@ -386,91 +515,161 @@ function DetalhesReceita() {
 
         <Grid item xs={12} lg={5}>
           <Stack spacing={3} sx={{ position: { lg: "sticky" }, top: { lg: 88 } }}>
-            <Card sx={{ p: { xs: 2, md: 3 } }}>
-              <Stack direction="row" spacing={2} alignItems="center" mb={2}>
+            <Card
+              sx={{
+                p: { xs: 2.5, md: 3 },
+                background: "#FFFFFF",
+                border: `1px solid ${alpha(color.green, 0.2)}`,
+                borderRadius: 3,
+                boxShadow: `0 4px 16px ${alpha(color.green, 0.08)}`,
+              }}
+            >
+              <Stack direction="row" spacing={2.5} alignItems="center" mb={3}>
                 <Avatar
                   src={authorAvatar}
                   alt={recipe.criador?.nome}
-                  sx={{ width: 82, height: 82 }}
+                  sx={{
+                    width: 72,
+                    height: 72,
+                    border: `3px solid ${color.gold}`,
+                    boxShadow: `0 4px 12px ${alpha(color.gold, 0.2)}`,
+                  }}
                 />
                 <div>
-                  <MDTypography variant="h5" fontWeight="medium" sx={{ color: color.green }}>
+                  <MDTypography variant="h5" fontWeight="bold" sx={{ color: color.green }}>
                     {recipe.criador?.nome || "Autor"}
                   </MDTypography>
-                  <MDTypography variant="caption" color="text">
-                    Chef
-                  </MDTypography>
+                  <MDBox display="flex" alignItems="center" gap={0.5}>
+                    <Icon sx={{ fontSize: 18, color: color.gold }}>restaurant</Icon>
+                    <MDTypography variant="body2" color="text" fontWeight="medium">
+                      Chef
+                    </MDTypography>
+                  </MDBox>
                 </div>
               </Stack>
-              <Divider sx={{ my: 2 }} />
+              <Divider sx={{ my: 2.5 }} />
               <Grid container spacing={2} textAlign="center">
                 <Grid item xs={4}>
-                  <MDTypography variant="h6" fontWeight="bold" sx={{ color: color.green }}>
-                    {recipe.tempo_preparo_min || "—"}
-                  </MDTypography>
-                  <MDTypography variant="caption" color="text">
-                    min
-                  </MDTypography>
+                  <MDBox
+                    sx={{
+                      p: 1.5,
+                      borderRadius: 2,
+                      background: alpha(color.green, 0.08),
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        background: alpha(color.green, 0.15),
+                        transform: "translateY(-2px)",
+                      },
+                    }}
+                  >
+                    <Icon sx={{ fontSize: 28, color: color.green, mb: 0.5 }}>schedule</Icon>
+                    <MDTypography variant="h6" fontWeight="bold" sx={{ color: color.green }}>
+                      {recipe.tempo_preparo_min || "—"}
+                    </MDTypography>
+                    <MDTypography variant="caption" color="text" fontWeight="medium">
+                      minutos
+                    </MDTypography>
+                  </MDBox>
                 </Grid>
                 <Grid item xs={4}>
-                  <MDTypography variant="h6" fontWeight="bold" sx={{ color: color.green }}>
-                    {recipe.dificuldade || "—"}
-                  </MDTypography>
-                  <MDTypography variant="caption" color="text">
-                    dificuldade
-                  </MDTypography>
+                  <MDBox
+                    sx={{
+                      p: 1.5,
+                      borderRadius: 2,
+                      background: alpha(color.gold, 0.08),
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        background: alpha(color.gold, 0.15),
+                        transform: "translateY(-2px)",
+                      },
+                    }}
+                  >
+                    <Icon sx={{ fontSize: 28, color: color.gold, mb: 0.5 }}>speed</Icon>
+                    <MDTypography variant="h6" fontWeight="bold" sx={{ color: color.gold }}>
+                      {recipe.dificuldade || "—"}
+                    </MDTypography>
+                    <MDTypography variant="caption" color="text" fontWeight="medium">
+                      dificuldade
+                    </MDTypography>
+                  </MDBox>
                 </Grid>
                 <Grid item xs={4}>
-                  <MDTypography variant="h6" fontWeight="bold" sx={{ color: color.green }}>
-                    {(recipe.avaliacao_media || 0).toFixed(1)}
-                  </MDTypography>
-                  <MDTypography variant="caption" color="text">
-                    ({recipe.total_avaliacoes || 0})
-                  </MDTypography>
+                  <MDBox
+                    sx={{
+                      p: 1.5,
+                      borderRadius: 2,
+                      background: alpha(color.gold, 0.08),
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        background: alpha(color.gold, 0.15),
+                        transform: "translateY(-2px)",
+                      },
+                    }}
+                  >
+                    <Icon sx={{ fontSize: 28, color: color.gold, mb: 0.5 }}>star</Icon>
+                    <MDTypography variant="h6" fontWeight="bold" sx={{ color: color.gold }}>
+                      {(parseFloat(recipe.media_avaliacoes || recipe.avaliacao_media) || 0).toFixed(
+                        1
+                      )}
+                    </MDTypography>
+                    <MDTypography variant="caption" color="text" fontWeight="medium">
+                      ({parseInt(recipe.quantidade_avaliacoes || recipe.total_avaliacoes) || 0})
+                      votos
+                    </MDTypography>
+                  </MDBox>
                 </Grid>
-              </Grid>
-              <Divider sx={{ my: 2 }} />
-              <MDTypography variant="h6" fontWeight="medium" sx={{ color: color.green }} mb={1}>
-                Nutrição (por porção)
-              </MDTypography>
-              <Grid container spacing={1.5} textAlign="center">
-                {[
-                  { label: "Kcal", value: recipe.calorias_kcal },
-                  {
-                    label: "Proteína",
-                    value: recipe.proteinas_g ? `${recipe.proteinas_g}g` : null,
-                  },
-                  {
-                    label: "Carb.",
-                    value: recipe.carboidratos_g ? `${recipe.carboidratos_g}g` : null,
-                  },
-                ].map((n, i) => (
-                  <Grid item xs={4} key={i}>
-                    <MDTypography variant="body2" fontWeight="bold" sx={{ color: color.gold }}>
-                      {n.value || "—"}
-                    </MDTypography>
-                    <MDTypography variant="caption" color="text">
-                      {n.label}
-                    </MDTypography>
-                  </Grid>
-                ))}
               </Grid>
             </Card>
 
-            <Card sx={{ p: { xs: 2, md: 3 } }}>
-              <MDTypography variant="h5" fontWeight="medium" sx={{ color: color.green }} mb={2}>
-                Avalie e Comente
-              </MDTypography>
-              <Stack direction="row" alignItems="center" spacing={1} mb={1}>
-                <MDTypography variant="body2" color="text">
-                  Sua nota:
+            <Card
+              sx={{
+                p: { xs: 2.5, md: 3 },
+                background: color.green,
+                border: "none",
+                borderRadius: 3,
+                boxShadow: `0 6px 20px ${alpha(color.green, 0.25)}`,
+              }}
+            >
+              <MDBox display="flex" alignItems="center" gap={1.5} mb={3}>
+                <MDBox
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: "12px",
+                    background: "#FFFFFF",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Icon sx={{ color: color.green, fontSize: 28 }}>rate_review</Icon>
+                </MDBox>
+                <MDTypography variant="h5" fontWeight="bold" color="white">
+                  Avalie e Comente
                 </MDTypography>
-                <Rating
-                  value={userRating}
-                  onChange={(_e, v) => setUserRating(v)}
-                  sx={{ color: color.gold }}
-                />
-              </Stack>
+              </MDBox>
+
+              <MDBox
+                sx={{
+                  p: 2.5,
+                  mb: 2.5,
+                  background: "#FFFFFF",
+                  borderRadius: 2,
+                }}
+              >
+                <Stack direction="row" alignItems="center" spacing={1.5}>
+                  <MDTypography variant="body2" fontWeight="bold" sx={{ color: color.green }}>
+                    Sua nota:
+                  </MDTypography>
+                  <Rating
+                    value={userRating}
+                    onChange={(_e, v) => setUserRating(v)}
+                    sx={{ color: color.gold }}
+                    size="large"
+                  />
+                </Stack>
+              </MDBox>
+
               <TextField
                 label="Deixe seu comentário"
                 multiline
@@ -478,18 +677,61 @@ function DetalhesReceita() {
                 fullWidth
                 value={userComment}
                 onChange={(e) => setUserComment(e.target.value)}
-                sx={{ my: 2 }}
+                sx={{
+                  mb: 2.5,
+                  "& .MuiOutlinedInput-root": {
+                    background: "#FFFFFF",
+                    borderRadius: 2,
+                    "& fieldset": {
+                      borderColor: alpha("#FFFFFF", 0.3),
+                    },
+                    "&:hover fieldset": {
+                      borderColor: alpha("#FFFFFF", 0.5),
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#FFFFFF",
+                      borderWidth: 2,
+                    },
+                  },
+                  "& .MuiInputLabel-root": {
+                    color: alpha(color.green, 0.7),
+                  },
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: color.green,
+                  },
+                }}
               />
               <MDButton
                 fullWidth
-                variant="gradient"
+                variant="contained"
                 onClick={handleAddComment}
                 disabled={isSubmitting}
+                sx={{
+                  background: color.gold,
+                  color: "white",
+                  py: 1.5,
+                  fontSize: "1rem",
+                  fontWeight: 700,
+                  borderRadius: 2,
+                  boxShadow: `0 4px 12px ${alpha(color.gold, 0.3)}`,
+                  "&:hover": {
+                    background: alpha(color.gold, 0.9),
+                    boxShadow: `0 6px 16px ${alpha(color.gold, 0.4)}`,
+                  },
+                }}
               >
-                {isSubmitting ? <CircularProgress size={22} color="inherit" /> : "Enviar Avaliação"}
+                {isSubmitting ? (
+                  <CircularProgress size={22} color="inherit" />
+                ) : (
+                  <>
+                    <Icon sx={{ mr: 1 }}>send</Icon>
+                    Enviar Avaliação
+                  </>
+                )}
               </MDButton>
-              <Divider sx={{ my: 3 }}>
-                <MDTypography variant="button" color="text" fontWeight="regular">
+              <Divider sx={{ my: 3, borderColor: alpha("#FFFFFF", 0.2) }}>
+                <MDTypography variant="button" color="white" fontWeight="bold">
+                  <Icon sx={{ fontSize: 16, mr: 0.5, verticalAlign: "middle" }}>forum</Icon>
                   Comentários ({comments.length})
                 </MDTypography>
               </Divider>
@@ -505,12 +747,19 @@ function DetalhesReceita() {
                     const canDelete = isAuthor || isRecipeOwner || isAdmin;
 
                     return (
-                      <MDBox
+                      <Card
                         key={comment.id}
                         sx={{
-                          bgcolor: (theme) => alpha(theme.palette.grey[500], 0.05),
-                          p: 2,
-                          borderRadius: "md",
+                          p: 2.5,
+                          background: "#FFFFFF",
+                          border: "none",
+                          borderRadius: 2,
+                          boxShadow: `0 2px 8px ${alpha("#000", 0.08)}`,
+                          transition: "all 0.3s ease",
+                          "&:hover": {
+                            boxShadow: `0 4px 16px ${alpha("#000", 0.12)}`,
+                            transform: "translateY(-2px)",
+                          },
                         }}
                       >
                         <Stack
@@ -590,13 +839,18 @@ function DetalhesReceita() {
                             </Stack>
                           )}
                         </Stack>
-                      </MDBox>
+                      </Card>
                     );
                   })
                 ) : (
-                  <MDTypography variant="body2" color="text" sx={{ textAlign: "center", py: 3 }}>
-                    Nenhum comentário ainda. Seja o primeiro a comentar!
-                  </MDTypography>
+                  <MDBox textAlign="center" py={4}>
+                    <Icon sx={{ fontSize: 64, color: alpha(color.gray, 0.3), mb: 1 }}>
+                      chat_bubble_outline
+                    </Icon>
+                    <MDTypography variant="body2" color="text">
+                      Nenhum comentário ainda. Seja o primeiro a comentar!
+                    </MDTypography>
+                  </MDBox>
                 )}
               </Stack>
             </Card>

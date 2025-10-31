@@ -17,6 +17,7 @@ import {
 } from "context";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { UserPreferencesProvider, useUserPreferences } from "./context/UserPreferencesContext";
+import { PermissionsProvider, usePermissions } from "./context/PermissionsContext";
 import PrivateRoute from "./components/PrivateRoute";
 import { Toaster } from "react-hot-toast";
 import brandLogo from "assets/images/logos/logo-deitado.png";
@@ -26,10 +27,26 @@ function AppContent() {
   const { miniSidenav, direction, layout, sidenavColor } = controller;
   const [onMouseEnter, setOnMouseEnter] = useState(false);
   const { pathname, search } = useLocation();
-  const { isAuthenticated, loading, uiPermissions } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { filterRoutes, loading: permissionsLoading } = usePermissions();
   const { preferences } = useUserPreferences();
   const { theme: themePref, sidenavColor: sidenavColorPref, sidenavStyle } = preferences;
   const darkMode = themePref === "dark";
+
+  const loading = authLoading || permissionsLoading;
+
+  // Filtra as rotas usando o contexto de permissões
+  const filteredRoutes = filterRoutes ? filterRoutes(routes) : routes;
+
+  console.log("🔍 App Debug:", {
+    authLoading,
+    permissionsLoading,
+    loading,
+    isAuthenticated,
+    routesCount: filteredRoutes?.length || 0,
+    totalRoutes: routes?.length || 0,
+    filteredRoutesKeys: filteredRoutes?.map((r) => r.key).filter(Boolean) || [],
+  });
 
   useEffect(() => {
     const urlParams = new URLSearchParams(search);
@@ -81,15 +98,6 @@ function AppContent() {
       document.scrollingElement.scrollTop = 0;
     }
   }, [pathname]);
-
-  const filteredRoutes = routes.filter(
-    (route) =>
-      !route.key ||
-      route.key === "logout" ||
-      route.key === "view-ebook" ||
-      route.key === "editar-ebook" ||
-      (uiPermissions && uiPermissions.includes(route.key))
-  );
 
   const getRoutes = (allRoutes) => {
     return allRoutes.flatMap((route) => {
@@ -177,9 +185,11 @@ function AppContent() {
 export default function App() {
   return (
     <AuthProvider>
-      <UserPreferencesProvider>
-        <AppContent />
-      </UserPreferencesProvider>
+      <PermissionsProvider>
+        <UserPreferencesProvider>
+          <AppContent />
+        </UserPreferencesProvider>
+      </PermissionsProvider>
     </AuthProvider>
   );
 }

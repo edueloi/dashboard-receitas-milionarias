@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import api from "services/api";
 import { useAuth } from "../../context/AuthContext";
+import toast from "react-hot-toast";
 
 // MUI
 import Grid from "@mui/material/Grid";
@@ -19,6 +20,9 @@ import InputLabel from "@mui/material/InputLabel";
 import FormControl from "@mui/material/FormControl";
 import TextField from "@mui/material/TextField";
 import Skeleton from "@mui/material/Skeleton";
+import { alpha } from "@mui/material/styles";
+import Fade from "@mui/material/Fade";
+import Grow from "@mui/material/Grow";
 
 // Template
 import PageWrapper from "components/PageWrapper";
@@ -31,15 +35,18 @@ import DataTable from "examples/Tables/DataTable";
 
 import PermissionSettings from "./components/PermissionSettings";
 
+// ---------- theme colors ----------
+const palette = { gold: "#C9A635", green: "#1C3B32" };
+
 // ---------- helpers & maps ----------
 const permissionsMap = {
   admin: 1,
-  "sub-admin": 2,
-  produtor: 3,
-  editor: 4,
   "afiliado pro": 5,
   afiliado: 6,
 };
+
+// Permissões permitidas para seleção (apenas essas 3)
+const allowedPermissions = ["admin", "afiliado pro", "afiliado"];
 
 const statusMap = {
   Ativo: 1,
@@ -65,6 +72,8 @@ const centerModal = {
   left: "50%",
   transform: "translate(-50%, -50%)",
   width: "min(520px, 92vw)",
+  maxHeight: "90vh",
+  overflow: "auto",
   outline: "none",
 };
 
@@ -97,7 +106,6 @@ function AdminPanel() {
       setUsers(visible);
       setError(null);
     } catch (err) {
-      console.error("Error fetching users:", err);
       setError("Erro ao carregar usuários.");
       setUsers([]);
     } finally {
@@ -150,10 +158,46 @@ function AdminPanel() {
         id_status: statusMap[editingUser.status],
       };
       const res = await api.put(`/users/${editingUser.id}`, payload);
-      if (res.status === 200) await fetchUsers();
-      closeEdit();
+      if (res.status === 200) {
+        await fetchUsers();
+        closeEdit();
+        toast.success(`Usuário ${editingUser.nome} atualizado com sucesso!`, {
+          duration: 4000,
+          style: {
+            background: `linear-gradient(135deg, ${palette.green} 0%, ${alpha(
+              palette.green,
+              0.9
+            )} 100%)`,
+            color: "#fff",
+            padding: "16px 20px",
+            borderRadius: "12px",
+            fontSize: "0.95rem",
+            fontWeight: 600,
+            boxShadow: `0 8px 24px ${alpha(palette.green, 0.35)}`,
+            maxWidth: "500px",
+          },
+          icon: "✅",
+          iconTheme: {
+            primary: palette.gold,
+            secondary: "#fff",
+          },
+        });
+      }
     } catch (err) {
-      console.error("Error saving user:", err);
+      toast.error("Erro ao atualizar usuário. Tente novamente.", {
+        duration: 4000,
+        style: {
+          background: `linear-gradient(135deg, #f44336 0%, ${alpha("#f44336", 0.9)} 100%)`,
+          color: "#fff",
+          padding: "16px 20px",
+          borderRadius: "12px",
+          fontSize: "0.95rem",
+          fontWeight: 600,
+          boxShadow: `0 8px 24px ${alpha("#f44336", 0.35)}`,
+          maxWidth: "500px",
+        },
+        icon: "❌",
+      });
     }
   };
 
@@ -174,10 +218,43 @@ function AdminPanel() {
     try {
       await api.delete(`/users/${userToDelete.id}`);
       setUsers((prev) => prev.filter((u) => u.id !== userToDelete.id));
-    } catch (err) {
-      console.error("Error deleting user:", err);
-    } finally {
       closeDelete();
+      toast.success(`Usuário ${userToDelete.nome} excluído com sucesso!`, {
+        duration: 4000,
+        style: {
+          background: `linear-gradient(135deg, ${palette.gold} 0%, ${alpha(
+            palette.gold,
+            0.9
+          )} 100%)`,
+          color: "#fff",
+          padding: "16px 20px",
+          borderRadius: "12px",
+          fontSize: "0.95rem",
+          fontWeight: 600,
+          boxShadow: `0 8px 24px ${alpha(palette.gold, 0.35)}`,
+          maxWidth: "500px",
+        },
+        icon: "🗑️",
+        iconTheme: {
+          primary: palette.green,
+          secondary: "#fff",
+        },
+      });
+    } catch (err) {
+      toast.error("Erro ao excluir usuário. Tente novamente.", {
+        duration: 4000,
+        style: {
+          background: `linear-gradient(135deg, #f44336 0%, ${alpha("#f44336", 0.9)} 100%)`,
+          color: "#fff",
+          padding: "16px 20px",
+          borderRadius: "12px",
+          fontSize: "0.95rem",
+          fontWeight: 600,
+          boxShadow: `0 8px 24px ${alpha("#f44336", 0.35)}`,
+          maxWidth: "500px",
+        },
+        icon: "❌",
+      });
     }
   };
 
@@ -219,24 +296,47 @@ function AdminPanel() {
         ),
         action: (
           <Stack direction="row" spacing={0.5} justifyContent="center">
-            <Tooltip title="Editar" arrow>
+            <Tooltip title="Editar usuário" arrow placement="top">
               <span>
                 <IconButton
                   size="small"
                   onClick={() => openEdit(row)}
                   disabled={row.email === currentEmail}
+                  sx={{
+                    color: row.email === currentEmail ? "text.disabled" : palette.green,
+                    transition: "all 0.3s",
+                    "&:hover": {
+                      backgroundColor: alpha(palette.gold, 0.12),
+                      color: palette.gold,
+                      transform: "scale(1.1)",
+                    },
+                    "&:disabled": {
+                      opacity: 0.4,
+                    },
+                  }}
                 >
                   <Icon fontSize="small">edit</Icon>
                 </IconButton>
               </span>
             </Tooltip>
-            <Tooltip title="Excluir" arrow>
+            <Tooltip title="Excluir usuário" arrow placement="top">
               <span>
                 <IconButton
                   size="small"
-                  color="error"
                   onClick={() => openDelete(row)}
                   disabled={row.email === currentEmail}
+                  sx={{
+                    color: row.email === currentEmail ? "text.disabled" : "#f44336",
+                    transition: "all 0.3s",
+                    "&:hover": {
+                      backgroundColor: alpha("#f44336", 0.12),
+                      color: "#d32f2f",
+                      transform: "scale(1.1)",
+                    },
+                    "&:disabled": {
+                      opacity: 0.4,
+                    },
+                  }}
                 >
                   <Icon fontSize="small">delete</Icon>
                 </IconButton>
@@ -250,14 +350,28 @@ function AdminPanel() {
 
   // header actions
   const headerActions = (
-    <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap">
+    <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap" gap={1}>
       <Tabs
         value={activeTab}
         onChange={(_e, v) => setActiveTab(v)}
         aria-label="abas-admin"
         sx={{
-          "& .MuiTab-root": { textTransform: "none", minHeight: 44, fontWeight: 600 },
-          "& .MuiTabs-flexContainer": { gap: 1 },
+          "& .MuiTab-root": {
+            textTransform: "none",
+            minHeight: 48,
+            fontWeight: 600,
+            fontSize: { xs: "0.8rem", sm: "0.875rem" },
+            px: { xs: 2, sm: 3 },
+            transition: "all 0.3s",
+            "&.Mui-selected": {
+              color: palette.gold,
+            },
+          },
+          "& .MuiTabs-indicator": {
+            backgroundColor: palette.gold,
+            height: 3,
+          },
+          "& .MuiTabs-flexContainer": { gap: { xs: 0.5, sm: 1 } },
         }}
       >
         <Tab icon={<Icon>group</Icon>} iconPosition="start" label="Gerenciar Usuários" />
@@ -266,13 +380,30 @@ function AdminPanel() {
 
       {activeTab === 0 && (
         <MDButton
-          variant="gradient"
           onClick={fetchUsers}
           startIcon={<Icon>refresh</Icon>}
           sx={{
-            backgroundColor: "#1C3B32 !important",
-            color: "#fff !important",
-            "&:hover": { backgroundColor: "#C9A635 !important" },
+            background: `linear-gradient(135deg, ${palette.green} 0%, ${alpha(
+              palette.green,
+              0.85
+            )} 100%)`,
+            color: "#fff",
+            px: { xs: 2, sm: 3 },
+            py: 1,
+            fontSize: { xs: "0.8rem", sm: "0.875rem" },
+            fontWeight: 600,
+            textTransform: "none",
+            borderRadius: 2,
+            boxShadow: `0 4px 12px ${alpha(palette.green, 0.3)}`,
+            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            "&:hover": {
+              background: `linear-gradient(135deg, ${palette.gold} 0%, ${alpha(
+                palette.gold,
+                0.85
+              )} 100%)`,
+              boxShadow: `0 6px 16px ${alpha(palette.gold, 0.4)}`,
+              transform: "translateY(-2px)",
+            },
           }}
         >
           Atualizar
@@ -288,7 +419,13 @@ function AdminPanel() {
       actions={headerActions}
     >
       <MDBox>
-        <Card>
+        <Card
+          sx={{
+            borderRadius: 3,
+            border: `1px solid ${alpha(palette.green, 0.15)}`,
+            boxShadow: `0 4px 24px ${alpha(palette.green, 0.08)}`,
+          }}
+        >
           <MDBox p={{ xs: 2, md: 3 }}>
             {activeTab === 0 && (
               <Grid container spacing={2}>
@@ -298,28 +435,124 @@ function AdminPanel() {
                     label="Buscar por nome ou e-mail"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
+                    InputProps={{
+                      startAdornment: <Icon sx={{ mr: 1, color: palette.green }}>search</Icon>,
+                    }}
+                    sx={{
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: 2,
+                        transition: "all 0.3s",
+                        "&:hover": {
+                          "& .MuiOutlinedInput-notchedOutline": {
+                            borderColor: palette.green,
+                          },
+                        },
+                        "&.Mui-focused": {
+                          "& .MuiOutlinedInput-notchedOutline": {
+                            borderColor: palette.gold,
+                            borderWidth: 2,
+                          },
+                        },
+                      },
+                      "& .MuiInputLabel-root.Mui-focused": {
+                        color: palette.gold,
+                      },
+                    }}
                   />
                 </Grid>
 
                 <Grid item xs={12}>
                   {loading ? (
                     <MDBox>
-                      <Skeleton variant="rounded" height={56} sx={{ mb: 1.5 }} />
-                      <Skeleton variant="rounded" height={56} sx={{ mb: 1.5 }} />
-                      <Skeleton variant="rounded" height={56} />
+                      <Skeleton variant="rounded" height={56} sx={{ mb: 1.5, borderRadius: 2 }} />
+                      <Skeleton variant="rounded" height={56} sx={{ mb: 1.5, borderRadius: 2 }} />
+                      <Skeleton variant="rounded" height={56} sx={{ borderRadius: 2 }} />
                     </MDBox>
                   ) : error ? (
-                    <MDBox display="flex" justifyContent="center" p={3}>
-                      <MDTypography color="error">{error}</MDTypography>
+                    <MDBox
+                      display="flex"
+                      flexDirection="column"
+                      alignItems="center"
+                      justifyContent="center"
+                      p={4}
+                      sx={{
+                        backgroundColor: alpha("#f44336", 0.08),
+                        borderRadius: 3,
+                        border: `1px solid ${alpha("#f44336", 0.2)}`,
+                      }}
+                    >
+                      <Icon
+                        sx={{
+                          fontSize: 64,
+                          color: "#f44336",
+                          mb: 2,
+                          opacity: 0.7,
+                        }}
+                      >
+                        error_outline
+                      </Icon>
+                      <MDTypography variant="h6" color="error" gutterBottom>
+                        {error}
+                      </MDTypography>
+                      <MDButton
+                        variant="outlined"
+                        color="error"
+                        onClick={fetchUsers}
+                        startIcon={<Icon>refresh</Icon>}
+                        sx={{ mt: 2 }}
+                      >
+                        Tentar Novamente
+                      </MDButton>
                     </MDBox>
                   ) : filtered.length === 0 ? (
-                    <MDBox p={4} textAlign="center">
-                      <MDTypography variant="h6" gutterBottom>
+                    <MDBox
+                      p={5}
+                      textAlign="center"
+                      sx={{
+                        backgroundColor: alpha(palette.green, 0.03),
+                        borderRadius: 3,
+                        border: `1px dashed ${alpha(palette.green, 0.2)}`,
+                      }}
+                    >
+                      <Icon
+                        sx={{
+                          fontSize: 72,
+                          color: palette.green,
+                          mb: 2,
+                          opacity: 0.5,
+                        }}
+                      >
+                        search_off
+                      </Icon>
+                      <MDTypography
+                        variant="h5"
+                        gutterBottom
+                        sx={{ color: palette.green, fontWeight: 600 }}
+                      >
                         Nada por aqui…
                       </MDTypography>
-                      <MDTypography variant="body2" color="text">
+                      <MDTypography variant="body2" color="text.secondary">
                         Ajuste o termo de busca ou tente atualizar a lista.
                       </MDTypography>
+                      {query && (
+                        <MDButton
+                          variant="outlined"
+                          onClick={() => setQuery("")}
+                          startIcon={<Icon>clear</Icon>}
+                          sx={{
+                            mt: 3,
+                            borderColor: palette.green,
+                            color: palette.green,
+                            "&:hover": {
+                              borderColor: palette.gold,
+                              color: palette.gold,
+                              backgroundColor: alpha(palette.gold, 0.08),
+                            },
+                          }}
+                        >
+                          Limpar Busca
+                        </MDButton>
+                      )}
                     </MDBox>
                   ) : (
                     <DataTable
@@ -341,129 +574,386 @@ function AdminPanel() {
 
       {/* MODAL EDITAR */}
       <Modal open={isEditOpen} onClose={closeEdit}>
-        <Box sx={centerModal}>
-          <Card>
-            <MDBox
-              variant="gradient"
-              bgColor="primary"
-              borderRadius="lg"
-              coloredShadow="primary"
-              p={2}
-              textAlign="center"
+        <Fade in={isEditOpen}>
+          <Box sx={centerModal}>
+            <Card
+              sx={{
+                borderRadius: 3,
+                border: `1px solid ${alpha(palette.green, 0.15)}`,
+                overflow: "hidden",
+              }}
             >
-              <MDTypography variant="h6" color="white">
-                Editar Usuário
-              </MDTypography>
-            </MDBox>
+              {/* Header */}
+              <MDBox
+                sx={{
+                  background: `linear-gradient(135deg, ${palette.green} 0%, ${alpha(
+                    palette.green,
+                    0.85
+                  )} 100%)`,
+                  p: 2.5,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.5,
+                }}
+              >
+                <MDBox
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 2,
+                    backgroundColor: alpha("#fff", 0.2),
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Icon sx={{ fontSize: 28, color: "#fff" }}>edit</Icon>
+                </MDBox>
+                <MDBox>
+                  <MDTypography variant="h6" color="white" fontWeight="bold">
+                    Editar Usuário
+                  </MDTypography>
+                  <MDTypography variant="caption" color="white" sx={{ opacity: 0.9 }}>
+                    Altere a função e o status do usuário
+                  </MDTypography>
+                </MDBox>
+              </MDBox>
 
-            {editingUser && (
+              {editingUser && (
+                <MDBox p={3}>
+                  <MDBox mb={2.5}>
+                    <MDInput
+                      type="text"
+                      label="Nome"
+                      value={
+                        editingUser.nome
+                          ? `${editingUser.nome} ${editingUser.sobrenome || ""}`.trim()
+                          : ""
+                      }
+                      fullWidth
+                      disabled
+                      sx={{
+                        "& .MuiInputBase-input.Mui-disabled": {
+                          WebkitTextFillColor: "rgba(0, 0, 0, 0.6)",
+                        },
+                      }}
+                    />
+                  </MDBox>
+
+                  <MDBox mb={2.5}>
+                    <MDInput
+                      type="email"
+                      label="Email"
+                      value={editingUser.email}
+                      fullWidth
+                      disabled
+                      sx={{
+                        "& .MuiInputBase-input.Mui-disabled": {
+                          WebkitTextFillColor: "rgba(0, 0, 0, 0.6)",
+                        },
+                      }}
+                    />
+                  </MDBox>
+
+                  <MDBox mb={2.5}>
+                    <FormControl fullWidth>
+                      <InputLabel
+                        id="role-select-label"
+                        sx={{
+                          "&.Mui-focused": {
+                            color: palette.gold,
+                          },
+                        }}
+                      >
+                        Função
+                      </InputLabel>
+                      <Select
+                        labelId="role-select-label"
+                        label="Função"
+                        value={editingUser.permissao || ""}
+                        onChange={(e) =>
+                          setEditingUser((prev) => ({ ...prev, permissao: e.target.value }))
+                        }
+                        sx={{
+                          height: 44,
+                          borderRadius: 2,
+                          "& .MuiOutlinedInput-notchedOutline": {
+                            borderColor: alpha(palette.green, 0.2),
+                          },
+                          "&:hover .MuiOutlinedInput-notchedOutline": {
+                            borderColor: palette.green,
+                          },
+                          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                            borderColor: palette.gold,
+                            borderWidth: 2,
+                          },
+                        }}
+                      >
+                        {allowedPermissions.map((permission) => (
+                          <MenuItem
+                            key={permission}
+                            value={permission}
+                            sx={{
+                              "&.Mui-selected": {
+                                backgroundColor: alpha(palette.gold, 0.12),
+                                "&:hover": {
+                                  backgroundColor: alpha(palette.gold, 0.18),
+                                },
+                              },
+                            }}
+                          >
+                            {capitalize(permission)}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </MDBox>
+
+                  <MDBox mb={2.5}>
+                    <FormControl fullWidth>
+                      <InputLabel
+                        id="status-select-label"
+                        sx={{
+                          "&.Mui-focused": {
+                            color: palette.gold,
+                          },
+                        }}
+                      >
+                        Status
+                      </InputLabel>
+                      <Select
+                        labelId="status-select-label"
+                        label="Status"
+                        value={editingUser.status || ""}
+                        onChange={(e) =>
+                          setEditingUser((prev) => ({ ...prev, status: e.target.value }))
+                        }
+                        sx={{
+                          height: 44,
+                          borderRadius: 2,
+                          "& .MuiOutlinedInput-notchedOutline": {
+                            borderColor: alpha(palette.green, 0.2),
+                          },
+                          "&:hover .MuiOutlinedInput-notchedOutline": {
+                            borderColor: palette.green,
+                          },
+                          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                            borderColor: palette.gold,
+                            borderWidth: 2,
+                          },
+                        }}
+                      >
+                        {Object.keys(statusMap).map((status) => (
+                          <MenuItem
+                            key={status}
+                            value={status}
+                            sx={{
+                              "&.Mui-selected": {
+                                backgroundColor: alpha(palette.gold, 0.12),
+                                "&:hover": {
+                                  backgroundColor: alpha(palette.gold, 0.18),
+                                },
+                              },
+                            }}
+                          >
+                            {status}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </MDBox>
+
+                  <Stack
+                    direction={{ xs: "column", sm: "row" }}
+                    spacing={1.5}
+                    justifyContent="flex-end"
+                    mt={3}
+                  >
+                    <MDButton
+                      onClick={closeEdit}
+                      fullWidth={true}
+                      sx={{
+                        py: 1.2,
+                        px: 3,
+                        borderRadius: 2,
+                        textTransform: "none",
+                        fontWeight: 600,
+                        color: palette.green,
+                        border: `2px solid ${alpha(palette.green, 0.3)}`,
+                        backgroundColor: "transparent",
+                        "&:hover": {
+                          backgroundColor: alpha(palette.green, 0.08),
+                          borderColor: palette.green,
+                        },
+                      }}
+                    >
+                      Cancelar
+                    </MDButton>
+                    <MDButton
+                      onClick={saveUser}
+                      fullWidth={true}
+                      sx={{
+                        py: 1.2,
+                        px: 3,
+                        borderRadius: 2,
+                        textTransform: "none",
+                        fontWeight: 600,
+                        background: `linear-gradient(135deg, ${palette.gold} 0%, ${alpha(
+                          palette.gold,
+                          0.85
+                        )} 100%)`,
+                        color: "#fff",
+                        boxShadow: `0 4px 12px ${alpha(palette.gold, 0.3)}`,
+                        "&:hover": {
+                          background: `linear-gradient(135deg, ${alpha(
+                            palette.gold,
+                            0.9
+                          )} 0%, ${alpha(palette.gold, 0.75)} 100%)`,
+                          boxShadow: `0 6px 16px ${alpha(palette.gold, 0.4)}`,
+                          transform: "translateY(-2px)",
+                        },
+                      }}
+                    >
+                      Salvar Alterações
+                    </MDButton>
+                  </Stack>
+                </MDBox>
+              )}
+            </Card>
+          </Box>
+        </Fade>
+      </Modal>
+
+      {/* MODAL EXCLUIR */}
+      <Modal open={isDeleteOpen} onClose={closeDelete}>
+        <Grow in={isDeleteOpen}>
+          <Box sx={{ ...centerModal, width: "min(480px, 92vw)" }}>
+            <Card
+              sx={{
+                borderRadius: 3,
+                border: `2px solid ${alpha("#f44336", 0.2)}`,
+                overflow: "hidden",
+              }}
+            >
+              {/* Header */}
+              <MDBox
+                sx={{
+                  background: `linear-gradient(135deg, #f44336 0%, ${alpha("#f44336", 0.85)} 100%)`,
+                  p: 2.5,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.5,
+                }}
+              >
+                <MDBox
+                  sx={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 2,
+                    backgroundColor: alpha("#fff", 0.2),
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Icon sx={{ fontSize: 28, color: "#fff" }}>warning</Icon>
+                </MDBox>
+                <MDBox>
+                  <MDTypography variant="h6" color="white" fontWeight="bold">
+                    Confirmar Exclusão
+                  </MDTypography>
+                  <MDTypography variant="caption" color="white" sx={{ opacity: 0.9 }}>
+                    Esta ação é irreversível
+                  </MDTypography>
+                </MDBox>
+              </MDBox>
+
               <MDBox p={3}>
-                <MDBox mb={2}>
-                  <MDInput
-                    type="text"
-                    label="Nome"
-                    value={
-                      editingUser.nome
-                        ? `${editingUser.nome} ${editingUser.sobrenome || ""}`.trim()
-                        : ""
-                    }
-                    fullWidth
-                    disabled
-                  />
+                <MDBox
+                  sx={{
+                    p: 2.5,
+                    backgroundColor: alpha("#f44336", 0.08),
+                    borderRadius: 2,
+                    border: `1px solid ${alpha("#f44336", 0.2)}`,
+                    mb: 3,
+                  }}
+                >
+                  <MDTypography
+                    variant="body2"
+                    sx={{
+                      color: "#d32f2f",
+                      lineHeight: 1.6,
+                      fontSize: { xs: "0.875rem", sm: "0.95rem" },
+                    }}
+                  >
+                    Tem certeza que deseja excluir o usuário{" "}
+                    <strong>
+                      {userToDelete?.nome} {userToDelete?.sobrenome}
+                    </strong>
+                    ?
+                    <br />
+                    <br />
+                    Todos os dados serão permanentemente removidos e não poderão ser recuperados.
+                  </MDTypography>
                 </MDBox>
 
-                <MDBox mb={2}>
-                  <MDInput
-                    type="email"
-                    label="Email"
-                    value={editingUser.email}
-                    fullWidth
-                    disabled
-                  />
-                </MDBox>
-
-                <MDBox mb={2}>
-                  <FormControl fullWidth>
-                    <InputLabel id="role-select-label">Função</InputLabel>
-                    <Select
-                      labelId="role-select-label"
-                      label="Função"
-                      value={editingUser.permissao || ""}
-                      onChange={(e) =>
-                        setEditingUser((prev) => ({ ...prev, permissao: e.target.value }))
-                      }
-                      sx={{ height: 44 }}
-                    >
-                      {Object.keys(permissionsMap).map((permission) => (
-                        <MenuItem key={permission} value={permission}>
-                          {capitalize(permission)}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </MDBox>
-
-                <MDBox mb={2}>
-                  <FormControl fullWidth>
-                    <InputLabel id="status-select-label">Status</InputLabel>
-                    <Select
-                      labelId="status-select-label"
-                      label="Status"
-                      value={editingUser.status || ""}
-                      onChange={(e) =>
-                        setEditingUser((prev) => ({ ...prev, status: e.target.value }))
-                      }
-                      sx={{ height: 44 }}
-                    >
-                      {Object.keys(statusMap).map((status) => (
-                        <MenuItem key={status} value={status}>
-                          {status}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </MDBox>
-
-                <Stack direction="row" spacing={1} justifyContent="flex-end" mt={3}>
-                  <MDButton variant="gradient" color="secondary" onClick={closeEdit}>
+                <Stack
+                  direction={{ xs: "column-reverse", sm: "row" }}
+                  spacing={1.5}
+                  justifyContent="flex-end"
+                >
+                  <MDButton
+                    onClick={closeDelete}
+                    fullWidth={true}
+                    sx={{
+                      py: 1.2,
+                      px: 3,
+                      borderRadius: 2,
+                      textTransform: "none",
+                      fontWeight: 600,
+                      color: palette.green,
+                      border: `2px solid ${alpha(palette.green, 0.3)}`,
+                      backgroundColor: "transparent",
+                      "&:hover": {
+                        backgroundColor: alpha(palette.green, 0.08),
+                        borderColor: palette.green,
+                      },
+                    }}
+                  >
                     Cancelar
                   </MDButton>
-                  <MDButton variant="gradient" color="primary" onClick={saveUser}>
-                    Salvar Alterações
+                  <MDButton
+                    onClick={confirmDelete}
+                    fullWidth={true}
+                    sx={{
+                      py: 1.2,
+                      px: 3,
+                      borderRadius: 2,
+                      textTransform: "none",
+                      fontWeight: 600,
+                      background: `linear-gradient(135deg, #f44336 0%, ${alpha(
+                        "#f44336",
+                        0.85
+                      )} 100%)`,
+                      color: "#fff",
+                      boxShadow: `0 4px 12px ${alpha("#f44336", 0.3)}`,
+                      "&:hover": {
+                        background: `linear-gradient(135deg, ${alpha("#f44336", 0.9)} 0%, ${alpha(
+                          "#f44336",
+                          0.75
+                        )} 100%)`,
+                        boxShadow: `0 6px 16px ${alpha("#f44336", 0.4)}`,
+                        transform: "translateY(-2px)",
+                      },
+                    }}
+                  >
+                    Excluir Permanentemente
                   </MDButton>
                 </Stack>
               </MDBox>
-            )}
-          </Card>
-        </Box>
-      </Modal>
-
-      {/* MODAL EXCLUIR — padrão do app */}
-      <Modal open={isDeleteOpen} onClose={closeDelete}>
-        <Box sx={{ ...centerModal, width: 440 }}>
-          <Card>
-            <MDBox p={3}>
-              <MDTypography variant="h5" fontWeight="medium">
-                Confirmar Exclusão
-              </MDTypography>
-              <MDTypography variant="body2" color="text" mt={2} mb={3}>
-                Tem certeza que deseja excluir o usuário{" "}
-                <b>
-                  {userToDelete?.nome} {userToDelete?.sobrenome}
-                </b>
-                ? Esta ação é irreversível.
-              </MDTypography>
-              <MDBox display="flex" justifyContent="flex-end" gap={1}>
-                <MDButton color="secondary" onClick={closeDelete}>
-                  Cancelar
-                </MDButton>
-                <MDButton variant="gradient" color="error" onClick={confirmDelete}>
-                  Deletar
-                </MDButton>
-              </MDBox>
-            </MDBox>
-          </Card>
-        </Box>
+            </Card>
+          </Box>
+        </Grow>
       </Modal>
     </PageWrapper>
   );
