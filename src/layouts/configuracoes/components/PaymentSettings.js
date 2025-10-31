@@ -6,12 +6,16 @@ import toast from "react-hot-toast";
 import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
 import Divider from "@mui/material/Divider";
+import Icon from "@mui/material/Icon";
+import { alpha } from "@mui/material/styles";
 
 // MD
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDInput from "components/MDInput";
 import MDButton from "components/MDButton";
+
+const palette = { gold: "#C9A635", green: "#1C3B32" };
 
 // helpers simples (sem libs externas)
 const onlyDigits = (v = "") => v.replace(/\D/g, "");
@@ -136,165 +140,444 @@ function PaymentSettings() {
   };
 
   return (
-    <Grid container spacing={4}>
+    <Grid container spacing={{ xs: 2, sm: 3 }}>
       {/* Cartão de crédito */}
-      <Grid item xs={12} md={6}>
-        <Card>
-          <MDBox p={3}>
-            <MDTypography variant="h5" fontWeight="medium">
-              Informações de Pagamento
-            </MDTypography>
-            <MDTypography variant="body2" color="text">
-              Cadastre seu cartão de crédito para pagar a assinatura da plataforma.
-            </MDTypography>
+      <Grid item xs={12} lg={6}>
+        <Card
+          sx={{
+            borderRadius: 3,
+            border: `1px solid ${alpha(palette.green, 0.15)}`,
+            height: "100%",
+          }}
+        >
+          <MDBox
+            sx={{
+              background: `linear-gradient(135deg, ${palette.green} 0%, ${alpha(
+                palette.green,
+                0.85
+              )} 100%)`,
+              p: { xs: 2, sm: 2.5 },
+              display: "flex",
+              alignItems: "center",
+              gap: { xs: 1, sm: 1.5 },
+            }}
+          >
+            <MDBox
+              sx={{
+                width: { xs: 40, sm: 48 },
+                height: { xs: 40, sm: 48 },
+                borderRadius: 2,
+                backgroundColor: alpha("#fff", 0.2),
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Icon sx={{ fontSize: { xs: 24, sm: 28 }, color: "#fff" }}>credit_card</Icon>
+            </MDBox>
+            <MDBox>
+              <MDTypography
+                variant="h6"
+                color="white"
+                fontWeight="bold"
+                sx={{ fontSize: { xs: "1rem", sm: "1.125rem" } }}
+              >
+                Informações de Pagamento
+              </MDTypography>
+              <MDTypography
+                variant="caption"
+                color="white"
+                sx={{ opacity: 0.9, fontSize: { xs: "0.7rem", sm: "0.75rem" } }}
+              >
+                Cadastre seu cartão de crédito
+              </MDTypography>
+            </MDBox>
           </MDBox>
-          <Divider />
-          <MDBox p={3} component="form">
-            <Grid container spacing={2.5}>
+
+          <MDBox p={{ xs: 2, sm: 3 }} component="form">
+            <Grid container spacing={{ xs: 2, sm: 2.5 }}>
               <Grid item xs={12}>
+                <MDBox mb={0.5}>
+                  <MDTypography
+                    variant="caption"
+                    fontWeight="bold"
+                    color="text.secondary"
+                    sx={{ fontSize: { xs: "0.7rem", sm: "0.75rem" } }}
+                  >
+                    Número do Cartão
+                  </MDTypography>
+                </MDBox>
                 <MDInput
                   name="cardNumber"
-                  label="Número do Cartão"
                   value={paymentInfo.cardNumber}
                   onChange={handleCardChange}
                   fullWidth
                   variant="outlined"
                   inputMode="numeric"
-                  icon={{ component: "credit_card", direction: "left" }}
                   placeholder="0000 0000 0000 0000"
+                  InputProps={{
+                    startAdornment: (
+                      <Icon sx={{ color: palette.green, mr: 1, fontSize: { xs: 18, sm: 20 } }}>
+                        credit_card
+                      </Icon>
+                    ),
+                  }}
                 />
               </Grid>
               <Grid item xs={12}>
+                <MDBox mb={0.5}>
+                  <MDTypography
+                    variant="caption"
+                    fontWeight="bold"
+                    color="text.secondary"
+                    sx={{ fontSize: { xs: "0.7rem", sm: "0.75rem" } }}
+                  >
+                    Nome no Cartão
+                  </MDTypography>
+                </MDBox>
                 <MDInput
                   name="cardName"
-                  label="Nome no Cartão"
                   value={paymentInfo.cardName}
                   onChange={handleCardChange}
                   fullWidth
                   variant="outlined"
-                  icon={{ component: "badge", direction: "left" }}
+                  placeholder="Como está no cartão"
+                  InputProps={{
+                    startAdornment: (
+                      <Icon sx={{ color: palette.green, mr: 1, fontSize: { xs: 18, sm: 20 } }}>
+                        badge
+                      </Icon>
+                    ),
+                  }}
                 />
               </Grid>
               <Grid item xs={6}>
+                <MDBox mb={0.5}>
+                  <MDTypography
+                    variant="caption"
+                    fontWeight="bold"
+                    color="text.secondary"
+                    sx={{ fontSize: { xs: "0.7rem", sm: "0.75rem" } }}
+                  >
+                    Validade
+                  </MDTypography>
+                </MDBox>
                 <MDInput
                   name="expiryDate"
-                  label="Validade (MM/AA)"
                   value={paymentInfo.expiryDate}
                   onChange={handleCardChange}
                   fullWidth
                   variant="outlined"
                   inputMode="numeric"
-                  icon={{ component: "calendar_month", direction: "left" }}
                   placeholder="MM/AA"
+                  InputProps={{
+                    startAdornment: (
+                      <Icon sx={{ color: palette.gold, mr: 1, fontSize: { xs: 18, sm: 20 } }}>
+                        calendar_month
+                      </Icon>
+                    ),
+                  }}
                 />
               </Grid>
               <Grid item xs={6}>
+                <MDBox mb={0.5}>
+                  <MDTypography
+                    variant="caption"
+                    fontWeight="bold"
+                    color="text.secondary"
+                    sx={{ fontSize: { xs: "0.7rem", sm: "0.75rem" } }}
+                  >
+                    CVV
+                  </MDTypography>
+                </MDBox>
                 <MDInput
                   name="cvv"
-                  label="CVV"
                   value={paymentInfo.cvv}
                   onChange={handleCardChange}
                   fullWidth
                   variant="outlined"
                   inputMode="numeric"
-                  icon={{ component: "lock", direction: "left" }}
                   placeholder="***"
+                  InputProps={{
+                    startAdornment: (
+                      <Icon sx={{ color: palette.gold, mr: 1, fontSize: { xs: 18, sm: 20 } }}>
+                        lock
+                      </Icon>
+                    ),
+                  }}
                 />
               </Grid>
             </Grid>
           </MDBox>
-          <MDBox p={3} pt={0} display="flex" justifyContent="flex-end">
+
+          <Divider />
+
+          <MDBox
+            p={{ xs: 2, sm: 3 }}
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            flexWrap="wrap"
+            gap={1}
+          >
+            <MDTypography
+              variant="caption"
+              color={cardDirty ? "warning" : "success"}
+              fontWeight="bold"
+              sx={{ fontSize: { xs: "0.7rem", sm: "0.75rem" } }}
+            >
+              {cardDirty ? "⚠️ Alterações não salvas" : "✓ Tudo salvo"}
+            </MDTypography>
             <MDButton
               variant="gradient"
-              color="success"
+              color="dark"
               onClick={saveCard}
               disabled={!cardDirty || savingCard}
               startIcon={
-                <span className="material-icons">{savingCard ? "hourglass_top" : "save"}</span>
+                <Icon sx={{ fontSize: { xs: 18, sm: 20 } }}>
+                  {savingCard ? "hourglass_top" : "save"}
+                </Icon>
               }
-              sx={{ minWidth: 170 }}
+              sx={{
+                minWidth: { xs: 140, sm: 170 },
+                fontSize: { xs: "0.8rem", sm: "0.875rem" },
+                background: `linear-gradient(135deg, ${palette.gold} 0%, ${alpha(
+                  palette.gold,
+                  0.8
+                )} 100%)`,
+                "&:hover": {
+                  background: `linear-gradient(135deg, ${alpha(palette.gold, 0.9)} 0%, ${alpha(
+                    palette.gold,
+                    0.7
+                  )} 100%)`,
+                },
+                "&:disabled": {
+                  opacity: 0.5,
+                },
+              }}
             >
-              {savingCard ? "Salvando..." : "Salvar cartão"}
+              {savingCard ? "Salvando..." : "Salvar Cartão"}
             </MDButton>
           </MDBox>
         </Card>
       </Grid>
 
       {/* Dados bancários */}
-      <Grid item xs={12} md={6}>
-        <Card>
-          <MDBox p={3}>
-            <MDTypography variant="h5" fontWeight="medium">
-              Informações para Saque
-            </MDTypography>
-            <MDTypography variant="body2" color="text">
-              Cadastre sua conta bancária para receber seus pagamentos.
-            </MDTypography>
+      <Grid item xs={12} lg={6}>
+        <Card
+          sx={{
+            borderRadius: 3,
+            border: `1px solid ${alpha(palette.green, 0.15)}`,
+            height: "100%",
+          }}
+        >
+          <MDBox
+            sx={{
+              background: `linear-gradient(135deg, ${palette.green} 0%, ${alpha(
+                palette.green,
+                0.85
+              )} 100%)`,
+              p: { xs: 2, sm: 2.5 },
+              display: "flex",
+              alignItems: "center",
+              gap: { xs: 1, sm: 1.5 },
+            }}
+          >
+            <MDBox
+              sx={{
+                width: { xs: 40, sm: 48 },
+                height: { xs: 40, sm: 48 },
+                borderRadius: 2,
+                backgroundColor: alpha("#fff", 0.2),
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Icon sx={{ fontSize: { xs: 24, sm: 28 }, color: "#fff" }}>account_balance</Icon>
+            </MDBox>
+            <MDBox>
+              <MDTypography
+                variant="h6"
+                color="white"
+                fontWeight="bold"
+                sx={{ fontSize: { xs: "1rem", sm: "1.125rem" } }}
+              >
+                Informações para Saque
+              </MDTypography>
+              <MDTypography
+                variant="caption"
+                color="white"
+                sx={{ opacity: 0.9, fontSize: { xs: "0.7rem", sm: "0.75rem" } }}
+              >
+                Cadastre sua conta bancária
+              </MDTypography>
+            </MDBox>
           </MDBox>
-          <Divider />
-          <MDBox p={3} component="form">
-            <Grid container spacing={2.5}>
+
+          <MDBox p={{ xs: 2, sm: 3 }} component="form">
+            <Grid container spacing={{ xs: 2, sm: 2.5 }}>
               <Grid item xs={12}>
+                <MDBox mb={0.5}>
+                  <MDTypography
+                    variant="caption"
+                    fontWeight="bold"
+                    color="text.secondary"
+                    sx={{ fontSize: { xs: "0.7rem", sm: "0.75rem" } }}
+                  >
+                    Nome do Banco
+                  </MDTypography>
+                </MDBox>
                 <MDInput
                   name="bankName"
-                  label="Nome do Banco"
                   value={bankInfo.bankName}
                   onChange={handleBankChange}
                   fullWidth
                   variant="outlined"
-                  icon={{ component: "account_balance", direction: "left" }}
+                  placeholder="Ex: Banco do Brasil"
+                  InputProps={{
+                    startAdornment: (
+                      <Icon sx={{ color: palette.green, mr: 1, fontSize: { xs: 18, sm: 20 } }}>
+                        account_balance
+                      </Icon>
+                    ),
+                  }}
                 />
               </Grid>
               <Grid item xs={12}>
+                <MDBox mb={0.5}>
+                  <MDTypography
+                    variant="caption"
+                    fontWeight="bold"
+                    color="text.secondary"
+                    sx={{ fontSize: { xs: "0.7rem", sm: "0.75rem" } }}
+                  >
+                    Número da Conta
+                  </MDTypography>
+                </MDBox>
                 <MDInput
                   name="bankAccount"
-                  label="Número da Conta"
                   value={bankInfo.bankAccount}
                   onChange={handleBankChange}
                   fullWidth
                   variant="outlined"
                   inputMode="numeric"
-                  icon={{ component: "account_circle", direction: "left" }}
+                  placeholder="Ex: 12345678"
+                  InputProps={{
+                    startAdornment: (
+                      <Icon sx={{ color: palette.green, mr: 1, fontSize: { xs: 18, sm: 20 } }}>
+                        account_circle
+                      </Icon>
+                    ),
+                  }}
                 />
               </Grid>
               <Grid item xs={6}>
+                <MDBox mb={0.5}>
+                  <MDTypography
+                    variant="caption"
+                    fontWeight="bold"
+                    color="text.secondary"
+                    sx={{ fontSize: { xs: "0.7rem", sm: "0.75rem" } }}
+                  >
+                    Agência
+                  </MDTypography>
+                </MDBox>
                 <MDInput
                   name="agency"
-                  label="Agência"
                   value={bankInfo.agency}
                   onChange={handleBankChange}
                   fullWidth
                   variant="outlined"
                   inputMode="numeric"
-                  icon={{ component: "location_city", direction: "left" }}
+                  placeholder="Ex: 0001"
+                  InputProps={{
+                    startAdornment: (
+                      <Icon sx={{ color: palette.gold, mr: 1, fontSize: { xs: 18, sm: 20 } }}>
+                        location_city
+                      </Icon>
+                    ),
+                  }}
                 />
               </Grid>
               <Grid item xs={6}>
+                <MDBox mb={0.5}>
+                  <MDTypography
+                    variant="caption"
+                    fontWeight="bold"
+                    color="text.secondary"
+                    sx={{ fontSize: { xs: "0.7rem", sm: "0.75rem" } }}
+                  >
+                    CPF/CNPJ
+                  </MDTypography>
+                </MDBox>
                 <MDInput
                   name="document"
-                  label="CPF/CNPJ"
                   value={bankInfo.document}
                   onChange={handleBankChange}
                   fullWidth
                   variant="outlined"
                   inputMode="numeric"
-                  icon={{ component: "badge", direction: "left" }}
+                  placeholder="Somente números"
+                  InputProps={{
+                    startAdornment: (
+                      <Icon sx={{ color: palette.gold, mr: 1, fontSize: { xs: 18, sm: 20 } }}>
+                        badge
+                      </Icon>
+                    ),
+                  }}
                 />
               </Grid>
             </Grid>
           </MDBox>
-          <MDBox p={3} pt={0} display="flex" justifyContent="flex-end">
+
+          <Divider />
+
+          <MDBox
+            p={{ xs: 2, sm: 3 }}
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            flexWrap="wrap"
+            gap={1}
+          >
+            <MDTypography
+              variant="caption"
+              color={bankDirty ? "warning" : "success"}
+              fontWeight="bold"
+              sx={{ fontSize: { xs: "0.7rem", sm: "0.75rem" } }}
+            >
+              {bankDirty ? "⚠️ Alterações não salvas" : "✓ Tudo salvo"}
+            </MDTypography>
             <MDButton
               variant="gradient"
-              color="success"
+              color="dark"
               onClick={saveBank}
               disabled={!bankDirty || savingBank}
               startIcon={
-                <span className="material-icons">{savingBank ? "hourglass_top" : "save"}</span>
+                <Icon sx={{ fontSize: { xs: 18, sm: 20 } }}>
+                  {savingBank ? "hourglass_top" : "save"}
+                </Icon>
               }
-              sx={{ minWidth: 220 }}
+              sx={{
+                minWidth: { xs: 140, sm: 170 },
+                fontSize: { xs: "0.8rem", sm: "0.875rem" },
+                background: `linear-gradient(135deg, ${palette.gold} 0%, ${alpha(
+                  palette.gold,
+                  0.8
+                )} 100%)`,
+                "&:hover": {
+                  background: `linear-gradient(135deg, ${alpha(palette.gold, 0.9)} 0%, ${alpha(
+                    palette.gold,
+                    0.7
+                  )} 100%)`,
+                },
+                "&:disabled": {
+                  opacity: 0.5,
+                },
+              }}
             >
-              {savingBank ? "Salvando..." : "Salvar conta bancária"}
+              {savingBank ? "Salvando..." : "Salvar Conta"}
             </MDButton>
           </MDBox>
         </Card>

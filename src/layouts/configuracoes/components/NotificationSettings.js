@@ -6,6 +6,8 @@ import toast from "react-hot-toast";
 import Card from "@mui/material/Card";
 import Switch from "@mui/material/Switch";
 import Divider from "@mui/material/Divider";
+import Icon from "@mui/material/Icon";
+import { alpha } from "@mui/material/styles";
 
 // MD
 import MDBox from "components/MDBox";
@@ -15,7 +17,10 @@ import MDButton from "components/MDButton";
 // Context
 import { useUserPreferences } from "context/UserPreferencesContext";
 
-const SECTION_SPACING = { px: 3, py: 2.25 };
+const palette = {
+  gold: "#C9A635",
+  green: "#1C3B32",
+};
 
 function NotificationSettings() {
   const { preferences, updatePreference, loading } = useUserPreferences();
@@ -70,17 +75,62 @@ function NotificationSettings() {
     }
   };
 
-  const SettingRow = ({ name, label, description, checked, onChange }) => (
-    <MDBox display="flex" justifyContent="space-between" alignItems="center" sx={{ gap: 2, my: 1 }}>
-      <MDBox sx={{ minWidth: 0 }}>
-        <MDTypography variant="body1" fontWeight="medium" sx={{ lineHeight: 1.2 }}>
-          {label}
-        </MDTypography>
-        <MDTypography variant="caption" color="text" sx={{ display: "block", opacity: 0.9 }}>
-          {description}
-        </MDTypography>
+  const SettingRow = ({ name, label, description, checked, onChange, icon }) => (
+    <MDBox
+      sx={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        gap: 2,
+        p: 2,
+        borderRadius: 2,
+        border: `1px solid ${alpha(checked ? palette.gold : "#000", 0.1)}`,
+        backgroundColor: checked ? alpha(palette.gold, 0.05) : "transparent",
+        transition: "all 0.3s ease",
+        "&:hover": {
+          backgroundColor: alpha(palette.gold, 0.08),
+          border: `1px solid ${alpha(palette.gold, 0.2)}`,
+        },
+      }}
+    >
+      <MDBox sx={{ display: "flex", alignItems: "flex-start", gap: 2, flex: 1, minWidth: 0 }}>
+        <MDBox
+          sx={{
+            width: 40,
+            height: 40,
+            borderRadius: 2,
+            backgroundColor: checked ? alpha(palette.gold, 0.15) : alpha(palette.green, 0.1),
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+            transition: "all 0.3s ease",
+          }}
+        >
+          <Icon sx={{ fontSize: 20, color: checked ? palette.gold : palette.green }}>{icon}</Icon>
+        </MDBox>
+        <MDBox sx={{ minWidth: 0 }}>
+          <MDTypography variant="body1" fontWeight="bold" sx={{ lineHeight: 1.3, mb: 0.5 }}>
+            {label}
+          </MDTypography>
+          <MDTypography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+            {description}
+          </MDTypography>
+        </MDBox>
       </MDBox>
-      <Switch name={name} checked={checked} onChange={onChange} />
+      <Switch
+        name={name}
+        checked={checked}
+        onChange={onChange}
+        sx={{
+          "& .MuiSwitch-switchBase.Mui-checked": {
+            color: palette.gold,
+          },
+          "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+            backgroundColor: palette.gold,
+          },
+        }}
+      />
     </MDBox>
   );
 
@@ -90,58 +140,107 @@ function NotificationSettings() {
     description: PropTypes.string.isRequired,
     checked: PropTypes.bool.isRequired,
     onChange: PropTypes.func.isRequired,
+    icon: PropTypes.string.isRequired,
   };
 
   return (
-    <Card>
-      {/* Header */}
-      <MDBox p={3} sx={{ borderBottom: "1px solid", borderColor: "divider" }}>
-        <MDTypography variant="h5" fontWeight="medium">
-          Notificações
-        </MDTypography>
-        <MDTypography variant="body2" color="text">
-          Escolha como e quando você quer ser notificado.
-        </MDTypography>
-      </MDBox>
-
-      {/* Atividade da conta */}
-      <MDBox {...SECTION_SPACING}>
-        <MDTypography variant="h6" sx={{ mb: 1 }}>
-          Atividade da conta
-        </MDTypography>
-
-        <SettingRow
-          name="newRecipes"
-          label="Novas receitas publicadas"
-          description="Receba um alerta quando uma nova receita for adicionada à plataforma."
-          checked={notifications.newRecipes}
-          onChange={handleToggle}
-        />
-
-        <SettingRow
-          name="comments"
-          label="Comentários em suas receitas"
-          description="Seja notificado quando alguém comentar em uma de suas receitas."
-          checked={notifications.comments}
-          onChange={handleToggle}
-        />
-      </MDBox>
-
-      <Divider />
-
-      {/* Ações */}
-      <MDBox p={3} display="flex" justifyContent="flex-end">
-        <MDButton
-          variant="gradient"
-          color="success"
-          disabled={!isDirty || saving || loading}
-          onClick={handleSave}
-          sx={{ minWidth: 180 }}
+    <MDBox>
+      {/* Header Card */}
+      <Card
+        sx={{
+          borderRadius: 3,
+          border: `1px solid ${alpha(palette.green, 0.15)}`,
+          mb: 3,
+        }}
+      >
+        <MDBox
+          sx={{
+            background: `linear-gradient(135deg, ${palette.green} 0%, ${alpha(
+              palette.green,
+              0.85
+            )} 100%)`,
+            p: 2.5,
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+          }}
         >
-          {saving ? "Salvando..." : "Salvar alterações"}
-        </MDButton>
-      </MDBox>
-    </Card>
+          <MDBox
+            sx={{
+              width: 48,
+              height: 48,
+              borderRadius: 2,
+              backgroundColor: alpha("#fff", 0.2),
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Icon sx={{ fontSize: 28, color: "#fff" }}>notifications</Icon>
+          </MDBox>
+          <MDBox>
+            <MDTypography variant="h6" color="white" fontWeight="bold">
+              Notificações
+            </MDTypography>
+            <MDTypography variant="caption" color="white" sx={{ opacity: 0.9 }}>
+              Escolha como e quando você quer ser notificado
+            </MDTypography>
+          </MDBox>
+        </MDBox>
+
+        <MDBox p={3}>
+          <MDBox sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <SettingRow
+              name="newRecipes"
+              label="Novas Receitas Publicadas"
+              description="Receba um alerta quando uma nova receita for adicionada à plataforma"
+              checked={notifications.newRecipes}
+              onChange={handleToggle}
+              icon="restaurant"
+            />
+
+            <SettingRow
+              name="comments"
+              label="Comentários nas suas Receitas"
+              description="Seja notificado quando alguém comentar em uma de suas receitas"
+              checked={notifications.comments}
+              onChange={handleToggle}
+              icon="comment"
+            />
+          </MDBox>
+        </MDBox>
+
+        <Divider />
+
+        <MDBox p={3} display="flex" justifyContent="space-between" alignItems="center">
+          <MDTypography variant="caption" color="text.secondary">
+            {isDirty ? "Há alterações não salvas" : "Tudo salvo"}
+          </MDTypography>
+          <MDButton
+            variant="gradient"
+            color="dark"
+            disabled={!isDirty || saving || loading}
+            onClick={handleSave}
+            startIcon={<Icon>{saving ? "hourglass_top" : "save"}</Icon>}
+            sx={{
+              minWidth: 180,
+              background: `linear-gradient(135deg, ${palette.gold} 0%, ${alpha(
+                palette.gold,
+                0.8
+              )} 100%)`,
+              "&:hover": {
+                background: `linear-gradient(135deg, ${alpha(palette.gold, 0.9)} 0%, ${alpha(
+                  palette.gold,
+                  0.7
+                )} 100%)`,
+              },
+            }}
+          >
+            {saving ? "Salvando..." : "Salvar Alterações"}
+          </MDButton>
+        </MDBox>
+      </Card>
+    </MDBox>
   );
 }
 

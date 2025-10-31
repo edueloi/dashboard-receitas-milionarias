@@ -13,14 +13,20 @@ import {
 } from "examples/Sidenav/styles/sidenavCollapse";
 import { useMaterialUIController } from "context";
 
-function SidenavCollapse({ icon, name, active, alwaysShowText = true, ...rest }) {
+function SidenavCollapse({ icon, name, active, ...rest }) {
   const [controller] = useMaterialUIController();
-  const { miniSidenav, transparentSidenav, whiteSidenav, darkMode, sidenavColor } = controller;
-
-  const miniForText = alwaysShowText ? false : miniSidenav;
+  const { transparentSidenav, whiteSidenav, darkMode, sidenavColor } = controller;
 
   return (
-    <ListItem component="li" disablePadding sx={{ mb: 0.5 }}>
+    <ListItem
+      component="li"
+      disablePadding
+      sx={{
+        mb: 0.75,
+        display: "flex",
+        width: "100%",
+      }}
+    >
       <MDBox
         role="button"
         tabIndex={0}
@@ -34,21 +40,33 @@ function SidenavCollapse({ icon, name, active, alwaysShowText = true, ...rest })
             darkMode,
             sidenavColor,
           }),
+          display: "flex",
+          alignItems: "center",
+          width: "100%",
           minHeight: { xs: 44, sm: 48 },
           borderRadius: { xs: 10, sm: 12 },
           px: { xs: 1.5, sm: 1 },
           py: { xs: 1, sm: 0 },
+          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
         })}
       >
         <ListItemIcon
           sx={(theme) => ({
             ...collapseIconBox(theme, { transparentSidenav, whiteSidenav, darkMode, active }),
             minWidth: { xs: 36, sm: 40 },
+            justifyContent: "center",
+            display: "flex",
+            alignItems: "center",
+            margin: 0,
           })}
         >
           {typeof icon === "string" ? (
             <Icon
-              sx={(theme) => ({ ...collapseIcon(theme, { active }), fontSize: { xs: 20, sm: 24 } })}
+              sx={(theme) => ({
+                ...collapseIcon(theme, { active }),
+                fontSize: { xs: 20, sm: 24 },
+                transition: "all 0.3s ease",
+              })}
             >
               {icon}
             </Icon>
@@ -61,11 +79,12 @@ function SidenavCollapse({ icon, name, active, alwaysShowText = true, ...rest })
           primary={name}
           sx={(theme) => ({
             ...collapseText(theme, {
-              miniSidenav: miniForText,
+              miniSidenav: false,
               transparentSidenav,
               whiteSidenav,
               active,
             }),
+            margin: 0,
             "& .MuiListItemText-primary": {
               whiteSpace: "nowrap",
               overflow: "hidden",
@@ -85,7 +104,6 @@ SidenavCollapse.propTypes = {
   icon: PropTypes.node.isRequired,
   name: PropTypes.string.isRequired,
   active: PropTypes.bool,
-  alwaysShowText: PropTypes.bool,
 };
 
 export default SidenavCollapse;

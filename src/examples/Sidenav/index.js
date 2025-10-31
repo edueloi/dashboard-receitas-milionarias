@@ -150,19 +150,17 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
       onClose={closeSidenav}
       ownerState={{ transparentSidenav, whiteSidenav, miniSidenav, darkMode, isMobile }}
       ModalProps={{ keepMounted: true }}
-      PaperProps={{
-        sx: {
-          px: isMobile ? 1 : 0,
-        },
-      }}
     >
       {/* Header / logo */}
       <MDBox
         pt={{ xs: 2, sm: 3 }}
-        pb={1}
-        px={{ xs: 2, sm: 3 }}
+        pb={{ xs: 1, sm: 1 }}
+        px={{ xs: 2, sm: 2 }}
         textAlign="center"
         position="relative"
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
       >
         {isMobile && (
           <MDBox
@@ -180,8 +178,10 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              transition: "all 0.2s ease",
               "&:hover": {
                 backgroundColor: "rgba(0,0,0,0.1)",
+                transform: "scale(1.1)",
               },
             }}
           >
@@ -196,7 +196,7 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
           alignItems="center"
           justifyContent="center"
           gap={1}
-          sx={{ textDecoration: "none" }}
+          sx={{ textDecoration: "none", width: "100%" }}
         >
           {brand ? (
             <MDBox
