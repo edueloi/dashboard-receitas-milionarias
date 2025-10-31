@@ -34,19 +34,24 @@ function SidenavCollapse({ icon, name, active, alwaysShowText = true, ...rest })
             darkMode,
             sidenavColor,
           }),
-          minHeight: 48,
-          borderRadius: 12,
-          px: 1, // encosta menos nas bordas
+          minHeight: { xs: 44, sm: 48 },
+          borderRadius: { xs: 10, sm: 12 },
+          px: { xs: 1.5, sm: 1 },
+          py: { xs: 1, sm: 0 },
         })}
       >
         <ListItemIcon
           sx={(theme) => ({
             ...collapseIconBox(theme, { transparentSidenav, whiteSidenav, darkMode, active }),
-            minWidth: 40,
+            minWidth: { xs: 36, sm: 40 },
           })}
         >
           {typeof icon === "string" ? (
-            <Icon sx={(theme) => collapseIcon(theme, { active })}>{icon}</Icon>
+            <Icon
+              sx={(theme) => ({ ...collapseIcon(theme, { active }), fontSize: { xs: 20, sm: 24 } })}
+            >
+              {icon}
+            </Icon>
           ) : (
             icon
           )}
@@ -65,8 +70,9 @@ function SidenavCollapse({ icon, name, active, alwaysShowText = true, ...rest })
               whiteSpace: "nowrap",
               overflow: "hidden",
               textOverflow: "ellipsis",
-              fontSize: 14,
-              lineHeight: 1.2,
+              fontSize: { xs: 13, sm: 14 },
+              lineHeight: { xs: 1.4, sm: 1.2 },
+              fontWeight: active ? 600 : 500,
             },
           })}
         />

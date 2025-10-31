@@ -67,10 +67,15 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
               variant="caption"
               fontWeight="bold"
               textTransform="uppercase"
-              pl={3}
+              pl={{ xs: 2, sm: 3 }}
               mt={2}
               mb={1}
               ml={1}
+              sx={{
+                fontSize: { xs: "0.65rem", sm: "0.75rem" },
+                letterSpacing: { xs: "0.5px", sm: "0.8px" },
+                opacity: 0.7,
+              }}
             >
               {title}
             </MDTypography>
@@ -152,19 +157,35 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
       }}
     >
       {/* Header / logo */}
-      <MDBox pt={3} pb={1} px={3} textAlign="center" position="relative">
+      <MDBox
+        pt={{ xs: 2, sm: 3 }}
+        pb={1}
+        px={{ xs: 2, sm: 3 }}
+        textAlign="center"
+        position="relative"
+      >
         {isMobile && (
           <MDBox
             position="absolute"
-            top={0}
-            right={0}
-            p={1.25}
+            top={8}
+            right={8}
+            p={1}
             onClick={closeSidenav}
-            sx={{ cursor: "pointer" }}
+            sx={{
+              cursor: "pointer",
+              backgroundColor: "rgba(0,0,0,0.05)",
+              borderRadius: "50%",
+              width: 36,
+              height: 36,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              "&:hover": {
+                backgroundColor: "rgba(0,0,0,0.1)",
+              },
+            }}
           >
-            <MDTypography variant="h6" color="secondary">
-              <Icon sx={{ fontWeight: "bold" }}>close</Icon>
-            </MDTypography>
+            <Icon sx={{ fontWeight: "bold", fontSize: 20 }}>close</Icon>
           </MDBox>
         )}
 
@@ -184,8 +205,8 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
               alt="Brand"
               sx={{
                 width: "auto",
-                height: 48,
-                maxHeight: 60,
+                height: { xs: 40, sm: 48 },
+                maxHeight: { xs: 50, sm: 60 },
                 borderRadius: "6px",
                 objectFit: "contain",
               }}
@@ -198,6 +219,7 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
               fontWeight="medium"
               color={textColor}
               noWrap
+              sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}
             >
               {brandName}
             </MDTypography>
@@ -214,12 +236,12 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
 
       <List
         sx={{
-          px: 1.25,
+          px: { xs: 1, sm: 1.25 },
           py: 1,
           overflowY: "auto",
-          height: "calc(100vh - 120px)",
+          height: { xs: "calc(100vh - 100px)", sm: "calc(100vh - 120px)" },
           "&::-webkit-scrollbar": {
-            width: "8px",
+            width: "6px",
           },
           "&::-webkit-scrollbar-track": {
             backgroundColor: "transparent",
@@ -229,7 +251,7 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
             borderRadius: "4px",
           },
           "&::-webkit-scrollbar-thumb:hover": {
-            backgroundColor: "rgba(0, 0, 0, 0.3)",
+            backgroundColor: "rgba(201, 166, 53, 0.8)",
           },
         }}
       >

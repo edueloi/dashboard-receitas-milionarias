@@ -19,25 +19,30 @@ import {
   useMediaQuery,
   useTheme,
   Stack,
+  IconButton,
+  Tooltip,
+  alpha,
+  Box,
 } from "@mui/material";
 
 // MD
 import MDBox from "components/MDBox";
+import MDTypography from "components/MDTypography";
+import MDButton from "components/MDButton";
 import getFullImageUrl from "utils/imageUrlHelper";
 
 // Layout & table
 import PageWrapper from "components/PageWrapper";
 import DataTable from "examples/Tables/DataTable";
+import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatisticsCard";
 
 // Data & components
 import recipesTableData from "./data/recipesTableData";
 import PublicRecipeCard from "./components/PublicRecipeCard";
 
-const colorPalette = {
-  dourado: "#C9A635",
-  verdeEscuro: "#1C3B32",
-  branco: "#FFFFFF",
-  cinza: "#444444",
+const palette = {
+  gold: "#C9A635",
+  green: "#1C3B32",
 };
 
 function useQuery() {
@@ -173,17 +178,50 @@ function TodasAsReceitas() {
         value={view}
         exclusive
         onChange={(_e, v) => v && updatePreference("recipeView", v)}
+        size="small"
+        sx={{
+          "& .MuiToggleButton-root": {
+            borderColor: palette.green,
+            color: palette.green,
+            px: { xs: 1.5, sm: 2 },
+            minWidth: { xs: 40, sm: "auto" },
+            "&.Mui-selected": {
+              backgroundColor: palette.gold,
+              color: "#fff",
+              "&:hover": {
+                backgroundColor: alpha(palette.gold, 0.9),
+              },
+            },
+            "&:hover": {
+              backgroundColor: alpha(palette.green, 0.05),
+            },
+          },
+        }}
       >
         <ToggleButton value="card" aria-label="Cartões">
-          <Icon>grid_view</Icon>
+          <Icon sx={{ fontSize: { xs: 20, sm: 24 } }}>grid_view</Icon>
+          <Box component="span" sx={{ display: { xs: "none", sm: "inline" }, ml: 1 }}>
+            Cartões
+          </Box>
         </ToggleButton>
         <ToggleButton value="table" aria-label="Tabela">
-          <Icon>table_rows</Icon>
+          <Icon sx={{ fontSize: { xs: 20, sm: 24 } }}>table_rows</Icon>
+          <Box component="span" sx={{ display: { xs: "none", sm: "inline" }, ml: 1 }}>
+            Tabela
+          </Box>
         </ToggleButton>
       </ToggleButtonGroup>
     ),
     [view, updatePreference]
   );
+
+  const hasFilters = searchTerm || categoryFilter !== "Todos" || tagsFilter.length > 0;
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setCategoryFilter("Todos");
+    setTagsFilter([]);
+  };
 
   return (
     <PageWrapper
@@ -191,52 +229,172 @@ function TodasAsReceitas() {
       subtitle="Explore e filtre todas as receitas disponíveis."
       actions={headerActions}
     >
+      {/* KPIs */}
+      <Grid container spacing={3} mb={3}>
+        <Grid item xs={12} sm={6} md={4}>
+          <ComplexStatisticsCard
+            color="primary"
+            icon="restaurant_menu"
+            title="Total de Receitas"
+            count={filteredRecipes.length}
+            percentage={{
+              color: "success",
+              amount: "",
+              label: `de ${allRecipes.length} receitas`,
+            }}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <ComplexStatisticsCard
+            icon="category"
+            title="Categorias"
+            count={listaCategorias.length - 1}
+            percentage={{
+              color: "info",
+              amount: "",
+              label: "diferentes categorias",
+            }}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={4}>
+          <ComplexStatisticsCard
+            color="success"
+            icon="label"
+            title="Tags Disponíveis"
+            count={listaTags.length}
+            percentage={{
+              color: "warning",
+              amount: "",
+              label: "para filtrar",
+            }}
+          />
+        </Grid>
+      </Grid>
+
       {/* Filtros */}
-      <Card sx={{ mb: 2 }}>
+      <Card
+        sx={{
+          mb: 3,
+          border: `1px solid ${alpha(palette.green, 0.1)}`,
+          boxShadow: `0 4px 12px ${alpha(palette.green, 0.08)}`,
+        }}
+      >
         <MDBox p={{ xs: 2, md: 3 }}>
-          <Stack
-            direction={{ xs: "column", md: "row" }}
-            spacing={2}
-            alignItems={{ xs: "stretch", md: "center" }}
-            justifyContent="space-between"
-          >
-            <TextField
-              fullWidth
-              label="Buscar pelo nome..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              sx={{ width: { xs: "100%", md: 280 } }}
-            />
+          <Stack spacing={2.5}>
+            {/* Título da seção */}
+            <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
+              <Box display="flex" alignItems="center" gap={1}>
+                <Icon sx={{ color: palette.gold, fontSize: "24px" }}>filter_alt</Icon>
+                <MDTypography variant="h6" fontWeight="medium" color={palette.green}>
+                  Filtros
+                </MDTypography>
+              </Box>
+              {hasFilters && (
+                <Tooltip title="Limpar todos os filtros">
+                  <IconButton
+                    onClick={clearFilters}
+                    size="small"
+                    sx={{
+                      color: palette.gold,
+                      "&:hover": { backgroundColor: alpha(palette.gold, 0.1) },
+                    }}
+                  >
+                    <Icon>clear_all</Icon>
+                  </IconButton>
+                </Tooltip>
+              )}
+            </Box>
 
-            <Autocomplete
-              disablePortal
-              options={listaCategorias}
-              getOptionLabel={(o) => o.nome}
-              value={listaCategorias.find((c) => c.nome === categoryFilter) || null}
-              onChange={(_e, v) => setCategoryFilter(v ? v.nome : "Todos")}
-              sx={{ width: { xs: "100%", md: 240 } }}
-              renderInput={(params) => <TextField {...params} label="Categoria" />}
-            />
+            {/* Linha de filtros */}
+            <Stack
+              direction={{ xs: "column", md: "row" }}
+              spacing={2}
+              alignItems={{ xs: "stretch", md: "center" }}
+            >
+              {/* Busca */}
+              <TextField
+                fullWidth
+                size="small"
+                label="Buscar pelo nome..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                sx={{ width: { xs: "100%", md: 300 } }}
+                InputProps={{
+                  startAdornment: <Icon sx={{ mr: 1, color: palette.green }}>search</Icon>,
+                }}
+              />
 
-            <Autocomplete
-              multiple
-              options={listaTags}
-              getOptionLabel={(o) => o.nome}
-              value={tagsFilter}
-              onChange={(_e, v) => setTagsFilter(v)}
-              sx={{ width: { xs: "100%", md: 360 } }}
-              renderTags={(value, getTagProps) =>
-                value.map((option, index) => (
-                  <Chip
-                    key={option.id}
-                    label={option.nome}
-                    sx={{ backgroundColor: colorPalette.dourado, color: "#fff" }}
-                    {...getTagProps({ index })}
+              {/* Categoria */}
+              <Autocomplete
+                disablePortal
+                size="small"
+                options={listaCategorias}
+                getOptionLabel={(o) => o.nome}
+                value={listaCategorias.find((c) => c.nome === categoryFilter) || null}
+                onChange={(_e, v) => setCategoryFilter(v ? v.nome : "Todos")}
+                sx={{ width: { xs: "100%", md: 240 } }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Categoria"
+                    InputProps={{
+                      ...params.InputProps,
+                      startAdornment: (
+                        <>
+                          <Icon sx={{ ml: 1, mr: 0.5, color: palette.green }}>category</Icon>
+                          {params.InputProps.startAdornment}
+                        </>
+                      ),
+                    }}
                   />
-                ))
-              }
-              renderInput={(params) => <TextField {...params} label="Tags" placeholder="Tags" />}
-            />
+                )}
+              />
+
+              {/* Tags */}
+              <Autocomplete
+                multiple
+                size="small"
+                options={listaTags}
+                getOptionLabel={(o) => o.nome}
+                value={tagsFilter}
+                onChange={(_e, v) => setTagsFilter(v)}
+                sx={{ width: { xs: "100%", md: 300 } }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Tags"
+                    InputProps={{
+                      ...params.InputProps,
+                      startAdornment: (
+                        <>
+                          <Icon sx={{ ml: 1, mr: 0.5, color: palette.green }}>label</Icon>
+                          {params.InputProps.startAdornment}
+                        </>
+                      ),
+                    }}
+                  />
+                )}
+                renderTags={(value, getTagProps) =>
+                  value.map((option, index) => (
+                    <Chip
+                      key={option.id}
+                      label={option.nome}
+                      {...getTagProps({ index })}
+                      size="small"
+                      sx={{
+                        backgroundColor: alpha(palette.gold, 0.1),
+                        color: palette.gold,
+                        fontWeight: 500,
+                        "& .MuiChip-deleteIcon": {
+                          color: palette.gold,
+                          "&:hover": { color: alpha(palette.gold, 0.8) },
+                        },
+                      }}
+                    />
+                  ))
+                }
+              />
+            </Stack>
           </Stack>
         </MDBox>
       </Card>
@@ -244,8 +402,39 @@ function TodasAsReceitas() {
       {/* Lista */}
       {loading ? (
         <MDBox display="flex" justifyContent="center" p={5}>
-          <CircularProgress sx={{ color: colorPalette.dourado }} />
+          <CircularProgress sx={{ color: palette.gold }} />
         </MDBox>
+      ) : filteredRecipes.length === 0 ? (
+        <Card
+          sx={{
+            p: 5,
+            textAlign: "center",
+            border: `1px solid ${alpha(palette.green, 0.1)}`,
+          }}
+        >
+          <Icon sx={{ fontSize: 64, color: alpha(palette.green, 0.3), mb: 2 }}>
+            restaurant_menu
+          </Icon>
+          <MDTypography variant="h5" color={palette.green} fontWeight="medium" mb={1}>
+            {hasFilters ? "Nenhuma receita encontrada" : "Nenhuma receita disponível"}
+          </MDTypography>
+          <MDTypography variant="body2" color="text.secondary">
+            {hasFilters
+              ? "Tente ajustar os filtros para encontrar mais receitas."
+              : "As receitas aparecerão aqui quando forem publicadas."}
+          </MDTypography>
+          {hasFilters && (
+            <MDButton
+              variant="gradient"
+              color="info"
+              onClick={clearFilters}
+              sx={{ mt: 2 }}
+              startIcon={<Icon>clear_all</Icon>}
+            >
+              Limpar Filtros
+            </MDButton>
+          )}
+        </Card>
       ) : view === "table" ? (
         <Card>
           <DataTable

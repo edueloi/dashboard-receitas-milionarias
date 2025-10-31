@@ -5,7 +5,7 @@ export default styled(Drawer)(({ theme, ownerState }) => {
   const { palette, boxShadows, transitions, breakpoints, functions, zIndex } = theme;
   const { transparentSidenav, whiteSidenav, miniSidenav, darkMode, isMobile } = ownerState;
 
-  const sidebarWidth = 250;
+  const sidebarWidth = isMobile ? 280 : 250;
   const { transparent, white, background, secondary } = palette;
   const { xxl } = boxShadows;
   const { pxToRem } = functions;
@@ -60,11 +60,14 @@ export default styled(Drawer)(({ theme, ownerState }) => {
   // mobile (temporary): papel do Drawer ganha blur e zIndex alto
   const mobilePaper = isMobile
     ? {
-        backdropFilter: "saturate(180%) blur(6px)",
-        WebkitBackdropFilter: "saturate(180%) blur(6px)",
+        backdropFilter: "saturate(180%) blur(8px)",
+        WebkitBackdropFilter: "saturate(180%) blur(8px)",
         background: backgroundValue,
         width: sidebarWidth,
         zIndex: zIndex.drawer + 2,
+        borderTopRightRadius: "16px",
+        borderBottomRightRadius: "16px",
+        boxShadow: "0 10px 40px rgba(0,0,0,0.2)",
       }
     : {};
 
