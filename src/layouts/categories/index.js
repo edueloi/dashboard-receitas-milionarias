@@ -21,6 +21,7 @@ import {
   Skeleton,
   alpha,
   IconButton,
+  Autocomplete,
 } from "@mui/material";
 
 // Material Dashboard 2 React components
@@ -62,7 +63,7 @@ const modalStyle = {
 function Categories() {
   const { uiPermissions } = useAuth();
   const { preferences, updatePreference } = useUserPreferences();
-  const [tabValue, setTabValue] = useState(0);
+  const [tabValue, setTabValue] = useState(preferences.categoriesTab || 0);
   const view = preferences.recipeView;
 
   const [categories, setCategories] = useState([]);
@@ -71,10 +72,35 @@ function Categories() {
   const [filteredCategories, setFilteredCategories] = useState([]);
   const [filteredTags, setFilteredTags] = useState([]);
 
-  const [categorySearch, setCategorySearch] = useState("");
-  const [tagSearch, setTagSearch] = useState("");
+  const [categorySearch, setCategorySearch] = useState(preferences.categorySearch || "");
+  const [tagSearch, setTagSearch] = useState(preferences.tagSearch || "");
+  const [categorySortOrder, setCategorySortOrder] = useState(
+    preferences.categorySortOrder || "recentes"
+  );
+  const [tagSortOrder, setTagSortOrder] = useState(preferences.tagSortOrder || "recentes");
 
   const [loading, setLoading] = useState(true);
+
+  // Salvar preferências quando mudarem
+  useEffect(() => {
+    updatePreference("categoriesTab", tabValue);
+  }, [tabValue]);
+
+  useEffect(() => {
+    updatePreference("categorySearch", categorySearch);
+  }, [categorySearch]);
+
+  useEffect(() => {
+    updatePreference("tagSearch", tagSearch);
+  }, [tagSearch]);
+
+  useEffect(() => {
+    updatePreference("categorySortOrder", categorySortOrder);
+  }, [categorySortOrder]);
+
+  useEffect(() => {
+    updatePreference("tagSortOrder", tagSortOrder);
+  }, [tagSortOrder]);
 
   // State for create/edit modal
   const [modalOpen, setModalOpen] = useState(false);
@@ -161,18 +187,40 @@ function Categories() {
   );
 
   useEffect(() => {
-    const filtered = categories.filter((cat) =>
+    let filtered = categories.filter((cat) =>
       cat.nome.toLowerCase().includes(categorySearch.toLowerCase())
     );
+
+    // Ordenação
+    if (categorySortOrder === "alfabetica-az") {
+      filtered = [...filtered].sort((a, b) => a.nome.localeCompare(b.nome));
+    } else if (categorySortOrder === "alfabetica-za") {
+      filtered = [...filtered].sort((a, b) => b.nome.localeCompare(a.nome));
+    } else {
+      // recentes (padrão - por ID decrescente)
+      filtered = [...filtered].sort((a, b) => b.id - a.id);
+    }
+
     setFilteredCategories(filtered);
     if (categorySearch) debouncedSavePreference("categorySearch", categorySearch);
-  }, [categorySearch, categories, debouncedSavePreference]);
+  }, [categorySearch, categorySortOrder, categories, debouncedSavePreference]);
 
   useEffect(() => {
-    const filtered = tags.filter((tag) => tag.nome.toLowerCase().includes(tagSearch.toLowerCase()));
+    let filtered = tags.filter((tag) => tag.nome.toLowerCase().includes(tagSearch.toLowerCase()));
+
+    // Ordenação
+    if (tagSortOrder === "alfabetica-az") {
+      filtered = [...filtered].sort((a, b) => a.nome.localeCompare(b.nome));
+    } else if (tagSortOrder === "alfabetica-za") {
+      filtered = [...filtered].sort((a, b) => b.nome.localeCompare(a.nome));
+    } else {
+      // recentes (padrão - por ID decrescente)
+      filtered = [...filtered].sort((a, b) => b.id - a.id);
+    }
+
     setFilteredTags(filtered);
     if (tagSearch) debouncedSavePreference("tagSearch", tagSearch);
-  }, [tagSearch, tags, debouncedSavePreference]);
+  }, [tagSearch, tagSortOrder, tags, debouncedSavePreference]);
 
   const handleCreateOrUpdateItem = async () => {
     const isCategory = modalType === "category";
@@ -388,17 +436,57 @@ function Categories() {
                 alignItems="center"
                 mb={3}
               >
-                <TextField
-                  label="Buscar Categoria"
-                  variant="outlined"
-                  size="small"
-                  value={categorySearch}
-                  onChange={(e) => setCategorySearch(e.target.value)}
-                  sx={{ width: { xs: "100%", sm: 280 } }}
-                  InputProps={{
-                    startAdornment: <Icon sx={{ mr: 1, color: palette.green }}>search</Icon>,
-                  }}
-                />
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={2}
+                  sx={{ width: { xs: "100%", sm: "auto" } }}
+                >
+                  <TextField
+                    label="Buscar Categoria"
+                    variant="outlined"
+                    size="small"
+                    value={categorySearch}
+                    onChange={(e) => setCategorySearch(e.target.value)}
+                    sx={{ width: { xs: "100%", sm: 250 } }}
+                    InputProps={{
+                      startAdornment: <Icon sx={{ mr: 1, color: palette.green }}>search</Icon>,
+                    }}
+                  />
+                  <Autocomplete
+                    disablePortal
+                    size="small"
+                    options={[
+                      { value: "recentes", label: "Mais Recentes" },
+                      { value: "alfabetica-az", label: "A → Z" },
+                      { value: "alfabetica-za", label: "Z → A" },
+                    ]}
+                    getOptionLabel={(o) => o.label}
+                    value={
+                      [
+                        { value: "recentes", label: "Mais Recentes" },
+                        { value: "alfabetica-az", label: "A → Z" },
+                        { value: "alfabetica-za", label: "Z → A" },
+                      ].find((o) => o.value === categorySortOrder) || null
+                    }
+                    onChange={(_e, v) => setCategorySortOrder(v ? v.value : "recentes")}
+                    sx={{ width: { xs: "100%", sm: 180 } }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Ordenar"
+                        InputProps={{
+                          ...params.InputProps,
+                          startAdornment: (
+                            <>
+                              <Icon sx={{ ml: 1, mr: 0.5, color: palette.green }}>sort</Icon>
+                              {params.InputProps.startAdornment}
+                            </>
+                          ),
+                        }}
+                      />
+                    )}
+                  />
+                </Stack>
                 <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
                   <ToggleButtonGroup
                     value={view}
@@ -547,17 +635,53 @@ function Categories() {
                 alignItems="center"
                 mb={3}
               >
-                <TextField
-                  label="Buscar Tag"
-                  variant="outlined"
-                  size="small"
-                  value={tagSearch}
-                  onChange={(e) => setTagSearch(e.target.value)}
-                  sx={{ width: { xs: "100%", sm: 280 } }}
-                  InputProps={{
-                    startAdornment: <Icon sx={{ mr: 1, color: palette.green }}>search</Icon>,
-                  }}
-                />
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={2}
+                  sx={{ width: { xs: "100%", sm: "auto" } }}
+                >
+                  <TextField
+                    label="Buscar Tag"
+                    variant="outlined"
+                    size="small"
+                    value={tagSearch}
+                    onChange={(e) => setTagSearch(e.target.value)}
+                    sx={{ width: { xs: "100%", sm: 280 } }}
+                    InputProps={{
+                      startAdornment: <Icon sx={{ mr: 1, color: palette.green }}>search</Icon>,
+                    }}
+                  />
+                  <Autocomplete
+                    size="small"
+                    value={tagSortOrder}
+                    onChange={(event, newValue) => {
+                      setTagSortOrder(newValue || "recentes");
+                    }}
+                    options={[
+                      { value: "recentes", label: "Mais Recentes" },
+                      { value: "alfabetica-az", label: "A → Z" },
+                      { value: "alfabetica-za", label: "Z → A" },
+                    ]}
+                    getOptionLabel={(option) => option.label || ""}
+                    isOptionEqualToValue={(option, value) => option.value === value.value}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Ordenar"
+                        InputProps={{
+                          ...params.InputProps,
+                          startAdornment: (
+                            <>
+                              <Icon sx={{ ml: 1, mr: -0.5, color: palette.green }}>sort</Icon>
+                              {params.InputProps.startAdornment}
+                            </>
+                          ),
+                        }}
+                      />
+                    )}
+                    sx={{ width: { xs: "100%", sm: 180 } }}
+                  />
+                </Stack>
                 {isAdmin && (
                   <MDButton
                     variant="gradient"
@@ -608,17 +732,18 @@ function Categories() {
                   </MDTypography>
                 </MDBox>
               ) : (
-                <MDBox display="flex" flexWrap="wrap" gap={2}>
+                <Grid container spacing={2}>
                   {filteredTags.map((tag) => (
-                    <TagCard
-                      tag={tag}
-                      key={tag.id}
-                      isAdmin={isAdmin}
-                      onEdit={() => handleModalOpen("tag", tag)}
-                      onDelete={handleDeleteTag}
-                    />
+                    <Grid item xs={12} sm={6} md={4} lg={3} key={tag.id}>
+                      <TagCard
+                        tag={tag}
+                        isAdmin={isAdmin}
+                        onEdit={() => handleModalOpen("tag", tag)}
+                        onDelete={handleDeleteTag}
+                      />
+                    </Grid>
                   ))}
-                </MDBox>
+                </Grid>
               )}
             </MDBox>
           )}

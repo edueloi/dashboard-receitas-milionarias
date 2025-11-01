@@ -76,16 +76,40 @@ function MinhasReceitas() {
   const [listaTags, setListaTags] = useState([]);
   const [loading, setLoading] = useState(true);
   const view = preferences.recipeView;
-  const [tab, setTab] = useState(0);
+  const [tab, setTab] = useState(preferences.minhasReceitasTab || 0);
 
-  // filtros
-  const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("Todos");
-  const [tagsFilter, setTagsFilter] = useState([]);
+  // filtros - inicializar com valores salvos no userPreferences
+  const [searchTerm, setSearchTerm] = useState(preferences.minhasReceitasSearch || "");
+  const [categoryFilter, setCategoryFilter] = useState(
+    preferences.minhasReceitasCategory || "Todos"
+  );
+  const [tagsFilter, setTagsFilter] = useState(preferences.minhasReceitasTags || []);
+  const [sortOrder, setSortOrder] = useState(preferences.minhasReceitasSort || "recentes");
 
   // modal delete
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [recipeToDelete, setRecipeToDelete] = useState(null);
+
+  // Salvar filtros no userPreferences quando mudarem
+  useEffect(() => {
+    updatePreference("minhasReceitasSearch", searchTerm);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    updatePreference("minhasReceitasCategory", categoryFilter);
+  }, [categoryFilter]);
+
+  useEffect(() => {
+    updatePreference("minhasReceitasTags", tagsFilter);
+  }, [tagsFilter]);
+
+  useEffect(() => {
+    updatePreference("minhasReceitasSort", sortOrder);
+  }, [sortOrder]);
+
+  useEffect(() => {
+    updatePreference("minhasReceitasTab", tab);
+  }, [tab]);
 
   // fetch
   useEffect(() => {
@@ -147,8 +171,18 @@ function MinhasReceitas() {
       list = list.filter((r) => r.tags?.some((t) => names.includes(t.nome)));
     }
 
+    // Ordenação
+    if (sortOrder === "alfabetica-az") {
+      list = [...list].sort((a, b) => a.titulo.localeCompare(b.titulo));
+    } else if (sortOrder === "alfabetica-za") {
+      list = [...list].sort((a, b) => b.titulo.localeCompare(a.titulo));
+    } else {
+      // recentes (padrão - por ID decrescente)
+      list = [...list].sort((a, b) => b.id - a.id);
+    }
+
     setFilteredRecipes(list);
-  }, [searchTerm, categoryFilter, tagsFilter, allUserRecipes]);
+  }, [searchTerm, categoryFilter, tagsFilter, sortOrder, allUserRecipes]);
 
   const mapRecipeData = (recipe) => {
     const imageUrl = getFullImageUrl(recipe.imagem_url) || "/static/images/default-recipe.jpg";
@@ -465,6 +499,47 @@ function MinhasReceitas() {
                       startAdornment: (
                         <>
                           <Icon sx={{ mr: 1, color: "text.secondary" }}>label</Icon>
+                          {params.InputProps.startAdornment}
+                        </>
+                      ),
+                    }}
+                  />
+                )}
+              />
+
+              {/* Ordenação */}
+              <Autocomplete
+                disablePortal
+                size="small"
+                options={[
+                  { value: "recentes", label: "Mais Recentes" },
+                  { value: "alfabetica-az", label: "A → Z" },
+                  { value: "alfabetica-za", label: "Z → A" },
+                ]}
+                getOptionLabel={(o) => o.label}
+                value={
+                  [
+                    { value: "recentes", label: "Mais Recentes" },
+                    { value: "alfabetica-az", label: "A → Z" },
+                    { value: "alfabetica-za", label: "Z → A" },
+                  ].find((o) => o.value === sortOrder) || null
+                }
+                onChange={(_e, v) => setSortOrder(v ? v.value : "recentes")}
+                sx={{
+                  width: { xs: "100%", md: 220 },
+                  "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                    borderColor: palette.green,
+                  },
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Ordenar"
+                    InputProps={{
+                      ...params.InputProps,
+                      startAdornment: (
+                        <>
+                          <Icon sx={{ mr: 1, color: "text.secondary" }}>sort</Icon>
                           {params.InputProps.startAdornment}
                         </>
                       ),

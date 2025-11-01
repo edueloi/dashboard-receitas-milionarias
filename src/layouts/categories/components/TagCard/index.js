@@ -2,11 +2,12 @@ import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 
 // @mui material components
-import Chip from "@mui/material/Chip";
+import Card from "@mui/material/Card";
 import Icon from "@mui/material/Icon";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import MDBox from "components/MDBox";
+import MDTypography from "components/MDTypography";
 import { alpha } from "@mui/material/styles";
 
 const palette = {
@@ -18,100 +19,134 @@ function TagCard({ tag, isAdmin, onEdit, onDelete }) {
   const { id, nome } = tag;
 
   return (
-    <MDBox
+    <Card
       sx={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 0.5,
         position: "relative",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        p: { xs: 1.5, md: 2 },
+        borderRadius: "16px",
+        border: `2px solid ${alpha(palette.green, 0.15)}`,
+        backgroundColor: alpha(palette.green, 0.02),
+        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+        cursor: "pointer",
+        overflow: "visible",
+        "&:hover": {
+          borderColor: palette.gold,
+          backgroundColor: alpha(palette.gold, 0.04),
+          transform: "translateY(-4px)",
+          boxShadow: `0 8px 24px ${alpha(palette.gold, 0.2)}`,
+        },
       }}
     >
       <Link
         to={`/todas-as-receitas?tag=${encodeURIComponent(nome)}`}
-        style={{ textDecoration: "none" }}
+        style={{
+          textDecoration: "none",
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          flex: 1,
+        }}
       >
-        <Chip
-          label={nome}
-          icon={<Icon sx={{ fontSize: "18px !important", color: palette.gold }}>label</Icon>}
-          variant="outlined"
+        <MDBox
           sx={{
-            cursor: "pointer",
-            fontSize: { xs: "0.8125rem", md: "0.875rem" },
-            fontWeight: 600,
-            px: 1,
-            py: 2.5,
-            height: "auto",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: { xs: 36, md: 40 },
+            height: { xs: 36, md: 40 },
             borderRadius: "12px",
-            borderColor: alpha(palette.green, 0.3),
-            color: palette.green,
-            backgroundColor: alpha(palette.green, 0.03),
-            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-            "& .MuiChip-label": {
-              px: 1,
-            },
-            "& .MuiChip-icon": {
-              ml: 1,
-            },
-            "&:hover": {
-              backgroundColor: palette.gold,
-              borderColor: palette.gold,
-              color: "#fff",
-              transform: "translateY(-2px) scale(1.02)",
-              boxShadow: `0 4px 12px ${alpha(palette.gold, 0.3)}`,
-              "& .MuiChip-icon": {
-                color: "#fff",
-              },
+            backgroundColor: alpha(palette.gold, 0.1),
+            border: `1px solid ${alpha(palette.gold, 0.3)}`,
+            transition: "all 0.3s ease",
+            "& .MuiIcon-root": {
+              transition: "all 0.3s ease",
             },
           }}
-        />
+        >
+          <Icon sx={{ fontSize: { xs: 20, md: 22 }, color: palette.gold }}>label</Icon>
+        </MDBox>
+
+        <MDTypography
+          variant="button"
+          fontWeight="bold"
+          sx={{
+            color: palette.green,
+            fontSize: { xs: "0.875rem", md: "0.9375rem" },
+            transition: "color 0.3s ease",
+          }}
+        >
+          {nome}
+        </MDTypography>
       </Link>
 
       {isAdmin && (
-        <MDBox sx={{ display: "flex", gap: 0.5, ml: 0.5 }}>
-          <Tooltip title="Editar tag" arrow>
+        <MDBox
+          sx={{
+            display: "flex",
+            gap: 0.75,
+            ml: 2,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Tooltip title="Editar tag" arrow placement="top">
             <IconButton
               size="small"
-              onClick={() => onEdit(tag)}
+              onClick={(e) => {
+                e.preventDefault();
+                onEdit(tag);
+              }}
               sx={{
-                width: 28,
-                height: 28,
+                width: { xs: 34, md: 36 },
+                height: { xs: 34, md: 36 },
                 color: palette.green,
                 backgroundColor: alpha(palette.green, 0.08),
+                border: `1px solid ${alpha(palette.green, 0.2)}`,
                 transition: "all 0.2s ease",
                 "&:hover": {
                   backgroundColor: palette.gold,
+                  borderColor: palette.gold,
                   color: "#fff",
-                  transform: "scale(1.1)",
+                  transform: "scale(1.1) rotate(5deg)",
+                  boxShadow: `0 4px 12px ${alpha(palette.gold, 0.3)}`,
                 },
               }}
             >
-              <Icon sx={{ fontSize: 16 }}>edit</Icon>
+              <Icon sx={{ fontSize: { xs: 18, md: 19 } }}>edit</Icon>
             </IconButton>
           </Tooltip>
 
-          <Tooltip title="Excluir tag" arrow>
+          <Tooltip title="Excluir tag" arrow placement="top">
             <IconButton
               size="small"
-              onClick={() => onDelete(tag)}
+              onClick={(e) => {
+                e.preventDefault();
+                onDelete(tag);
+              }}
               sx={{
-                width: 28,
-                height: 28,
+                width: { xs: 34, md: 36 },
+                height: { xs: 34, md: 36 },
                 color: "#d32f2f",
                 backgroundColor: alpha("#d32f2f", 0.08),
+                border: `1px solid ${alpha("#d32f2f", 0.2)}`,
                 transition: "all 0.2s ease",
                 "&:hover": {
                   backgroundColor: "#d32f2f",
+                  borderColor: "#d32f2f",
                   color: "#fff",
-                  transform: "scale(1.1)",
+                  transform: "scale(1.1) rotate(-5deg)",
+                  boxShadow: `0 4px 12px ${alpha("#d32f2f", 0.3)}`,
                 },
               }}
             >
-              <Icon sx={{ fontSize: 16 }}>delete</Icon>
+              <Icon sx={{ fontSize: { xs: 18, md: 19 } }}>delete</Icon>
             </IconButton>
           </Tooltip>
         </MDBox>
       )}
-    </MDBox>
+    </Card>
   );
 }
 

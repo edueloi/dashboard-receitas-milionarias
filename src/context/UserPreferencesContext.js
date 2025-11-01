@@ -23,14 +23,27 @@ export const UserPreferencesProvider = ({ children }) => {
   const [preferences, setPreferences] = useState(initialPreferences);
   const [loading, setLoading] = useState(true);
 
-  const parseBool = (v) => {
+  const parseValue = (v) => {
+    // Tenta parsear JSON primeiro (para arrays e objetos)
+    if (typeof v === "string") {
+      const trimmed = v.trim();
+      if (
+        (trimmed.startsWith("{") && trimmed.endsWith("}")) ||
+        (trimmed.startsWith("[") && trimmed.endsWith("]"))
+      ) {
+        try {
+          return JSON.parse(trimmed);
+        } catch {
+          // Se falhar, continua para outras conversões
+        }
+      }
+      // Tenta converter booleanos
+      const lower = trimmed.toLowerCase();
+      if (lower === "true" || lower === "1") return true;
+      if (lower === "false" || lower === "0") return false;
+    }
     if (typeof v === "boolean") return v;
     if (typeof v === "number") return v === 1;
-    if (typeof v === "string") {
-      const s = v.toLowerCase().trim();
-      if (s === "true" || s === "1") return true;
-      if (s === "false" || s === "0") return false;
-    }
     return v;
   };
 
@@ -42,14 +55,14 @@ export const UserPreferencesProvider = ({ children }) => {
       if (Array.isArray(response.data)) {
         const prefsObject = response.data.reduce((acc, pref) => {
           const key = pref.preferencia_chave;
-          const value = parseBool(pref.preferencia_valor);
+          const value = parseValue(pref.preferencia_valor);
           acc[key] = value;
           return acc;
         }, {});
         setPreferences((prev) => ({ ...prev, ...prefsObject }));
       } else if (response.data && typeof response.data === "object") {
         const normalized = Object.fromEntries(
-          Object.entries(response.data).map(([k, v]) => [k, parseBool(v)])
+          Object.entries(response.data).map(([k, v]) => [k, parseValue(v)])
         );
         setPreferences((prev) => ({ ...prev, ...normalized }));
       }
@@ -79,16 +92,23 @@ export const UserPreferencesProvider = ({ children }) => {
     });
 
     try {
+      // Converter arrays e objetos para JSON string antes de enviar
+      let valueToSend = value;
+      if (typeof value === "object" && value !== null) {
+        valueToSend = JSON.stringify(value);
+      }
+
       // retorne a promise para quem chamou (Promise.all)
       return await api.post("/users/me/preferences", {
         preferencia_chave: key,
-        preferencia_valor: value,
+        preferencia_valor: valueToSend,
       });
     } catch (error) {
       console.error(`Erro ao atualizar a preferência '${key}':`, error);
       // rollback funcional
       setPreferences((prev) => ({ ...prev, [key]: previousValue }));
-      throw error;
+      // Não lance o erro para evitar travamento
+      // throw error;
     }
   };
 
