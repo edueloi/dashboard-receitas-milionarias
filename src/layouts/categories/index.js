@@ -66,7 +66,7 @@ const modalStyle = {
 function Categories() {
   const { uiPermissions } = useAuth();
   const { preferences, updatePreference } = useUserPreferences();
-  const [tabValue, setTabValue] = useState(preferences.categoriesTab || 0);
+  const [tabValue, setTabValue] = useState(0); // Sempre inicia em Categorias (tab 0)
   const view = preferences.recipeView;
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -91,26 +91,29 @@ function Categories() {
 
   const [loading, setLoading] = useState(true);
 
-  // Salvar preferências quando mudarem
+  // Sincronizar tabValue quando preferences.categoriesTab mudar (só se existir preferência)
   useEffect(() => {
-    updatePreference("categoriesTab", tabValue);
-  }, [tabValue]);
+    if (preferences.categoriesTab !== undefined && preferences.categoriesTab !== null) {
+      setTabValue(preferences.categoriesTab);
+    }
+  }, [preferences.categoriesTab]);
 
+  // Salvar preferências quando mudarem (exceto categoriesTab que é salvo no handleTabChange)
   useEffect(() => {
     updatePreference("categorySearch", categorySearch);
-  }, [categorySearch]);
+  }, [categorySearch, updatePreference]);
 
   useEffect(() => {
     updatePreference("tagSearch", tagSearch);
-  }, [tagSearch]);
+  }, [tagSearch, updatePreference]);
 
   useEffect(() => {
     updatePreference("categorySortOrder", categorySortOrder);
-  }, [categorySortOrder]);
+  }, [categorySortOrder, updatePreference]);
 
   useEffect(() => {
     updatePreference("tagSortOrder", tagSortOrder);
-  }, [tagSortOrder]);
+  }, [tagSortOrder, updatePreference]);
 
   // State for create/edit modal
   const [modalOpen, setModalOpen] = useState(false);
@@ -129,6 +132,7 @@ function Categories() {
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
+    updatePreference("categoriesTab", newValue);
   };
 
   const handleViewChange = (event, newView) => {
