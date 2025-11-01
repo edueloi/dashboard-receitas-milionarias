@@ -61,8 +61,8 @@ function NotificationDropdown() {
   const fetchNotifications = async (showLoading = true) => {
     if (showLoading) setLoading(true);
     try {
-      // Buscar apenas não lidas por padrão
-      const response = await api.get("/api/notifications?limit=20&unreadOnly=false");
+      // Buscar apenas não lidas
+      const response = await api.get("/api/notifications?limit=20&unreadOnly=true");
       setNotifications(response.data.notifications);
       setUnreadCount(response.data.unreadCount);
     } catch (error) {

@@ -1,9 +1,8 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import api from "services/api";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
 import { useUserPreferences } from "../../context/UserPreferencesContext";
-import { debounce } from "lodash";
 
 // @mui material components
 import Card from "@mui/material/Card";
@@ -66,7 +65,7 @@ const modalStyle = {
 function Categories() {
   const { uiPermissions } = useAuth();
   const { preferences, updatePreference } = useUserPreferences();
-  const [tabValue, setTabValue] = useState(0); // Sempre inicia em Categorias (tab 0)
+  const [tabValue, setTabValue] = useState(0);
   const view = preferences.recipeView;
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -82,38 +81,12 @@ function Categories() {
   const [tagPage, setTagPage] = useState(1);
   const itemsPerPage = 12;
 
-  const [categorySearch, setCategorySearch] = useState(preferences.categorySearch || "");
-  const [tagSearch, setTagSearch] = useState(preferences.tagSearch || "");
-  const [categorySortOrder, setCategorySortOrder] = useState(
-    preferences.categorySortOrder || "recentes"
-  );
-  const [tagSortOrder, setTagSortOrder] = useState(preferences.tagSortOrder || "recentes");
+  const [categorySearch, setCategorySearch] = useState("");
+  const [tagSearch, setTagSearch] = useState("");
+  const [categorySortOrder, setCategorySortOrder] = useState("recentes");
+  const [tagSortOrder, setTagSortOrder] = useState("recentes");
 
   const [loading, setLoading] = useState(true);
-
-  // Sincronizar tabValue quando preferences.categoriesTab mudar (só se existir preferência)
-  useEffect(() => {
-    if (preferences.categoriesTab !== undefined && preferences.categoriesTab !== null) {
-      setTabValue(preferences.categoriesTab);
-    }
-  }, [preferences.categoriesTab]);
-
-  // Salvar preferências quando mudarem (exceto categoriesTab que é salvo no handleTabChange)
-  useEffect(() => {
-    updatePreference("categorySearch", categorySearch);
-  }, [categorySearch, updatePreference]);
-
-  useEffect(() => {
-    updatePreference("tagSearch", tagSearch);
-  }, [tagSearch, updatePreference]);
-
-  useEffect(() => {
-    updatePreference("categorySortOrder", categorySortOrder);
-  }, [categorySortOrder, updatePreference]);
-
-  useEffect(() => {
-    updatePreference("tagSortOrder", tagSortOrder);
-  }, [tagSortOrder, updatePreference]);
 
   // State for create/edit modal
   const [modalOpen, setModalOpen] = useState(false);
@@ -132,7 +105,6 @@ function Categories() {
 
   const handleTabChange = (event, newValue) => {
     setTabValue(newValue);
-    updatePreference("categoriesTab", newValue);
   };
 
   const handleViewChange = (event, newView) => {
@@ -193,13 +165,6 @@ function Categories() {
     fetchAndSetData();
   }, []);
 
-  const debouncedSavePreference = useCallback(
-    debounce((key, value) => {
-      api.post("/users/me/preferences", { preferencia_chave: key, preferencia_valor: value });
-    }, 500),
-    []
-  );
-
   useEffect(() => {
     let filtered = categories.filter((cat) =>
       cat.nome.toLowerCase().includes(categorySearch.toLowerCase())
@@ -217,8 +182,7 @@ function Categories() {
 
     setFilteredCategories(filtered);
     setCategoryPage(1); // Reset to page 1 on filter change
-    if (categorySearch) debouncedSavePreference("categorySearch", categorySearch);
-  }, [categorySearch, categorySortOrder, categories, debouncedSavePreference]);
+  }, [categorySearch, categorySortOrder, categories]);
 
   useEffect(() => {
     let filtered = tags.filter((tag) => tag.nome.toLowerCase().includes(tagSearch.toLowerCase()));
@@ -235,8 +199,7 @@ function Categories() {
 
     setFilteredTags(filtered);
     setTagPage(1); // Reset to page 1 on filter change
-    if (tagSearch) debouncedSavePreference("tagSearch", tagSearch);
-  }, [tagSearch, tagSortOrder, tags, debouncedSavePreference]);
+  }, [tagSearch, tagSortOrder, tags]);
 
   // Paginated data
   const paginatedCategories = useMemo(() => {

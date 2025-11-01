@@ -24,7 +24,6 @@ import {
   useMediaQuery,
   useTheme,
   IconButton,
-  Tooltip,
   Pagination,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
@@ -79,13 +78,11 @@ function MinhasReceitas() {
   const view = preferences.recipeView;
   const [tab, setTab] = useState(preferences.minhasReceitasTab || 0);
 
-  // filtros - inicializar com valores salvos no userPreferences
-  const [searchTerm, setSearchTerm] = useState(preferences.minhasReceitasSearch || "");
-  const [categoryFilter, setCategoryFilter] = useState(
-    preferences.minhasReceitasCategory || "Todos"
-  );
-  const [tagsFilter, setTagsFilter] = useState(preferences.minhasReceitasTags || []);
-  const [sortOrder, setSortOrder] = useState(preferences.minhasReceitasSort || "recentes");
+  // filtros
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("Todos");
+  const [tagsFilter, setTagsFilter] = useState([]);
+  const [sortOrder, setSortOrder] = useState("recentes");
 
   // Paginação para card view
   const [page, setPage] = useState(1);
@@ -94,27 +91,6 @@ function MinhasReceitas() {
   // modal delete
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [recipeToDelete, setRecipeToDelete] = useState(null);
-
-  // Salvar filtros no userPreferences quando mudarem
-  useEffect(() => {
-    updatePreference("minhasReceitasSearch", searchTerm);
-  }, [searchTerm]);
-
-  useEffect(() => {
-    updatePreference("minhasReceitasCategory", categoryFilter);
-  }, [categoryFilter]);
-
-  useEffect(() => {
-    updatePreference("minhasReceitasTags", tagsFilter);
-  }, [tagsFilter]);
-
-  useEffect(() => {
-    updatePreference("minhasReceitasSort", sortOrder);
-  }, [sortOrder]);
-
-  useEffect(() => {
-    updatePreference("minhasReceitasTab", tab);
-  }, [tab]);
 
   // fetch
   useEffect(() => {
@@ -457,10 +433,15 @@ function MinhasReceitas() {
 
               <Autocomplete
                 disablePortal
+                disableClearable
                 options={listaCategorias}
                 getOptionLabel={(o) => o.nome}
                 value={listaCategorias.find((c) => c.nome === categoryFilter) || null}
-                onChange={(_e, v) => setCategoryFilter(v ? v.nome : "Todos")}
+                onChange={(_e, v) => {
+                  if (v) {
+                    setCategoryFilter(v.nome);
+                  }
+                }}
                 size="small"
                 fullWidth
                 sx={{
@@ -570,24 +551,22 @@ function MinhasReceitas() {
               />
 
               {(searchTerm || categoryFilter !== "Todos" || tagsFilter.length > 0) && (
-                <Tooltip title="Limpar filtros">
-                  <IconButton
-                    onClick={() => {
-                      setSearchTerm("");
-                      setCategoryFilter("Todos");
-                      setTagsFilter([]);
-                    }}
-                    sx={{
-                      color: palette.gold,
-                      border: `1px solid ${alpha(palette.gold, 0.3)}`,
-                      "&:hover": {
-                        backgroundColor: alpha(palette.gold, 0.1),
-                      },
-                    }}
-                  >
-                    <Icon>clear_all</Icon>
-                  </IconButton>
-                </Tooltip>
+                <IconButton
+                  onClick={() => {
+                    setSearchTerm("");
+                    setCategoryFilter("Todos");
+                    setTagsFilter([]);
+                  }}
+                  sx={{
+                    color: palette.gold,
+                    border: `1px solid ${alpha(palette.gold, 0.3)}`,
+                    "&:hover": {
+                      backgroundColor: alpha(palette.gold, 0.1),
+                    },
+                  }}
+                >
+                  <Icon>clear_all</Icon>
+                </IconButton>
               )}
             </Stack>
 

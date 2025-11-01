@@ -1,5 +1,5 @@
 import PropTypes from "prop-types";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 // @mui material components
 import Card from "@mui/material/Card";
@@ -17,9 +17,23 @@ const palette = {
 
 function TagCard({ tag, isAdmin, onEdit, onDelete }) {
   const { id, nome } = tag;
+  const navigate = useNavigate();
+
+  const goToList = () => navigate(`/todas-as-receitas?tag=${encodeURIComponent(nome)}`);
+
+  const onCardKeyDown = (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      goToList();
+    }
+  };
 
   return (
     <Card
+      role="button"
+      tabIndex={0}
+      onClick={goToList}
+      onKeyDown={onCardKeyDown}
       sx={{
         position: "relative",
         display: "flex",
@@ -40,10 +54,8 @@ function TagCard({ tag, isAdmin, onEdit, onDelete }) {
         },
       }}
     >
-      <Link
-        to={`/todas-as-receitas?tag=${encodeURIComponent(nome)}`}
-        style={{
-          textDecoration: "none",
+      <MDBox
+        sx={{
           display: "flex",
           alignItems: "center",
           gap: "12px",
@@ -80,7 +92,7 @@ function TagCard({ tag, isAdmin, onEdit, onDelete }) {
         >
           {nome}
         </MDTypography>
-      </Link>
+      </MDBox>
 
       {isAdmin && (
         <MDBox

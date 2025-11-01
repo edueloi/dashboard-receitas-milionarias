@@ -47,15 +47,11 @@ const palette = {
   green: "#1C3B32",
 };
 
-function useQuery() {
-  return new URLSearchParams(useLocation().search);
-}
-
 function TodasAsReceitas() {
   const { uiPermissions } = useAuth();
   const { preferences, updatePreference } = useUserPreferences();
   const navigate = useNavigate();
-  const query = useQuery();
+  const location = useLocation();
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -67,36 +63,17 @@ function TodasAsReceitas() {
   const [loading, setLoading] = useState(true);
   const view = preferences.recipeView;
 
-  // filtros - inicializar com valores salvos no userPreferences
-  const [searchTerm, setSearchTerm] = useState(preferences.todasReceitasSearch || "");
-  const [categoryFilter, setCategoryFilter] = useState(
-    preferences.todasReceitasCategory || "Todos"
-  );
-  const [tagsFilter, setTagsFilter] = useState(preferences.todasReceitasTags || []);
-  const [sortOrder, setSortOrder] = useState(preferences.todasReceitasSort || "recentes");
+  // filtros
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("Todos");
+  const [tagsFilter, setTagsFilter] = useState([]);
+  const [sortOrder, setSortOrder] = useState("recentes");
 
   // Paginação para card view
   const [page, setPage] = useState(1);
   const itemsPerPage = 12;
 
   const isAdmin = uiPermissions.includes("admin");
-
-  // Salvar filtros no userPreferences quando mudarem
-  useEffect(() => {
-    updatePreference("todasReceitasSearch", searchTerm);
-  }, [searchTerm]);
-
-  useEffect(() => {
-    updatePreference("todasReceitasCategory", categoryFilter);
-  }, [categoryFilter]);
-
-  useEffect(() => {
-    updatePreference("todasReceitasTags", tagsFilter);
-  }, [tagsFilter]);
-
-  useEffect(() => {
-    updatePreference("todasReceitasSort", sortOrder);
-  }, [sortOrder]);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -122,17 +99,15 @@ function TodasAsReceitas() {
         setListaCategorias([{ id: "Todos", nome: "Todos" }, ...categoriesRes.data]);
         setListaTags(tagsRes.data);
 
-        // filtros via URL (só aplica se não houver preferência salva)
-        const categoryFromUrl = query.get("category");
-        if (categoryFromUrl && !preferences.todasReceitasCategory) {
+        // Aplicar filtros via URL (sempre tem prioridade sobre preferências)
+        const params = new URLSearchParams(location.search);
+        const categoryFromUrl = params.get("category");
+        if (categoryFromUrl) {
           setCategoryFilter(decodeURIComponent(categoryFromUrl));
         }
 
-        const tagFromUrl = query.get("tag");
-        if (
-          tagFromUrl &&
-          (!preferences.todasReceitasTags || preferences.todasReceitasTags.length === 0)
-        ) {
+        const tagFromUrl = params.get("tag");
+        if (tagFromUrl) {
           const found = tagsRes.data.find((t) => t.nome === decodeURIComponent(tagFromUrl));
           if (found) setTagsFilter([found]);
         }
@@ -144,7 +119,7 @@ function TodasAsReceitas() {
       }
     };
     fetchInitialData();
-  }, []); // mount only
+  }, [location.search]); // Reagir a mudanças nos parâmetros da URL
 
   useEffect(() => {
     let filtered = allRecipes;
@@ -388,7 +363,13 @@ function TodasAsReceitas() {
                 options={listaCategorias}
                 getOptionLabel={(o) => o.nome}
                 value={listaCategorias.find((c) => c.nome === categoryFilter) || null}
-                onChange={(_e, v) => setCategoryFilter(v ? v.nome : "Todos")}
+                onChange={(_e, v) => {
+                  if (v) {
+                    setCategoryFilter(v.nome);
+                  } else {
+                    setCategoryFilter("Todos");
+                  }
+                }}
                 sx={{ width: { xs: "100%", md: 240 } }}
                 renderInput={(params) => (
                   <TextField

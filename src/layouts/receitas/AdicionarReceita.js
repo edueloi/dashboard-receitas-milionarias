@@ -15,6 +15,9 @@ import Stepper from "@mui/material/Stepper";
 import Step from "@mui/material/Step";
 import StepLabel from "@mui/material/StepLabel";
 import Divider from "@mui/material/Divider";
+import Modal from "@mui/material/Modal";
+import Box from "@mui/material/Box";
+import TextField from "@mui/material/TextField";
 import { alpha } from "@mui/material/styles";
 
 // Material Dashboard 2 React components
@@ -30,6 +33,18 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 
 const palette = { gold: "#C9A635", green: "#1C3B32" };
 
+const modalStyle = {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  width: 440,
+  bgcolor: "background.paper",
+  borderRadius: 2,
+  boxShadow: 24,
+  p: 3,
+};
+
 const steps = ["Informações Básicas", "Ingredientes", "Modo de Preparo", "Finalizar"];
 
 function AdicionarReceita() {
@@ -38,6 +53,13 @@ function AdicionarReceita() {
   const [listaTags, setListaTags] = useState([]);
   const [imagem, setImagem] = useState(null);
   const [activeStep, setActiveStep] = useState(0);
+
+  // modais de criar categoria/tag
+  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+  const [tagModalOpen, setTagModalOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryDescription, setNewCategoryDescription] = useState("");
+  const [newTagName, setNewTagName] = useState("");
 
   // Refs para autofocus
   const lastIngredientRefs = useRef({});
@@ -71,6 +93,60 @@ function AdicionarReceita() {
     };
     fetchData();
   }, []);
+
+  // Funções para criar categoria
+  const handleCreateCategory = async () => {
+    if (!newCategoryName.trim()) {
+      toast.error("Nome da categoria é obrigatório");
+      return;
+    }
+
+    try {
+      await api.post("/categories", {
+        nome: newCategoryName.trim(),
+        descricao: newCategoryDescription.trim(),
+      });
+      toast.success("Categoria criada com sucesso!");
+
+      // Atualizar lista de categorias
+      const { data } = await api.get("/categories");
+      setListaCategorias(data);
+
+      // Limpar e fechar modal
+      setNewCategoryName("");
+      setNewCategoryDescription("");
+      setCategoryModalOpen(false);
+    } catch (error) {
+      console.error("Erro ao criar categoria:", error);
+      toast.error(error.response?.data?.message || "Erro ao criar categoria");
+    }
+  };
+
+  // Funções para criar tag
+  const handleCreateTag = async () => {
+    if (!newTagName.trim()) {
+      toast.error("Nome da tag é obrigatório");
+      return;
+    }
+
+    try {
+      await api.post("/tags", {
+        nome: newTagName.trim(),
+      });
+      toast.success("Tag criada com sucesso!");
+
+      // Atualizar lista de tags
+      const { data } = await api.get("/tags");
+      setListaTags(data);
+
+      // Limpar e fechar modal
+      setNewTagName("");
+      setTagModalOpen(false);
+    } catch (error) {
+      console.error("Erro ao criar tag:", error);
+      toast.error(error.response?.data?.message || "Erro ao criar tag");
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -282,23 +358,61 @@ function AdicionarReceita() {
                     Compartilhe suas receitas com a comunidade
                   </MDTypography>
                 </MDBox>
-                <MDButton
-                  variant="contained"
-                  onClick={() => navigate("/receitas")}
-                  startIcon={<Icon>arrow_back</Icon>}
-                  sx={{
-                    background: "white",
-                    color: palette.green,
-                    width: { xs: "100%", sm: "auto" },
-                    fontSize: { xs: "0.75rem", sm: "0.875rem" },
-                    padding: { xs: "6px 12px", sm: "8px 22px" },
-                    "&:hover": {
-                      background: alpha("#fff", 0.9),
-                    },
-                  }}
-                >
-                  Voltar
-                </MDButton>
+                <MDBox display="flex" gap={1} flexDirection={{ xs: "column", sm: "row" }}>
+                  <MDButton
+                    variant="contained"
+                    onClick={() => navigate("/receitas")}
+                    startIcon={<Icon>arrow_back</Icon>}
+                    sx={{
+                      background: "white",
+                      color: palette.green,
+                      fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                      padding: { xs: "6px 12px", sm: "8px 22px" },
+                      "&:hover": {
+                        background: alpha("#fff", 0.9),
+                      },
+                    }}
+                  >
+                    Voltar
+                  </MDButton>
+
+                  {/* Botões de criar categoria/tag */}
+                  <MDButton
+                    variant="outlined"
+                    onClick={() => setCategoryModalOpen(true)}
+                    startIcon={<Icon>category</Icon>}
+                    sx={{
+                      color: "white",
+                      borderColor: "rgba(255,255,255,0.5)",
+                      fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                      padding: { xs: "6px 12px", sm: "8px 22px" },
+                      "&:hover": {
+                        borderColor: "white",
+                        backgroundColor: "rgba(255,255,255,0.1)",
+                      },
+                    }}
+                  >
+                    Nova Categoria
+                  </MDButton>
+
+                  <MDButton
+                    variant="outlined"
+                    onClick={() => setTagModalOpen(true)}
+                    startIcon={<Icon>label</Icon>}
+                    sx={{
+                      color: "white",
+                      borderColor: "rgba(255,255,255,0.5)",
+                      fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                      padding: { xs: "6px 12px", sm: "8px 22px" },
+                      "&:hover": {
+                        borderColor: "white",
+                        backgroundColor: "rgba(255,255,255,0.1)",
+                      },
+                    }}
+                  >
+                    Nova Tag
+                  </MDButton>
+                </MDBox>
               </MDBox>
             </Card>
           </Grid>
@@ -1065,6 +1179,147 @@ function AdicionarReceita() {
           </Grid>
         </Grid>
       </MDBox>
+
+      {/* Modal de criar categoria */}
+      <Modal open={categoryModalOpen} onClose={() => setCategoryModalOpen(false)}>
+        <Box sx={modalStyle}>
+          <MDTypography
+            variant="h6"
+            fontWeight="bold"
+            mb={2}
+            sx={{ fontSize: { xs: "1rem", sm: "1.125rem" } }}
+          >
+            Criar Categoria
+          </MDTypography>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Nome"
+            type="text"
+            fullWidth
+            variant="outlined"
+            size="small"
+            value={newCategoryName}
+            onChange={(e) => setNewCategoryName(e.target.value)}
+          />
+          <TextField
+            margin="dense"
+            label="Descrição (opcional)"
+            type="text"
+            fullWidth
+            size="small"
+            variant="outlined"
+            multiline
+            rows={3}
+            value={newCategoryDescription}
+            onChange={(e) => setNewCategoryDescription(e.target.value)}
+          />
+          <MDBox display="flex" justifyContent="flex-end" gap={1.5} mt={3}>
+            <MDButton
+              variant="outlined"
+              color="dark"
+              onClick={() => {
+                setCategoryModalOpen(false);
+                setNewCategoryName("");
+                setNewCategoryDescription("");
+              }}
+              sx={{
+                fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                px: { xs: 2, sm: 2.5 },
+                py: { xs: 0.6, sm: 0.75 },
+                color: (theme) => theme.palette.text.secondary,
+                borderColor: "divider",
+                "&:hover": {
+                  borderColor: (theme) => theme.palette.text.secondary,
+                  backgroundColor: alpha("#000", 0.04),
+                },
+              }}
+            >
+              Cancelar
+            </MDButton>
+            <MDButton
+              variant="contained"
+              onClick={handleCreateCategory}
+              sx={{
+                fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                px: { xs: 2, sm: 2.5 },
+                py: { xs: 0.6, sm: 0.75 },
+                backgroundColor: palette.gold,
+                color: "#fff !important",
+                "&:hover": {
+                  backgroundColor: alpha(palette.gold, 0.9),
+                },
+              }}
+            >
+              Criar
+            </MDButton>
+          </MDBox>
+        </Box>
+      </Modal>
+
+      {/* Modal de criar tag */}
+      <Modal open={tagModalOpen} onClose={() => setTagModalOpen(false)}>
+        <Box sx={modalStyle}>
+          <MDTypography
+            variant="h6"
+            fontWeight="bold"
+            mb={2}
+            sx={{ fontSize: { xs: "1rem", sm: "1.125rem" } }}
+          >
+            Criar Tag
+          </MDTypography>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Nome"
+            type="text"
+            fullWidth
+            variant="outlined"
+            size="small"
+            value={newTagName}
+            onChange={(e) => setNewTagName(e.target.value)}
+          />
+          <MDBox display="flex" justifyContent="flex-end" gap={1.5} mt={3}>
+            <MDButton
+              variant="outlined"
+              color="dark"
+              onClick={() => {
+                setTagModalOpen(false);
+                setNewTagName("");
+              }}
+              sx={{
+                fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                px: { xs: 2, sm: 2.5 },
+                py: { xs: 0.6, sm: 0.75 },
+                color: (theme) => theme.palette.text.secondary,
+                borderColor: "divider",
+                "&:hover": {
+                  borderColor: (theme) => theme.palette.text.secondary,
+                  backgroundColor: alpha("#000", 0.04),
+                },
+              }}
+            >
+              Cancelar
+            </MDButton>
+            <MDButton
+              variant="contained"
+              onClick={handleCreateTag}
+              sx={{
+                fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                px: { xs: 2, sm: 2.5 },
+                py: { xs: 0.6, sm: 0.75 },
+                backgroundColor: palette.gold,
+                color: "#fff !important",
+                "&:hover": {
+                  backgroundColor: alpha(palette.gold, 0.9),
+                },
+              }}
+            >
+              Criar
+            </MDButton>
+          </MDBox>
+        </Box>
+      </Modal>
     </DashboardLayout>
   );
 }
