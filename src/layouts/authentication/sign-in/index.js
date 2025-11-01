@@ -244,9 +244,9 @@ function SignInSplit() {
                     variant="button"
                     fontWeight="regular"
                     onClick={handleSetRememberMe}
-                    sx={{ cursor: "pointer", userSelect: "none" }}
+                    sx={{ cursor: "pointer", userSelect: "none", ml: 1 }}
                   >
-                    &nbsp;&nbsp;Lembrar de mim
+                    Lembrar-me
                   </MDTypography>
                 </MDBox>
 
