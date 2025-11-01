@@ -96,6 +96,54 @@ function ImageUpload({ onImageChange, onImageDelete, initialImage = null }) {
     setPreview(initialImage);
   }, [initialImage]);
 
+  // Adicionar event listener para Ctrl+V (colar imagem)
+  useEffect(() => {
+    const handlePaste = (e) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      // Procurar por imagens no clipboard
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type.indexOf("image") !== -1) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          if (file) {
+            // Validar tamanho
+            const MAX_SIZE_MB = 5;
+            if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+              toast.error(`A imagem não pode ter mais de ${MAX_SIZE_MB}MB.`);
+              return;
+            }
+
+            setLoading(true);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              setPreview(reader.result);
+              onImageChange(file);
+              setLoading(false);
+              toast.success("Imagem colada com sucesso!");
+            };
+            reader.onerror = () => {
+              setLoading(false);
+              toast.error("Erro ao carregar a imagem.");
+            };
+            reader.readAsDataURL(file);
+          }
+          break;
+        }
+      }
+    };
+
+    // Adicionar listener ao documento
+    document.addEventListener("paste", handlePaste);
+
+    // Cleanup
+    return () => {
+      document.removeEventListener("paste", handlePaste);
+    };
+  }, [onImageChange]);
+
   const handleFileChange = useCallback(
     (event) => {
       const file = event.target.files[0];
@@ -258,6 +306,15 @@ function ImageUpload({ onImageChange, onImageDelete, initialImage = null }) {
         </Typography>
         <Typography variant="body2" color="text.secondary" mb={2}>
           ou clique para selecionar do seu dispositivo
+        </Typography>
+        <Typography
+          variant="body2"
+          color={palette.gold}
+          fontWeight={600}
+          mb={2}
+          sx={{ fontSize: { xs: "0.8125rem", md: "0.875rem" } }}
+        >
+          💡 Dica: Use Ctrl+V para colar uma imagem da área de transferência
         </Typography>
         <Box
           sx={{
