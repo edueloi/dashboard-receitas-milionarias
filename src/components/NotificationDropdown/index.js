@@ -224,7 +224,7 @@ function NotificationDropdown() {
             <Icon sx={{ fontSize: 48, color: alpha(palette.green, 0.3), mb: 1 }}>
               notifications_off
             </Icon>
-            <MDTypography variant="body2" color="text.secondary">
+            <MDTypography variant="body2" color="text">
               Nenhuma notificação
             </MDTypography>
           </MDBox>
@@ -298,7 +298,7 @@ function NotificationDropdown() {
                           <>
                             <MDTypography
                               variant="caption"
-                              color="text.secondary"
+                              color="text"
                               sx={{
                                 display: "block",
                                 fontSize: "0.75rem",

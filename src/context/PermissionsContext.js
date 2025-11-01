@@ -25,10 +25,7 @@ export const PermissionsProvider = ({ children }) => {
 
   useEffect(() => {
     const fetchPermissions = async () => {
-      console.log("🔄 PermissionsContext - Iniciando fetch", { isAuthenticated, user });
-
       if (!isAuthenticated || !user) {
-        console.log("⏭️ Usuário não autenticado - pulando fetch");
         setPermissions({});
         setLoading(false);
         return;
@@ -38,16 +35,7 @@ export const PermissionsProvider = ({ children }) => {
       const roleId = user.role || user.id_permissao;
       const roleName = user.permissao || ROLE_MAP[roleId];
 
-      console.log("👤 Role detectada:", {
-        roleId,
-        roleName,
-        userRole: user.role,
-        userIdPermissao: user.id_permissao,
-        userPermissao: user.permissao,
-      });
-
       if (!roleId && !roleName) {
-        console.error("❌ Role não encontrada no usuário");
         setPermissions({});
         setLoading(false);
         return;
@@ -55,7 +43,6 @@ export const PermissionsProvider = ({ children }) => {
 
       // Admin tem acesso a tudo - sem precisar buscar do banco
       if (roleName === "admin") {
-        console.log("✅ Admin detectado - acesso total concedido (sem consulta ao backend)");
         setPermissions({
           dashboard: true,
           "todas-as-receitas": true,
@@ -73,13 +60,11 @@ export const PermissionsProvider = ({ children }) => {
       }
 
       // Para outros usuários, busca permissões do backend
-      console.log(`🔍 Buscando permissões do backend para role: ${roleName}`);
       setLoading(true);
       try {
         const response = await api.get(`/permissions/${roleName}`);
         setPermissions(response.data);
       } catch (error) {
-        console.error("Erro ao carregar permissões:", error);
         // Em caso de erro, define permissões básicas
         setPermissions({
           dashboard: true,
@@ -110,22 +95,16 @@ export const PermissionsProvider = ({ children }) => {
   const filterRoutes = (routes) => {
     // Se não está autenticado, retorna as rotas como estão (para login/signup)
     if (!isAuthenticated || !user) {
-      console.log("⚠️ filterRoutes: usuário não autenticado");
       return routes;
     }
 
     const roleId = user.role || user.id_permissao;
     const roleName = user.permissao || ROLE_MAP[roleId];
 
-    console.log("🔍 filterRoutes - roleId:", roleId, "roleName:", roleName, "tipo:", typeof roleId);
-
     // Admin vê todas as rotas (verifica por número E por nome)
     if (roleId === 1 || roleId === "1" || roleName === "admin") {
-      console.log("🔓 Admin - todas as rotas liberadas");
       return routes;
     }
-
-    console.log("🔒 Filtrando rotas para role:", roleName, "(role_id:", roleId, ")");
 
     return routes.filter((route) => {
       // Sempre mostra logout, dividers e títulos
@@ -136,17 +115,12 @@ export const PermissionsProvider = ({ children }) => {
       // Rotas SEM type="collapse" são rotas internas (detalhes, edição, etc)
       // Essas não devem ser bloqueadas pelo sistema de permissões
       if (!route.type || route.type !== "collapse") {
-        console.log(`✅ Rota interna permitida: ${route.key || route.route}`);
         return true;
       }
 
       // Verifica permissão baseada na chave da rota (apenas para rotas no menu)
       const hasAccess = hasPermission(route.key);
-      if (!hasAccess && route.key) {
-        console.log(`❌ Rota do menu bloqueada: ${route.key}`);
-      } else if (hasAccess) {
-        console.log(`✅ Rota do menu permitida: ${route.key}`);
-      }
+
       return hasAccess;
     });
   };

@@ -52,16 +52,12 @@ function PrivateRoute({ children, routeKey }) {
 
   // Se for uma rota interna, não verifica permissão (deixa o backend verificar se necessário)
   if (routeKey && internalRoutes.includes(routeKey)) {
-    console.log(
-      `🔓 PrivateRoute: Rota interna "${routeKey}" permitida sem verificação de permissão`
-    );
     return children;
   }
 
   // Verifica permissão apenas para rotas do menu (collapse)
   // Profile sempre é permitido
   if (routeKey && routeKey !== "profile" && !hasPermission(routeKey)) {
-    console.log(`❌ PrivateRoute: Acesso negado à rota "${routeKey}"`);
     return <Navigate to="/dashboard" replace />;
   }
 

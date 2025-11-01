@@ -38,16 +38,6 @@ function AppContent() {
   // Filtra as rotas usando o contexto de permissões
   const filteredRoutes = filterRoutes ? filterRoutes(routes) : routes;
 
-  console.log("🔍 App Debug:", {
-    authLoading,
-    permissionsLoading,
-    loading,
-    isAuthenticated,
-    routesCount: filteredRoutes?.length || 0,
-    totalRoutes: routes?.length || 0,
-    filteredRoutesKeys: filteredRoutes?.map((r) => r.key).filter(Boolean) || [],
-  });
-
   useEffect(() => {
     const urlParams = new URLSearchParams(search);
     const affiliateId = urlParams.get("ref");

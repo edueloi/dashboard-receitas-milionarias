@@ -358,7 +358,7 @@ function Categories() {
               "& .MuiTab-root": {
                 fontSize: { xs: "0.85rem", md: "0.9rem" },
                 fontWeight: 600,
-                color: "text.secondary",
+                color: (theme) => theme.palette.text.secondary,
                 minHeight: { xs: 42, md: 48 },
                 "&.Mui-selected": {
                   color: palette.gold,
@@ -600,7 +600,10 @@ function Categories() {
                   <Icon sx={{ fontSize: 64, color: alpha(palette.green, 0.3), mb: 2 }}>
                     label_off
                   </Icon>
-                  <MDTypography variant="h6" sx={{ color: "text.secondary" }}>
+                  <MDTypography
+                    variant="h6"
+                    sx={{ color: (theme) => theme.palette.text.secondary }}
+                  >
                     Nenhuma tag encontrada
                   </MDTypography>
                 </MDBox>
@@ -665,14 +668,18 @@ function Categories() {
                   variant="caption"
                   mb={1}
                   display="block"
-                  sx={{ color: "text.secondary" }}
+                  sx={{ color: (theme) => theme.palette.text.secondary }}
                 >
                   Imagem da Categoria
                 </MDTypography>
                 <ImageUpload
                   onImageChange={handleImageChange}
                   onImageDelete={handleImageDelete}
-                  initialImage={editingItem ? getFullImageUrl(editingItem.image) : null}
+                  initialImage={
+                    editingItem
+                      ? getFullImageUrl(editingItem.imagem_url || editingItem.image)
+                      : null
+                  }
                 />
               </MDBox>
             </>
@@ -686,10 +693,10 @@ function Categories() {
                 fontSize: { xs: "0.75rem", sm: "0.875rem" },
                 px: { xs: 2, sm: 2.5 },
                 py: { xs: 0.6, sm: 0.75 },
-                color: "text.secondary",
+                color: (theme) => theme.palette.text.secondary,
                 borderColor: "divider",
                 "&:hover": {
-                  borderColor: "text.secondary",
+                  borderColor: (theme) => theme.palette.text.secondary,
                   backgroundColor: alpha("#000", 0.04),
                 },
               }}
@@ -729,7 +736,7 @@ function Categories() {
           </MDTypography>
           <MDTypography
             variant="body2"
-            color="text.secondary"
+            color="text"
             sx={{ fontSize: { xs: "0.8125rem", sm: "0.875rem" } }}
           >
             Tem certeza que deseja excluir &quot;<strong>{itemToDelete?.name}</strong>&quot;? Esta
@@ -744,10 +751,10 @@ function Categories() {
                 fontSize: { xs: "0.75rem", sm: "0.875rem" },
                 px: { xs: 2, sm: 2.5 },
                 py: { xs: 0.6, sm: 0.75 },
-                color: "text.secondary",
+                color: (theme) => theme.palette.text.secondary,
                 borderColor: "divider",
                 "&:hover": {
-                  borderColor: "text.secondary",
+                  borderColor: (theme) => theme.palette.text.secondary,
                   backgroundColor: alpha("#000", 0.04),
                 },
               }}

@@ -6,22 +6,38 @@ import toast from "react-hot-toast";
 // @mui material components
 import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
-import { CircularProgress, TextField, Box, Divider } from "@mui/material";
+import {
+  CircularProgress,
+  Box,
+  Divider,
+  alpha,
+  Icon,
+  IconButton,
+  Tooltip,
+  Paper,
+  useMediaQuery,
+  useTheme,
+} from "@mui/material";
 
 // Material Dashboard 2 React components
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDButton from "components/MDButton";
 import MDInput from "components/MDInput";
+import ImageUpload from "components/ImageUpload";
+import getFullImageUrl from "utils/imageUrlHelper";
 
 // Material Dashboard 2 React example components
-import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
-import DashboardNavbar from "examples/Navbars/DashboardNavbar";
+import PageWrapper from "components/PageWrapper";
+
+const palette = { gold: "#C9A635", green: "#1C3B32" };
 
 function EditarCategoria() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { state } = useLocation();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
@@ -32,21 +48,27 @@ function EditarCategoria() {
   useEffect(() => {
     if (state?.category) {
       const { category } = state;
-      setName(category.name);
-      setDescription(category.description || "");
-      setPreviewImage(category.image);
+      setName(category.name || category.nome);
+      setDescription(category.description || category.descricao || "");
+      // Usa o helper para garantir que a URL da imagem está completa
+      const imageUrl = getFullImageUrl(category.image || category.imagem_url);
+      setPreviewImage(imageUrl);
     } else {
       toast.error("Dados da categoria não encontrados. Redirecionando...");
       navigate("/categories");
     }
   }, [state, navigate]);
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
+  const handleImageChange = (file) => {
+    setImage(file);
     if (file) {
-      setImage(file);
       setPreviewImage(URL.createObjectURL(file));
     }
+  };
+
+  const handleImageDelete = () => {
+    setImage(null);
+    setPreviewImage(null);
   };
 
   const handleSubmit = async (e) => {
@@ -76,92 +98,172 @@ function EditarCategoria() {
 
   if (!state?.category) {
     return (
-      <DashboardLayout>
-        <DashboardNavbar />
-        <MDBox display="flex" justifyContent="center" alignItems="center" mt={10}>
-          <CircularProgress />
+      <PageWrapper title="Editar Categoria">
+        <MDBox display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
+          <CircularProgress sx={{ color: palette.gold }} />
         </MDBox>
-      </DashboardLayout>
+      </PageWrapper>
     );
   }
 
   return (
-    <DashboardLayout>
-      <DashboardNavbar />
-      <MDBox pt={6} pb={3}>
-        <Card>
-          <MDBox
-            variant="gradient"
-            bgColor="success"
-            borderRadius="lg"
-            coloredShadow="success"
-            mx={2}
-            mt={-3}
-            p={3}
-            mb={1}
-            textAlign="center"
-          >
-            <MDTypography variant="h4" fontWeight="medium" color="white">
+    <PageWrapper title="Editar Categoria">
+      <MDBox mb={3}>
+        <Grid container spacing={3} alignItems="center">
+          <Grid item xs={12} md={6}>
+            <MDTypography variant="h4" fontWeight="bold" color="dark">
               Editar Categoria
             </MDTypography>
-          </MDBox>
-          <MDBox pt={4} pb={3} px={3}>
-            <Box component="form" role="form" onSubmit={handleSubmit}>
-              <Grid container spacing={3}>
-                <Grid item xs={12} md={5}>
-                  <MDTypography variant="h6" fontWeight="medium">
-                    Imagem da Categoria
-                  </MDTypography>
-                  <MDBox mt={1} mb={2} display="flex" justifyContent="center">
-                    <img
-                      src={previewImage || "/static/images/placeholder.jpg"}
-                      alt="Pré-visualização"
-                      style={{ width: "100%", borderRadius: "12px", objectFit: "cover" }}
-                    />
-                  </MDBox>
-                  <MDInput type="file" fullWidth onChange={handleImageChange} />
-                </Grid>
-                <Grid item xs={12} md={7}>
-                  <MDBox mb={2}>
-                    <TextField
-                      label="Nome da Categoria"
-                      fullWidth
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                    />
-                  </MDBox>
-                  <MDBox mb={2}>
-                    <TextField
-                      label="Descrição"
-                      fullWidth
-                      multiline
-                      rows={8}
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                    />
-                  </MDBox>
-                </Grid>
-              </Grid>
-              <Divider sx={{ my: 3 }} />
-              <MDBox display="flex" justifyContent="flex-end">
-                <MDButton
-                  variant="outlined"
-                  color="secondary"
-                  sx={{ mr: 1 }}
-                  onClick={() => navigate("/categories")}
-                >
-                  Cancelar
-                </MDButton>
-                <MDButton variant="gradient" color="success" type="submit" disabled={loading}>
-                  {loading ? <CircularProgress size={20} color="inherit" /> : "Salvar Alterações"}
-                </MDButton>
-              </MDBox>
-            </Box>
-          </MDBox>
-        </Card>
+            <MDTypography variant="body2" color="text" mt={0.5}>
+              Atualize as informações da categoria {state?.category?.name || state?.category?.nome}
+            </MDTypography>
+          </Grid>
+          <Grid item xs={12} md={6} textAlign="right">
+            <MDButton
+              variant="outlined"
+              color="dark"
+              startIcon={<Icon>arrow_back</Icon>}
+              onClick={() => navigate("/categories")}
+            >
+              Voltar
+            </MDButton>
+          </Grid>
+        </Grid>
       </MDBox>
-    </DashboardLayout>
+
+      <Card
+        sx={{
+          backdropFilter: "saturate(200%) blur(30px)",
+          backgroundColor: ({ functions: { rgba }, palette: { white } }) => rgba(white.main, 0.8),
+          boxShadow: ({ boxShadows: { navbarBoxShadow } }) => navbarBoxShadow,
+        }}
+      >
+        <Box component="form" role="form" onSubmit={handleSubmit}>
+          <MDBox p={3}>
+            <Grid container spacing={3}>
+              {/* Seção de Imagem */}
+              <Grid item xs={12} md={5}>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2,
+                    borderRadius: 3,
+                    border: "2px dashed",
+                    borderColor: palette.gold,
+                    backgroundColor: (theme) => alpha(palette.gold, 0.05),
+                  }}
+                >
+                  <MDBox mb={2}>
+                    <MDTypography variant="h6" fontWeight="medium" color="dark">
+                      <Icon sx={{ verticalAlign: "middle", mr: 1 }}>image</Icon>
+                      Imagem da Categoria
+                    </MDTypography>
+                    <MDTypography variant="caption" color="text">
+                      Escolha uma imagem representativa (recomendado: 800x600px)
+                    </MDTypography>
+                  </MDBox>
+
+                  <ImageUpload
+                    initialImage={previewImage}
+                    onImageChange={handleImageChange}
+                    onImageDelete={handleImageDelete}
+                  />
+                </Paper>
+              </Grid>
+
+              {/* Seção de Informações */}
+              <Grid item xs={12} md={7}>
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 3,
+                    borderRadius: 3,
+                    backgroundColor: (theme) => alpha(palette.green, 0.02),
+                    border: "1px solid",
+                    borderColor: (theme) => alpha(palette.green, 0.1),
+                  }}
+                >
+                  <MDBox mb={3}>
+                    <MDTypography variant="h6" fontWeight="medium" color="dark" mb={2}>
+                      <Icon sx={{ verticalAlign: "middle", mr: 1 }}>info</Icon>
+                      Informações Básicas
+                    </MDTypography>
+
+                    <MDBox mb={3}>
+                      <MDInput
+                        type="text"
+                        label="Nome da Categoria"
+                        fullWidth
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                        InputProps={{
+                          startAdornment: <Icon sx={{ mr: 1, color: palette.gold }}>category</Icon>,
+                        }}
+                      />
+                    </MDBox>
+
+                    <MDBox>
+                      <MDInput
+                        label="Descrição"
+                        fullWidth
+                        multiline
+                        rows={6}
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                      />
+                      <MDTypography variant="caption" color="text" mt={0.5}>
+                        Descreva brevemente o tipo de receitas desta categoria
+                      </MDTypography>
+                    </MDBox>
+                  </MDBox>
+
+                  <Divider sx={{ my: 2 }} />
+
+                  <MDBox
+                    display="flex"
+                    flexDirection={{ xs: "column", sm: "row" }}
+                    gap={2}
+                    justifyContent="flex-end"
+                  >
+                    <MDButton
+                      variant="outlined"
+                      color="dark"
+                      onClick={() => navigate("/categories")}
+                      fullWidth={isMobile}
+                    >
+                      Cancelar
+                    </MDButton>
+                    <MDButton
+                      variant="gradient"
+                      color="success"
+                      type="submit"
+                      disabled={loading}
+                      fullWidth={isMobile}
+                      sx={{
+                        background: `linear-gradient(195deg, ${palette.gold} 0%, ${palette.green} 100%)`,
+                        "&:hover": {
+                          background: `linear-gradient(195deg, ${palette.green} 0%, ${palette.gold} 100%)`,
+                        },
+                      }}
+                    >
+                      {loading ? (
+                        <CircularProgress size={20} sx={{ color: "white" }} />
+                      ) : (
+                        <>
+                          <Icon sx={{ mr: 1 }}>save</Icon>
+                          Salvar Alterações
+                        </>
+                      )}
+                    </MDButton>
+                  </MDBox>
+                </Paper>
+              </Grid>
+            </Grid>
+          </MDBox>
+        </Box>
+      </Card>
+    </PageWrapper>
   );
 }
 
