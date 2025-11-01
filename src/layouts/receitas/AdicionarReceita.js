@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "services/api";
 import toast from "react-hot-toast";
@@ -38,6 +38,10 @@ function AdicionarReceita() {
   const [listaTags, setListaTags] = useState([]);
   const [imagem, setImagem] = useState(null);
   const [activeStep, setActiveStep] = useState(0);
+
+  // Refs para autofocus
+  const lastIngredientRefs = useRef({});
+  const lastInstructionRef = useRef(null);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -105,6 +109,15 @@ function AdicionarReceita() {
     const newIngredients = [...formData.ingredients];
     newIngredients[groupIndex].items.push({ itemText: "" });
     setFormData({ ...formData, ingredients: newIngredients });
+
+    // Focar no novo input após renderização
+    setTimeout(() => {
+      const newIndex = newIngredients[groupIndex].items.length - 1;
+      const key = `${groupIndex}-${newIndex}`;
+      if (lastIngredientRefs.current[key]) {
+        lastIngredientRefs.current[key].focus();
+      }
+    }, 100);
   };
 
   const handleRemoveIngredient = (groupIndex, itemIndex) => {
@@ -127,6 +140,13 @@ function AdicionarReceita() {
 
   const handleAddInstruction = () => {
     setFormData({ ...formData, instructions: [...formData.instructions, { stepText: "" }] });
+
+    // Focar no novo input após renderização
+    setTimeout(() => {
+      if (lastInstructionRef.current) {
+        lastInstructionRef.current.focus();
+      }
+    }, 100);
   };
 
   const handleRemoveInstruction = (index) => {
@@ -645,6 +665,10 @@ function AdicionarReceita() {
                               size="small"
                               value={item.itemText}
                               onChange={(e) => handleIngredientChange(groupIndex, itemIndex, e)}
+                              inputRef={(el) => {
+                                const key = `${groupIndex}-${itemIndex}`;
+                                lastIngredientRefs.current[key] = el;
+                              }}
                               InputProps={{
                                 startAdornment: (
                                   <Icon
@@ -798,21 +822,10 @@ function AdicionarReceita() {
                             rows={2}
                             value={instruction.stepText}
                             onChange={(e) => handleInstructionChange(index, e)}
-                            InputProps={{
-                              startAdornment: (
-                                <Icon
-                                  sx={{
-                                    mr: 1,
-                                    color: "text.secondary",
-                                    fontSize: 20,
-                                    alignSelf: "flex-start",
-                                    mt: 1,
-                                    display: { xs: "none", sm: "block" },
-                                  }}
-                                >
-                                  edit_note
-                                </Icon>
-                              ),
+                            inputRef={(el) => {
+                              if (index === formData.instructions.length - 1) {
+                                lastInstructionRef.current = el;
+                              }
                             }}
                             sx={{
                               "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline":
