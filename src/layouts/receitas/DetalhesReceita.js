@@ -183,24 +183,23 @@ function DetalhesReceita() {
   const headerActions = useMemo(() => {
     if (!recipe) return null;
 
-    const handleShare = () => {
+    const getShareUrl = () => {
       let affiliateCode = user?.codigo_afiliado_proprio;
-      if (!affiliateCode) {
-        toast.error("Você precisa ser um afiliado para compartilhar receitas.");
-        return;
-      }
-
-      if (affiliateCode.startsWith("afiliado_")) {
+      if (affiliateCode && affiliateCode.startsWith("afiliado_")) {
         affiliateCode = affiliateCode.replace("afiliado_", "");
       }
-
       const externalSiteUrl =
         process.env.REACT_APP_EXTERNAL_SITE_URL || "https://receitasmilionarias.com.br";
-      const shareUrl = `${externalSiteUrl}/receita.html?id=${id}&ref=${affiliateCode}`;
+      return `${externalSiteUrl}/receita.html?id=${id}${
+        affiliateCode ? `&ref=${affiliateCode}` : ""
+      }`;
+    };
 
+    const handleCopyLink = () => {
+      const shareUrl = getShareUrl();
       navigator.clipboard.writeText(shareUrl).then(
         () => {
-          toast.success("Link de compartilhamento copiado!");
+          toast.success("Link copiado para área de transferência!");
         },
         () => {
           toast.error("Não foi possível copiar o link.");
@@ -208,15 +207,123 @@ function DetalhesReceita() {
       );
     };
 
+    const handleShareWhatsApp = () => {
+      const shareUrl = getShareUrl();
+      const text = `Confira esta receita incrível: ${recipe.titulo}`;
+      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text + " " + shareUrl)}`;
+      window.open(whatsappUrl, "_blank");
+    };
+
+    const handleShareFacebook = () => {
+      const shareUrl = getShareUrl();
+      const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+        shareUrl
+      )}`;
+      window.open(facebookUrl, "_blank");
+    };
+
+    const handleShareTwitter = () => {
+      const shareUrl = getShareUrl();
+      const text = `Confira esta receita: ${recipe.titulo}`;
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(
+        text
+      )}&url=${encodeURIComponent(shareUrl)}`;
+      window.open(twitterUrl, "_blank");
+    };
+
+    const handleShareLinkedIn = () => {
+      const shareUrl = getShareUrl();
+      const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
+        shareUrl
+      )}`;
+      window.open(linkedinUrl, "_blank");
+    };
+
     return (
-      <MDButton
-        variant="contained"
-        color="success"
-        startIcon={<Icon>share</Icon>}
-        onClick={handleShare}
-      >
-        Compartilhar
-      </MDButton>
+      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+        <Tooltip title="Copiar link">
+          <MDButton
+            variant="outlined"
+            color="dark"
+            onClick={handleCopyLink}
+            sx={{
+              minWidth: { xs: 40, sm: "auto" },
+              px: { xs: 1, sm: 2 },
+            }}
+          >
+            <Icon sx={{ fontSize: { xs: 20, sm: 22 } }}>link</Icon>
+            <Box component="span" sx={{ display: { xs: "none", sm: "inline" }, ml: 1 }}>
+              Copiar Link
+            </Box>
+          </MDButton>
+        </Tooltip>
+
+        <Tooltip title="Compartilhar no WhatsApp">
+          <MDButton
+            variant="outlined"
+            onClick={handleShareWhatsApp}
+            sx={{
+              minWidth: { xs: 40, sm: "auto" },
+              px: { xs: 1, sm: 2 },
+              color: "#25D366",
+              borderColor: "#25D366",
+              "&:hover": {
+                borderColor: "#128C7E",
+                backgroundColor: alpha("#25D366", 0.1),
+              },
+            }}
+          >
+            <Icon sx={{ fontSize: { xs: 20, sm: 22 } }}>whatsapp</Icon>
+            <Box component="span" sx={{ display: { xs: "none", sm: "inline" }, ml: 1 }}>
+              WhatsApp
+            </Box>
+          </MDButton>
+        </Tooltip>
+
+        <Tooltip title="Compartilhar no Facebook">
+          <MDButton
+            variant="outlined"
+            onClick={handleShareFacebook}
+            sx={{
+              minWidth: { xs: 40, sm: "auto" },
+              px: { xs: 1, sm: 2 },
+              color: "#1877F2",
+              borderColor: "#1877F2",
+              "&:hover": {
+                borderColor: "#166FE5",
+                backgroundColor: alpha("#1877F2", 0.1),
+              },
+            }}
+          >
+            <Icon sx={{ fontSize: { xs: 20, sm: 22 } }}>facebook</Icon>
+            <Box component="span" sx={{ display: { xs: "none", sm: "inline" }, ml: 1 }}>
+              Facebook
+            </Box>
+          </MDButton>
+        </Tooltip>
+
+        <Tooltip title="Compartilhar no Instagram">
+          <MDButton
+            variant="outlined"
+            onClick={handleCopyLink}
+            sx={{
+              minWidth: { xs: 40, sm: "auto" },
+              px: { xs: 1, sm: 2 },
+              color: "#E4405F",
+              borderColor: "#E4405F",
+              "&:hover": {
+                borderColor: "#D62976",
+                backgroundColor: alpha("#E4405F", 0.1),
+              },
+            }}
+          >
+            <Icon sx={{ fontSize: { xs: 20, sm: 22 } }}>camera_alt</Icon>
+            <Box component="span" sx={{ display: { xs: "none", sm: "inline" }, ml: 1 }}>
+              Instagram
+            </Box>
+          </MDButton>
+        </Tooltip>
+      </Stack>
     );
   }, [recipe, id, user]);
 
@@ -248,18 +355,20 @@ function DetalhesReceita() {
 
   const mainImage = getFullImageUrl(recipe.imagem_url);
   const authorAvatar = getFullImageUrl(recipe.criador?.foto_perfil_url);
-  const subtitle = recipe.resumo || "Veja modo de preparo, ingredientes e informações da receita.";
 
   return (
-    <PageWrapper title={recipe.titulo} subtitle={subtitle} actions={headerActions}>
-      {/* Hero Section com Imagem Grande */}
+    <PageWrapper
+      title={recipe.titulo}
+      subtitle={recipe.resumo || "Veja modo de preparo, ingredientes e informações da receita."}
+      actions={headerActions}
+    >
+      {/* Hero Section com Imagem Limpa */}
       <Card
         sx={{
-          mb: 3,
-          position: "relative",
+          mb: { xs: 2, md: 3 },
           overflow: "hidden",
-          borderRadius: 3,
-          boxShadow: `0 8px 40px ${alpha(color.green, 0.15)}`,
+          borderRadius: { xs: 2, md: 3 },
+          boxShadow: `0 4px 20px ${alpha(color.green, 0.12)}`,
         }}
       >
         <MDBox
@@ -268,78 +377,85 @@ function DetalhesReceita() {
           alt={recipe.titulo}
           sx={{
             width: "100%",
-            height: { xs: 250, sm: 350, md: 450 },
+            height: { xs: 200, sm: 300, md: 400 },
             objectFit: "cover",
             display: "block",
           }}
         />
-        <MDBox
-          sx={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            background: `linear-gradient(180deg, transparent 0%, ${alpha(color.green, 0.95)} 100%)`,
-            p: { xs: 2, md: 4 },
-            color: "white",
-          }}
-        >
-          <Stack direction="row" spacing={1} mb={2} flexWrap="wrap" useFlexGap>
-            {recipe.categoria?.nome && (
-              <Chip
-                label={recipe.categoria.nome}
-                size="small"
-                sx={{
-                  bgcolor: alpha(color.gold, 0.9),
-                  color: "white",
-                  fontWeight: 600,
-                  border: `2px solid ${alpha(color.white, 0.3)}`,
-                }}
-              />
-            )}
-            {recipe.tempo_preparo_min && (
-              <Chip
-                icon={<Icon sx={{ fontSize: 16, color: "white !important" }}>schedule</Icon>}
-                label={`${recipe.tempo_preparo_min} min`}
-                size="small"
-                sx={{ bgcolor: alpha(color.white, 0.2), color: "white", fontWeight: 600 }}
-              />
-            )}
-            {recipe.dificuldade && (
-              <Chip
-                icon={<Icon sx={{ fontSize: 16, color: "white !important" }}>terrain</Icon>}
-                label={recipe.dificuldade}
-                size="small"
-                sx={{ bgcolor: alpha(color.white, 0.2), color: "white", fontWeight: 600 }}
-              />
-            )}
-          </Stack>
-          <MDTypography variant="h3" color="white" fontWeight="bold" mb={1}>
-            {recipe.titulo}
-          </MDTypography>
-          {recipe.resumo && (
-            <MDTypography variant="body1" color="white" sx={{ opacity: 0.95 }}>
-              {recipe.resumo}
-            </MDTypography>
-          )}
-        </MDBox>
       </Card>
+
+      {/* Tags de Categoria e Info */}
+      <MDBox mb={{ xs: 2, md: 3 }}>
+        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+          {recipe.categoria?.nome && (
+            <Chip
+              label={recipe.categoria.nome}
+              size="small"
+              sx={{
+                bgcolor: color.gold,
+                color: "white",
+                fontWeight: 600,
+                fontSize: { xs: "0.7rem", sm: "0.75rem" },
+              }}
+            />
+          )}
+          {recipe.tempo_preparo_min && (
+            <Chip
+              icon={
+                <Icon sx={{ fontSize: { xs: 12, sm: 14 }, color: "white !important" }}>
+                  schedule
+                </Icon>
+              }
+              label={`${recipe.tempo_preparo_min} min`}
+              size="small"
+              sx={{
+                bgcolor: color.green,
+                color: "white",
+                fontWeight: 600,
+                fontSize: { xs: "0.7rem", sm: "0.75rem" },
+              }}
+            />
+          )}
+          {recipe.dificuldade && (
+            <Chip
+              icon={
+                <Icon sx={{ fontSize: { xs: 12, sm: 14 }, color: "white !important" }}>
+                  terrain
+                </Icon>
+              }
+              label={recipe.dificuldade}
+              size="small"
+              sx={{
+                bgcolor: color.green,
+                color: "white",
+                fontWeight: 600,
+                fontSize: { xs: "0.7rem", sm: "0.75rem" },
+              }}
+            />
+          )}
+        </Stack>
+      </MDBox>
 
       <Grid container spacing={3}>
         <Grid item xs={12} lg={7}>
           <Card
             sx={{
-              p: { xs: 2, md: 3 },
-              borderRadius: 3,
+              p: { xs: 1.5, md: 2.5 },
+              borderRadius: { xs: 2, md: 3 },
               boxShadow: `0 4px 20px ${alpha(color.green, 0.08)}`,
             }}
           >
-            <MDBox display="flex" alignItems="center" gap={1.5} mb={3}>
+            <MDBox
+              display="flex"
+              alignItems="center"
+              gap={{ xs: 1, md: 1.5 }}
+              mb={{ xs: 2, md: 2.5 }}
+            >
               <MDBox
                 sx={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: "16px",
+                  width: { xs: 32, md: 40 },
+                  height: { xs: 32, md: 40 },
+                  borderRadius: "12px",
                   background: "#FFFFFF",
                   border: `2px solid ${color.green}`,
                   display: "flex",
@@ -348,9 +464,13 @@ function DetalhesReceita() {
                   boxShadow: `0 4px 12px ${alpha(color.green, 0.15)}`,
                 }}
               >
-                <Icon sx={{ color: color.green, fontSize: 32 }}>restaurant</Icon>
+                <Icon sx={{ color: color.green, fontSize: { xs: 18, md: 20 } }}>restaurant</Icon>
               </MDBox>
-              <MDTypography variant="h4" fontWeight="bold" sx={{ color: color.green }}>
+              <MDTypography
+                variant="h6"
+                fontWeight="bold"
+                sx={{ color: color.green, fontSize: { xs: "1rem", md: "1.25rem" } }}
+              >
                 Ingredientes
               </MDTypography>
             </MDBox>
@@ -359,8 +479,8 @@ function DetalhesReceita() {
                 <Card
                   key={group.id}
                   sx={{
-                    p: 2.5,
-                    mb: 2,
+                    p: { xs: 1.5, md: 2 },
+                    mb: { xs: 1, md: 1.5 },
                     background: "#FFFFFF",
                     border: `1px solid ${alpha(color.green, 0.2)}`,
                     borderRadius: 3,
@@ -373,11 +493,11 @@ function DetalhesReceita() {
                   }}
                 >
                   {group.titulo && (
-                    <MDBox display="flex" alignItems="center" gap={1} mb={2}>
+                    <MDBox display="flex" alignItems="center" gap={1} mb={{ xs: 1.5, md: 2 }}>
                       <MDBox
                         sx={{
-                          width: 32,
-                          height: 32,
+                          width: { xs: 28, md: 32 },
+                          height: { xs: 28, md: 32 },
                           borderRadius: "8px",
                           background: color.gold,
                           color: "white",
@@ -385,12 +505,16 @@ function DetalhesReceita() {
                           alignItems: "center",
                           justifyContent: "center",
                           fontWeight: 700,
-                          fontSize: "0.9rem",
+                          fontSize: { xs: "0.8rem", md: "0.9rem" },
                         }}
                       >
                         {idx + 1}
                       </MDBox>
-                      <MDTypography variant="h6" fontWeight="bold" sx={{ color: color.green }}>
+                      <MDTypography
+                        variant="subtitle2"
+                        fontWeight="bold"
+                        sx={{ color: color.green, fontSize: { xs: "0.9rem", md: "1rem" } }}
+                      >
                         {group.titulo}
                       </MDTypography>
                     </MDBox>
@@ -402,7 +526,7 @@ function DetalhesReceita() {
                         key={ing.id}
                         display="flex"
                         alignItems="center"
-                        mb={1.25}
+                        mb={{ xs: 1, md: 1.25 }}
                         sx={{
                           transition: "all 0.2s ease",
                           "&:hover": {
@@ -410,8 +534,15 @@ function DetalhesReceita() {
                           },
                         }}
                       >
-                        <Icon sx={{ fontSize: 20, mr: 1.5, color: color.gold }}>check_circle</Icon>
-                        <MDTypography variant="body1" color="text" fontWeight="medium">
+                        <Icon sx={{ fontSize: { xs: 16, md: 18 }, mr: 1, color: color.gold }}>
+                          check_circle
+                        </Icon>
+                        <MDTypography
+                          variant="body2"
+                          color="text"
+                          fontWeight="medium"
+                          sx={{ fontSize: { xs: "0.85rem", md: "0.95rem" } }}
+                        >
                           {ing.descricao}
                         </MDTypography>
                       </MDBox>
@@ -430,12 +561,17 @@ function DetalhesReceita() {
               </MDBox>
             )}
 
-            <MDBox display="flex" alignItems="center" gap={1.5} mb={3}>
+            <MDBox
+              display="flex"
+              alignItems="center"
+              gap={{ xs: 1, md: 1.5 }}
+              mb={{ xs: 2, md: 2.5 }}
+            >
               <MDBox
                 sx={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: "16px",
+                  width: { xs: 32, md: 40 },
+                  height: { xs: 32, md: 40 },
+                  borderRadius: "12px",
                   background: "#FFFFFF",
                   border: `2px solid ${color.green}`,
                   display: "flex",
@@ -444,9 +580,15 @@ function DetalhesReceita() {
                   boxShadow: `0 4px 12px ${alpha(color.green, 0.15)}`,
                 }}
               >
-                <Icon sx={{ color: color.green, fontSize: 32 }}>format_list_numbered</Icon>
+                <Icon sx={{ color: color.green, fontSize: { xs: 18, md: 20 } }}>
+                  format_list_numbered
+                </Icon>
               </MDBox>
-              <MDTypography variant="h4" fontWeight="bold" sx={{ color: color.green }}>
+              <MDTypography
+                variant="h6"
+                fontWeight="bold"
+                sx={{ color: color.green, fontSize: { xs: "1rem", md: "1.25rem" } }}
+              >
                 Modo de Preparo
               </MDTypography>
             </MDBox>
@@ -456,8 +598,8 @@ function DetalhesReceita() {
                   <Card
                     key={step.id}
                     sx={{
-                      p: 2.5,
-                      mb: 2,
+                      p: { xs: 1.5, md: 2 },
+                      mb: { xs: 1, md: 1.5 },
                       background: "#FFFFFF",
                       border: `1px solid ${alpha(color.gold, 0.25)}`,
                       borderRadius: 3,
@@ -469,11 +611,11 @@ function DetalhesReceita() {
                       },
                     }}
                   >
-                    <Stack direction="row" spacing={2} alignItems="flex-start">
+                    <Stack direction="row" spacing={{ xs: 1.5, md: 2 }} alignItems="flex-start">
                       <MDBox
                         sx={{
-                          width: 42,
-                          height: 42,
+                          width: { xs: 36, md: 42 },
+                          height: { xs: 36, md: 42 },
                           borderRadius: "50%",
                           background: color.gold,
                           color: "white",
@@ -481,7 +623,7 @@ function DetalhesReceita() {
                           alignItems: "center",
                           justifyContent: "center",
                           fontWeight: 700,
-                          fontSize: "1.1rem",
+                          fontSize: { xs: "0.95rem", md: "1.1rem" },
                           flexShrink: 0,
                           boxShadow: `0 4px 12px ${alpha(color.gold, 0.25)}`,
                         }}
@@ -489,10 +631,10 @@ function DetalhesReceita() {
                         {step.ordem}
                       </MDBox>
                       <MDTypography
-                        variant="body1"
+                        variant="body2"
                         color="text"
                         fontWeight="medium"
-                        sx={{ pt: 0.5 }}
+                        sx={{ pt: 0.5, fontSize: { xs: "0.85rem", md: "0.95rem" } }}
                       >
                         {step.descricao}
                       </MDTypography>
@@ -514,45 +656,59 @@ function DetalhesReceita() {
         </Grid>
 
         <Grid item xs={12} lg={5}>
-          <Stack spacing={3} sx={{ position: { lg: "sticky" }, top: { lg: 88 } }}>
+          <Stack spacing={{ xs: 2, md: 2.5 }} sx={{ position: { lg: "sticky" }, top: { lg: 88 } }}>
             <Card
               sx={{
-                p: { xs: 2.5, md: 3 },
+                p: { xs: 1.5, md: 2.5 },
                 background: "#FFFFFF",
                 border: `1px solid ${alpha(color.green, 0.2)}`,
-                borderRadius: 3,
+                borderRadius: { xs: 2, md: 3 },
                 boxShadow: `0 4px 16px ${alpha(color.green, 0.08)}`,
               }}
             >
-              <Stack direction="row" spacing={2.5} alignItems="center" mb={3}>
+              <Stack
+                direction="row"
+                spacing={{ xs: 1.5, md: 2 }}
+                alignItems="center"
+                mb={{ xs: 2, md: 2.5 }}
+              >
                 <Avatar
                   src={authorAvatar}
                   alt={recipe.criador?.nome}
                   sx={{
-                    width: 72,
-                    height: 72,
+                    width: { xs: 56, md: 72 },
+                    height: { xs: 56, md: 72 },
                     border: `3px solid ${color.gold}`,
                     boxShadow: `0 4px 12px ${alpha(color.gold, 0.2)}`,
                   }}
                 />
                 <div>
-                  <MDTypography variant="h5" fontWeight="bold" sx={{ color: color.green }}>
+                  <MDTypography
+                    variant="h6"
+                    fontWeight="bold"
+                    sx={{ color: color.green, fontSize: { xs: "1rem", md: "1.25rem" } }}
+                  >
                     {recipe.criador?.nome || "Autor"}
                   </MDTypography>
                   <MDBox display="flex" alignItems="center" gap={0.5}>
-                    <Icon sx={{ fontSize: 18, color: color.gold }}>restaurant</Icon>
-                    <MDTypography variant="body2" color="text" fontWeight="medium">
+                    <Icon sx={{ fontSize: { xs: 16, md: 18 }, color: color.gold }}>restaurant</Icon>
+                    <MDTypography
+                      variant="body2"
+                      color="text"
+                      fontWeight="medium"
+                      sx={{ fontSize: { xs: "0.8rem", md: "0.875rem" } }}
+                    >
                       Chef
                     </MDTypography>
                   </MDBox>
                 </div>
               </Stack>
               <Divider sx={{ my: 2.5 }} />
-              <Grid container spacing={2} textAlign="center">
-                <Grid item xs={4}>
+              <Grid container spacing={{ xs: 1, sm: 2 }} textAlign="center">
+                <Grid item xs={12} sm={4}>
                   <MDBox
                     sx={{
-                      p: 1.5,
+                      p: { xs: 1.5, sm: 1.5 },
                       borderRadius: 2,
                       background: alpha(color.green, 0.08),
                       transition: "all 0.3s ease",
@@ -562,19 +718,30 @@ function DetalhesReceita() {
                       },
                     }}
                   >
-                    <Icon sx={{ fontSize: 28, color: color.green, mb: 0.5 }}>schedule</Icon>
-                    <MDTypography variant="h6" fontWeight="bold" sx={{ color: color.green }}>
+                    <Icon sx={{ fontSize: { xs: 20, sm: 24 }, color: color.green, mb: 0.5 }}>
+                      schedule
+                    </Icon>
+                    <MDTypography
+                      variant="body2"
+                      fontWeight="bold"
+                      sx={{ color: color.green, fontSize: { xs: "0.9rem", sm: "1rem" } }}
+                    >
                       {recipe.tempo_preparo_min || "—"}
                     </MDTypography>
-                    <MDTypography variant="caption" color="text" fontWeight="medium">
+                    <MDTypography
+                      variant="caption"
+                      color="text"
+                      fontWeight="medium"
+                      sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" } }}
+                    >
                       minutos
                     </MDTypography>
                   </MDBox>
                 </Grid>
-                <Grid item xs={4}>
+                <Grid item xs={12} sm={4}>
                   <MDBox
                     sx={{
-                      p: 1.5,
+                      p: { xs: 1.5, sm: 1.5 },
                       borderRadius: 2,
                       background: alpha(color.gold, 0.08),
                       transition: "all 0.3s ease",
@@ -584,19 +751,30 @@ function DetalhesReceita() {
                       },
                     }}
                   >
-                    <Icon sx={{ fontSize: 28, color: color.gold, mb: 0.5 }}>speed</Icon>
-                    <MDTypography variant="h6" fontWeight="bold" sx={{ color: color.gold }}>
+                    <Icon sx={{ fontSize: { xs: 20, sm: 24 }, color: color.gold, mb: 0.5 }}>
+                      speed
+                    </Icon>
+                    <MDTypography
+                      variant="body2"
+                      fontWeight="bold"
+                      sx={{ color: color.gold, fontSize: { xs: "0.9rem", sm: "1rem" } }}
+                    >
                       {recipe.dificuldade || "—"}
                     </MDTypography>
-                    <MDTypography variant="caption" color="text" fontWeight="medium">
+                    <MDTypography
+                      variant="caption"
+                      color="text"
+                      fontWeight="medium"
+                      sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" } }}
+                    >
                       dificuldade
                     </MDTypography>
                   </MDBox>
                 </Grid>
-                <Grid item xs={4}>
+                <Grid item xs={12} sm={4}>
                   <MDBox
                     sx={{
-                      p: 1.5,
+                      p: { xs: 1.5, sm: 1.5 },
                       borderRadius: 2,
                       background: alpha(color.gold, 0.08),
                       transition: "all 0.3s ease",
@@ -606,13 +784,24 @@ function DetalhesReceita() {
                       },
                     }}
                   >
-                    <Icon sx={{ fontSize: 28, color: color.gold, mb: 0.5 }}>star</Icon>
-                    <MDTypography variant="h6" fontWeight="bold" sx={{ color: color.gold }}>
+                    <Icon sx={{ fontSize: { xs: 20, sm: 24 }, color: color.gold, mb: 0.5 }}>
+                      star
+                    </Icon>
+                    <MDTypography
+                      variant="body2"
+                      fontWeight="bold"
+                      sx={{ color: color.gold, fontSize: { xs: "0.9rem", sm: "1rem" } }}
+                    >
                       {(parseFloat(recipe.media_avaliacoes || recipe.avaliacao_media) || 0).toFixed(
                         1
                       )}
                     </MDTypography>
-                    <MDTypography variant="caption" color="text" fontWeight="medium">
+                    <MDTypography
+                      variant="caption"
+                      color="text"
+                      fontWeight="medium"
+                      sx={{ fontSize: { xs: "0.65rem", sm: "0.75rem" } }}
+                    >
                       ({parseInt(recipe.quantidade_avaliacoes || recipe.total_avaliacoes) || 0})
                       votos
                     </MDTypography>
@@ -623,18 +812,23 @@ function DetalhesReceita() {
 
             <Card
               sx={{
-                p: { xs: 2.5, md: 3 },
+                p: { xs: 2, md: 2.5 },
                 background: color.green,
                 border: "none",
-                borderRadius: 3,
+                borderRadius: { xs: 2, md: 3 },
                 boxShadow: `0 6px 20px ${alpha(color.green, 0.25)}`,
               }}
             >
-              <MDBox display="flex" alignItems="center" gap={1.5} mb={3}>
+              <MDBox
+                display="flex"
+                alignItems="center"
+                gap={{ xs: 1, md: 1.5 }}
+                mb={{ xs: 2, md: 2.5 }}
+              >
                 <MDBox
                   sx={{
-                    width: 48,
-                    height: 48,
+                    width: { xs: 40, md: 48 },
+                    height: { xs: 40, md: 48 },
                     borderRadius: "12px",
                     background: "#FFFFFF",
                     display: "flex",
@@ -642,30 +836,39 @@ function DetalhesReceita() {
                     justifyContent: "center",
                   }}
                 >
-                  <Icon sx={{ color: color.green, fontSize: 28 }}>rate_review</Icon>
+                  <Icon sx={{ color: color.green, fontSize: { xs: 24, md: 28 } }}>rate_review</Icon>
                 </MDBox>
-                <MDTypography variant="h5" fontWeight="bold" color="white">
+                <MDTypography
+                  variant="h6"
+                  fontWeight="bold"
+                  color="white"
+                  sx={{ fontSize: { xs: "1rem", md: "1.25rem" } }}
+                >
                   Avalie e Comente
                 </MDTypography>
               </MDBox>
 
               <MDBox
                 sx={{
-                  p: 2.5,
-                  mb: 2.5,
+                  p: { xs: 1.5, md: 2 },
+                  mb: { xs: 1.5, md: 2 },
                   background: "#FFFFFF",
                   borderRadius: 2,
                 }}
               >
-                <Stack direction="row" alignItems="center" spacing={1.5}>
-                  <MDTypography variant="body2" fontWeight="bold" sx={{ color: color.green }}>
+                <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap">
+                  <MDTypography
+                    variant="body2"
+                    fontWeight="bold"
+                    sx={{ color: color.green, fontSize: { xs: "0.85rem", md: "0.875rem" } }}
+                  >
                     Sua nota:
                   </MDTypography>
                   <Rating
                     value={userRating}
                     onChange={(_e, v) => setUserRating(v)}
                     sx={{ color: color.gold }}
-                    size="large"
+                    size="medium"
                   />
                 </Stack>
               </MDBox>
@@ -736,7 +939,7 @@ function DetalhesReceita() {
                 </MDTypography>
               </Divider>
 
-              <Stack spacing={2.5}>
+              <Stack spacing={{ xs: 1.5, md: 2 }}>
                 {Array.isArray(comments) && comments.length > 0 ? (
                   comments.map((comment) => {
                     const isAuthor = user && user.id === comment.id_usuario;
@@ -750,7 +953,7 @@ function DetalhesReceita() {
                       <Card
                         key={comment.id}
                         sx={{
-                          p: 2.5,
+                          p: { xs: 1.5, md: 2 },
                           background: "#FFFFFF",
                           border: "none",
                           borderRadius: 2,
@@ -764,11 +967,16 @@ function DetalhesReceita() {
                       >
                         <Stack
                           direction="row"
-                          spacing={2}
+                          spacing={{ xs: 1, md: 1.5 }}
                           alignItems="flex-start"
                           justifyContent="space-between"
                         >
-                          <Stack direction="row" spacing={2} alignItems="flex-start" flex={1}>
+                          <Stack
+                            direction="row"
+                            spacing={{ xs: 1, md: 1.5 }}
+                            alignItems="flex-start"
+                            flex={1}
+                          >
                             <Avatar
                               src={
                                 comment.foto_perfil_url
@@ -776,39 +984,54 @@ function DetalhesReceita() {
                                   : undefined
                               }
                               alt={comment.nome}
-                              sx={{ bgcolor: color.gold, width: 40, height: 40 }}
+                              sx={{
+                                bgcolor: color.gold,
+                                width: { xs: 32, md: 40 },
+                                height: { xs: 32, md: 40 },
+                                fontSize: { xs: "0.9rem", md: "1rem" },
+                              }}
                             >
                               {!comment.foto_perfil_url && comment.nome?.charAt(0)}
                             </Avatar>
                             <Stack spacing={0.5} sx={{ flex: 1 }}>
-                              <Stack
-                                direction="row"
-                                justifyContent="space-between"
-                                alignItems="center"
+                              <MDTypography
+                                variant="subtitle2"
+                                fontWeight="bold"
+                                sx={{ fontSize: { xs: "0.85rem", md: "0.95rem" } }}
                               >
-                                <MDTypography variant="subtitle2" fontWeight="bold">
-                                  {comment.nome}
-                                </MDTypography>
-                              </Stack>
+                                {comment.nome}
+                              </MDTypography>
                               {comment.avaliacao && (
                                 <Rating
                                   value={comment.avaliacao}
                                   readOnly
                                   size="small"
-                                  sx={{ color: color.gold }}
+                                  sx={{
+                                    color: color.gold,
+                                    fontSize: { xs: "1rem", md: "1.25rem" },
+                                  }}
                                 />
                               )}
                               <MDTypography
                                 variant="body2"
                                 color="text"
-                                sx={{ pt: 0.5, whiteSpace: "pre-wrap", wordBreak: "break-word" }}
+                                sx={{
+                                  pt: 0.5,
+                                  whiteSpace: "pre-wrap",
+                                  wordBreak: "break-word",
+                                  fontSize: { xs: "0.8rem", md: "0.875rem" },
+                                }}
                               >
                                 {comment.comentario}
                               </MDTypography>
                               <MDTypography
                                 variant="caption"
                                 color="text"
-                                sx={{ pt: 1, opacity: 0.7 }}
+                                sx={{
+                                  pt: 1,
+                                  opacity: 0.7,
+                                  fontSize: { xs: "0.7rem", md: "0.75rem" },
+                                }}
                               >
                                 {new Date(comment.data_criacao).toLocaleString("pt-BR")}
                               </MDTypography>
