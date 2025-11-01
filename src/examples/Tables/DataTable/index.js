@@ -195,8 +195,23 @@ function DataTable({
         <TableBody {...getTableBodyProps()}>
           {page.map((row, key) => {
             prepareRow(row);
+            const isClickable = row.original.clickable;
+            const handleRowClick = row.original.onClick;
+
             return (
-              <TableRow key={key} {...row.getRowProps()}>
+              <TableRow
+                key={key}
+                {...row.getRowProps()}
+                onClick={isClickable && handleRowClick ? handleRowClick : undefined}
+                sx={{
+                  cursor: isClickable ? "pointer" : "default",
+                  "&:hover": isClickable
+                    ? {
+                        backgroundColor: "rgba(0, 0, 0, 0.04)",
+                      }
+                    : {},
+                }}
+              >
                 {row.cells.map((cell, idx) => (
                   <DataTableBodyCell
                     key={idx}

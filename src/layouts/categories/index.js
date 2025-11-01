@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import api from "services/api";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
@@ -22,6 +22,9 @@ import {
   alpha,
   IconButton,
   Autocomplete,
+  Pagination,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 
 // Material Dashboard 2 React components
@@ -65,12 +68,19 @@ function Categories() {
   const { preferences, updatePreference } = useUserPreferences();
   const [tabValue, setTabValue] = useState(preferences.categoriesTab || 0);
   const view = preferences.recipeView;
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   const [categories, setCategories] = useState([]);
   const [tags, setTags] = useState([]);
 
   const [filteredCategories, setFilteredCategories] = useState([]);
   const [filteredTags, setFilteredTags] = useState([]);
+
+  // Pagination states
+  const [categoryPage, setCategoryPage] = useState(1);
+  const [tagPage, setTagPage] = useState(1);
+  const itemsPerPage = 12;
 
   const [categorySearch, setCategorySearch] = useState(preferences.categorySearch || "");
   const [tagSearch, setTagSearch] = useState(preferences.tagSearch || "");
@@ -202,6 +212,7 @@ function Categories() {
     }
 
     setFilteredCategories(filtered);
+    setCategoryPage(1); // Reset to page 1 on filter change
     if (categorySearch) debouncedSavePreference("categorySearch", categorySearch);
   }, [categorySearch, categorySortOrder, categories, debouncedSavePreference]);
 
@@ -219,8 +230,35 @@ function Categories() {
     }
 
     setFilteredTags(filtered);
+    setTagPage(1); // Reset to page 1 on filter change
     if (tagSearch) debouncedSavePreference("tagSearch", tagSearch);
   }, [tagSearch, tagSortOrder, tags, debouncedSavePreference]);
+
+  // Paginated data
+  const paginatedCategories = useMemo(() => {
+    const startIndex = (categoryPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredCategories.slice(startIndex, endIndex);
+  }, [filteredCategories, categoryPage, itemsPerPage]);
+
+  const paginatedTags = useMemo(() => {
+    const startIndex = (tagPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredTags.slice(startIndex, endIndex);
+  }, [filteredTags, tagPage, itemsPerPage]);
+
+  const totalCategoryPages = Math.ceil(filteredCategories.length / itemsPerPage);
+  const totalTagPages = Math.ceil(filteredTags.length / itemsPerPage);
+
+  const handleCategoryPageChange = (event, value) => {
+    setCategoryPage(value);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleTagPageChange = (event, value) => {
+    setTagPage(value);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const handleCreateOrUpdateItem = async () => {
     const isCategory = modalType === "category";
@@ -609,18 +647,49 @@ function Categories() {
                   />
                 </MDBox>
               ) : (
-                <Grid container spacing={3}>
-                  {filteredCategories.map((cat) => (
-                    <Grid item xs={12} sm={6} md={4} lg={3} key={cat.id}>
-                      <CategoryCard
-                        category={mapCategoryData(cat)}
-                        isAdmin={isAdmin}
-                        onDelete={handleDelete}
-                        onEdit={() => handleModalOpen("category", cat)}
+                <>
+                  <Grid container spacing={3}>
+                    {paginatedCategories.map((cat) => (
+                      <Grid item xs={12} sm={6} md={4} lg={3} key={cat.id}>
+                        <CategoryCard
+                          category={mapCategoryData(cat)}
+                          isAdmin={isAdmin}
+                          onDelete={handleDelete}
+                          onEdit={() => handleModalOpen("category", cat)}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                  {totalCategoryPages > 1 && (
+                    <MDBox display="flex" justifyContent="center" mt={4}>
+                      <Pagination
+                        count={totalCategoryPages}
+                        page={categoryPage}
+                        onChange={handleCategoryPageChange}
+                        showFirstButton
+                        showLastButton
+                        size={isMobile ? "small" : "large"}
+                        sx={{
+                          "& .MuiPaginationItem-root": {
+                            color: palette.green,
+                            fontWeight: 500,
+                            borderColor: palette.green,
+                            "&:hover": {
+                              backgroundColor: alpha(palette.green, 0.1),
+                            },
+                          },
+                          "& .Mui-selected": {
+                            backgroundColor: `${palette.gold} !important`,
+                            color: "#fff",
+                            "&:hover": {
+                              backgroundColor: `${alpha(palette.gold, 0.8)} !important`,
+                            },
+                          },
+                        }}
                       />
-                    </Grid>
-                  ))}
-                </Grid>
+                    </MDBox>
+                  )}
+                </>
               )}
             </MDBox>
           )}
@@ -732,18 +801,49 @@ function Categories() {
                   </MDTypography>
                 </MDBox>
               ) : (
-                <Grid container spacing={2}>
-                  {filteredTags.map((tag) => (
-                    <Grid item xs={12} sm={6} md={4} lg={3} key={tag.id}>
-                      <TagCard
-                        tag={tag}
-                        isAdmin={isAdmin}
-                        onEdit={() => handleModalOpen("tag", tag)}
-                        onDelete={handleDeleteTag}
+                <>
+                  <Grid container spacing={2}>
+                    {paginatedTags.map((tag) => (
+                      <Grid item xs={12} sm={6} md={4} lg={3} key={tag.id}>
+                        <TagCard
+                          tag={tag}
+                          isAdmin={isAdmin}
+                          onEdit={() => handleModalOpen("tag", tag)}
+                          onDelete={handleDeleteTag}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                  {totalTagPages > 1 && (
+                    <MDBox display="flex" justifyContent="center" mt={4}>
+                      <Pagination
+                        count={totalTagPages}
+                        page={tagPage}
+                        onChange={handleTagPageChange}
+                        showFirstButton
+                        showLastButton
+                        size={isMobile ? "small" : "large"}
+                        sx={{
+                          "& .MuiPaginationItem-root": {
+                            color: palette.green,
+                            fontWeight: 500,
+                            borderColor: palette.green,
+                            "&:hover": {
+                              backgroundColor: alpha(palette.green, 0.1),
+                            },
+                          },
+                          "& .Mui-selected": {
+                            backgroundColor: `${palette.gold} !important`,
+                            color: "#fff",
+                            "&:hover": {
+                              backgroundColor: `${alpha(palette.gold, 0.8)} !important`,
+                            },
+                          },
+                        }}
                       />
-                    </Grid>
-                  ))}
-                </Grid>
+                    </MDBox>
+                  )}
+                </>
               )}
             </MDBox>
           )}

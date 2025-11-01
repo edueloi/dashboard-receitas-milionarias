@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { slugify } from "utils/slugify";
 
 // @mui material components
@@ -19,7 +19,7 @@ const palette = {
   green: "#1C3B32",
 };
 
-function recipesTableData(recipes, isAdmin, onDelete, onEdit) {
+function recipesTableData(recipes, isAdmin, onDelete, onEdit, onRowClick) {
   const Recipe = ({ image, name, author, authorAvatar, category }) => (
     <MDBox display="flex" alignItems="center" lineHeight={1}>
       <Avatar
@@ -74,6 +74,7 @@ function recipesTableData(recipes, isAdmin, onDelete, onEdit) {
     { Header: "tags", accessor: "tags", width: "25%", align: "left" },
   ];
 
+  // Só adiciona coluna de ações se for admin
   if (isAdmin) {
     columns.push({ Header: "ações", accessor: "acoes", align: "center" });
   }
@@ -84,6 +85,9 @@ function recipesTableData(recipes, isAdmin, onDelete, onEdit) {
     const total = Number(recipe.votes ?? recipe.quantidade_avaliacoes ?? 0);
 
     const row = {
+      id: recipe.id, // ID para poder clicar na linha
+      clickable: true, // Sempre clicável (admin e não-admin)
+      onClick: onRowClick ? () => onRowClick(recipe.id, recipe.name) : undefined,
       receita: (
         <Recipe
           image={recipe.image}
@@ -170,7 +174,13 @@ function recipesTableData(recipes, isAdmin, onDelete, onEdit) {
 
     if (isAdmin) {
       row.acoes = (
-        <MDBox display="flex" justifyContent="center" alignItems="center" gap={1}>
+        <MDBox
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          gap={1}
+          onClick={(e) => e.stopPropagation()} // Previne o clique na linha quando clicar nos botões
+        >
           <Tooltip title="Ver Detalhes">
             <Link to={`/receita/${recipe.id}-${slugify(recipe.name)}`}>
               <Icon

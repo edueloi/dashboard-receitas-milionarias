@@ -4,6 +4,7 @@ import api from "services/api";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
 import { useUserPreferences } from "../../context/UserPreferencesContext";
+import { slugify } from "utils/slugify";
 
 // @mui
 import Card from "@mui/material/Card";
@@ -23,6 +24,7 @@ import {
   Tooltip,
   alpha,
   Box,
+  Pagination,
 } from "@mui/material";
 
 // MD
@@ -72,6 +74,10 @@ function TodasAsReceitas() {
   );
   const [tagsFilter, setTagsFilter] = useState(preferences.todasReceitasTags || []);
   const [sortOrder, setSortOrder] = useState(preferences.todasReceitasSort || "recentes");
+
+  // Paginação para card view
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 12;
 
   const isAdmin = uiPermissions.includes("admin");
 
@@ -168,6 +174,7 @@ function TodasAsReceitas() {
     }
 
     setFilteredRecipes(filtered);
+    setPage(1); // Reset para página 1 quando filtros mudarem
   }, [searchTerm, categoryFilter, tagsFilter, sortOrder, allRecipes]);
 
   const mapRecipeData = (recipe) => {
@@ -203,8 +210,23 @@ function TodasAsReceitas() {
     filteredRecipes.map(mapRecipeData),
     isAdmin,
     /* onDelete */ () => {},
-    /* onEdit */ (id) => navigate(`/receitas/editar/${id}`)
+    /* onEdit */ (id) => navigate(`/receitas/editar/${id}`),
+    /* onRowClick */ (id, name) => navigate(`/receita/${id}-${slugify(name)}`)
   );
+
+  // Paginação para card view
+  const paginatedRecipes = useMemo(() => {
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredRecipes.slice(startIndex, endIndex);
+  }, [filteredRecipes, page, itemsPerPage]);
+
+  const totalPages = Math.ceil(filteredRecipes.length / itemsPerPage);
+
+  const handlePageChange = (event, value) => {
+    setPage(value);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   // ações do header (toggle de visualização)
   const headerActions = useMemo(
@@ -541,13 +563,46 @@ function TodasAsReceitas() {
           />
         </Card>
       ) : (
-        <Grid container spacing={3}>
-          {filteredRecipes.map((recipe) => (
-            <Grid item xs={12} sm={6} md={4} lg={3} key={recipe.id}>
-              <PublicRecipeCard recipe={mapRecipeData(recipe)} />
-            </Grid>
-          ))}
-        </Grid>
+        <>
+          <Grid container spacing={3}>
+            {paginatedRecipes.map((recipe) => (
+              <Grid item xs={12} sm={6} md={4} lg={3} key={recipe.id}>
+                <PublicRecipeCard recipe={mapRecipeData(recipe)} />
+              </Grid>
+            ))}
+          </Grid>
+
+          {/* Paginação para Card View */}
+          {totalPages > 1 && (
+            <MDBox display="flex" justifyContent="center" mt={4}>
+              <Pagination
+                count={totalPages}
+                page={page}
+                onChange={handlePageChange}
+                color="primary"
+                size={isMobile ? "medium" : "large"}
+                showFirstButton
+                showLastButton
+                sx={{
+                  "& .MuiPaginationItem-root": {
+                    color: palette.green,
+                    borderColor: palette.green,
+                    "&.Mui-selected": {
+                      backgroundColor: palette.gold,
+                      color: "#fff",
+                      "&:hover": {
+                        backgroundColor: alpha(palette.gold, 0.9),
+                      },
+                    },
+                    "&:hover": {
+                      backgroundColor: alpha(palette.green, 0.05),
+                    },
+                  },
+                }}
+              />
+            </MDBox>
+          )}
+        </>
       )}
     </PageWrapper>
   );

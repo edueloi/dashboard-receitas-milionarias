@@ -25,6 +25,7 @@ import {
   useTheme,
   IconButton,
   Tooltip,
+  Pagination,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 
@@ -85,6 +86,10 @@ function MinhasReceitas() {
   );
   const [tagsFilter, setTagsFilter] = useState(preferences.minhasReceitasTags || []);
   const [sortOrder, setSortOrder] = useState(preferences.minhasReceitasSort || "recentes");
+
+  // Paginação para card view
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 12;
 
   // modal delete
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -182,6 +187,7 @@ function MinhasReceitas() {
     }
 
     setFilteredRecipes(list);
+    setPage(1); // Reset para página 1 quando filtros mudarem
   }, [searchTerm, categoryFilter, tagsFilter, sortOrder, allUserRecipes]);
 
   const mapRecipeData = (recipe) => {
@@ -231,8 +237,23 @@ function MinhasReceitas() {
     filteredRecipes.map(mapRecipeData),
     isAdmin,
     openDeleteModal,
-    handleEdit
+    handleEdit,
+    undefined // onRowClick não usado aqui pois já tem botão de ação
   );
+
+  // Paginação para card view
+  const paginatedRecipes = useMemo(() => {
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredRecipes.slice(startIndex, endIndex);
+  }, [filteredRecipes, page, itemsPerPage]);
+
+  const totalPages = Math.ceil(filteredRecipes.length / itemsPerPage);
+
+  const handlePageChange = (event, value) => {
+    setPage(value);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   // ações do header
   const headerActions = useMemo(
@@ -644,20 +665,53 @@ function MinhasReceitas() {
               pagination={{ variant: "gradient", color: "success" }}
             />
           ) : (
-            <MDBox p={{ xs: 2, md: 3 }}>
-              <Grid container spacing={3}>
-                {filteredRecipes.map((recipe) => (
-                  <Grid item xs={12} sm={6} md={4} lg={3} key={recipe.id}>
-                    <UserRecipeCard
-                      recipe={mapRecipeData(recipe)}
-                      onEdit={handleEdit}
-                      onDelete={openDeleteModal}
-                      size="tall"
-                    />
-                  </Grid>
-                ))}
-              </Grid>
-            </MDBox>
+            <>
+              <MDBox p={{ xs: 2, md: 3 }}>
+                <Grid container spacing={3}>
+                  {paginatedRecipes.map((recipe) => (
+                    <Grid item xs={12} sm={6} md={4} lg={3} key={recipe.id}>
+                      <UserRecipeCard
+                        recipe={mapRecipeData(recipe)}
+                        onEdit={handleEdit}
+                        onDelete={openDeleteModal}
+                        size="tall"
+                      />
+                    </Grid>
+                  ))}
+                </Grid>
+              </MDBox>
+
+              {/* Paginação para Card View */}
+              {totalPages > 1 && (
+                <MDBox display="flex" justifyContent="center" p={3}>
+                  <Pagination
+                    count={totalPages}
+                    page={page}
+                    onChange={handlePageChange}
+                    color="primary"
+                    size={isMobile ? "medium" : "large"}
+                    showFirstButton
+                    showLastButton
+                    sx={{
+                      "& .MuiPaginationItem-root": {
+                        color: palette.green,
+                        borderColor: palette.green,
+                        "&.Mui-selected": {
+                          backgroundColor: palette.gold,
+                          color: "#fff",
+                          "&:hover": {
+                            backgroundColor: alpha(palette.gold, 0.9),
+                          },
+                        },
+                        "&:hover": {
+                          backgroundColor: alpha(palette.green, 0.05),
+                        },
+                      },
+                    }}
+                  />
+                </MDBox>
+              )}
+            </>
           )}
         </Card>
       </MDBox>
