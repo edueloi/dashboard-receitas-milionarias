@@ -28,7 +28,7 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
   // mini no lg pra baixo (bom compromisso para desktop/tablet)
   const isMobile = useMediaQuery(theme.breakpoints.down("lg"));
 
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -57,89 +57,105 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
 
   const renderRoutes = useMemo(
     () =>
-      routes.map(({ type, name, icon, title, noCollapse, key, href, route }) => {
-        if (type === "title") {
-          return (
-            <MDTypography
-              key={key}
-              color={textColor}
-              display="block"
-              variant="caption"
-              fontWeight="bold"
-              textTransform="uppercase"
-              pl={{ xs: 2, sm: 3 }}
-              mt={2}
-              mb={1}
-              ml={1}
-              sx={{
-                fontSize: { xs: "0.65rem", sm: "0.75rem" },
-                letterSpacing: { xs: "0.5px", sm: "0.8px" },
-                opacity: 0.7,
-              }}
-            >
-              {title}
-            </MDTypography>
-          );
-        }
-
-        if (type === "divider") {
-          return (
-            <Divider
-              key={key}
-              light={
-                (!darkMode && !whiteSidenav && !transparentSidenav) ||
-                (darkMode && !transparentSidenav && whiteSidenav)
-              }
-            />
-          );
-        }
-
-        if (type === "collapse") {
-          if (key === "logout") {
+      routes
+        .filter(({ visibleFor }) => {
+          // Se não tem restrição de visibilidade, mostra para todos
+          if (!visibleFor) return true;
+          // Se tem restrição, verifica se a permissão do usuário está na lista
+          return user && visibleFor.includes(user.permissao);
+        })
+        .map(({ type, name, icon, title, noCollapse, key, href, route }) => {
+          if (type === "title") {
             return (
-              <MDBox
+              <MDTypography
                 key={key}
-                onClick={handleLogout}
-                role="button"
-                aria-label="Sair da conta"
-                tabIndex={0}
-                onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleLogout()}
-                sx={{ cursor: "pointer", outline: "none" }}
+                color={textColor}
+                display="block"
+                variant="caption"
+                fontWeight="bold"
+                textTransform="uppercase"
+                pl={{ xs: 2, sm: 3 }}
+                mt={2}
+                mb={1}
+                ml={1}
+                sx={{
+                  fontSize: { xs: "0.65rem", sm: "0.75rem" },
+                  letterSpacing: { xs: "0.5px", sm: "0.8px" },
+                  opacity: 0.7,
+                }}
               >
-                <SidenavCollapse name={name} icon={icon} />
-              </MDBox>
+                {title}
+              </MDTypography>
             );
           }
 
-          if (href) {
+          if (type === "divider") {
             return (
-              <Link
-                href={href}
+              <Divider
                 key={key}
-                target="_blank"
-                rel="noreferrer"
-                sx={{ textDecoration: "none" }}
+                light={
+                  (!darkMode && !whiteSidenav && !transparentSidenav) ||
+                  (darkMode && !transparentSidenav && whiteSidenav)
+                }
+              />
+            );
+          }
+
+          if (type === "collapse") {
+            if (key === "logout") {
+              return (
+                <MDBox
+                  key={key}
+                  onClick={handleLogout}
+                  role="button"
+                  aria-label="Sair da conta"
+                  tabIndex={0}
+                  onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleLogout()}
+                  sx={{ cursor: "pointer", outline: "none" }}
+                >
+                  <SidenavCollapse name={name} icon={icon} />
+                </MDBox>
+              );
+            }
+
+            if (href) {
+              return (
+                <Link
+                  href={href}
+                  key={key}
+                  target="_blank"
+                  rel="noreferrer"
+                  sx={{ textDecoration: "none" }}
+                >
+                  <SidenavCollapse name={name} icon={icon} active={isActive(route)} />
+                </Link>
+              );
+            }
+
+            return (
+              <NavLink
+                key={key}
+                to={route}
+                onClick={isMobile ? closeSidenav : undefined}
+                style={{ textDecoration: "none" }}
               >
                 <SidenavCollapse name={name} icon={icon} active={isActive(route)} />
-              </Link>
+              </NavLink>
             );
           }
 
-          return (
-            <NavLink
-              key={key}
-              to={route}
-              onClick={isMobile ? closeSidenav : undefined}
-              style={{ textDecoration: "none" }}
-            >
-              <SidenavCollapse name={name} icon={icon} active={isActive(route)} />
-            </NavLink>
-          );
-        }
-
-        return null;
-      }),
-    [routes, textColor, darkMode, whiteSidenav, transparentSidenav, isMobile, location.pathname]
+          return null;
+        }),
+    [
+      routes,
+      textColor,
+      darkMode,
+      whiteSidenav,
+      transparentSidenav,
+      isMobile,
+      location.pathname,
+      user,
+    ]
   );
 
   return (
