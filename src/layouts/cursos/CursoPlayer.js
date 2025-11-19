@@ -281,7 +281,7 @@ function CursoPlayer() {
   }
 
   return (
-    <Box sx={{ display: "flex", height: "100vh", overflow: "hidden" }}>
+    <Box sx={{ display: "flex", height: "100vh", overflow: "hidden", position: "relative" }}>
       {/* Menu lateral exclusivo do curso */}
       <Box
         sx={{
@@ -294,8 +294,10 @@ function CursoPlayer() {
           flexDirection: "column",
           height: "100vh",
           boxShadow: "0 0 0 1px #e0e0e0",
-          position: "relative",
-          zIndex: 1100,
+          position: "fixed",
+          left: 0,
+          top: 0,
+          zIndex: 2000,
         }}
       >
         <MDBox p={3}>
@@ -416,9 +418,12 @@ function CursoPlayer() {
         component="main"
         sx={{
           flexGrow: 1,
-          width: `calc(100% - ${drawerWidth}px)`,
+          ml: `${drawerWidth}px`,
+          width: `calc(100vw - ${drawerWidth}px)`,
+          minHeight: "100vh",
           overflowY: "auto",
           backgroundColor: "#f5f5f5",
+          position: "relative",
         }}
       >
         {/* Header */}
