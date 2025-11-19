@@ -285,18 +285,18 @@ function CursoPlayer() {
       {/* Menu lateral exclusivo do curso */}
       <Box
         sx={{
-          width: drawerWidth,
-          minWidth: drawerWidth,
-          maxWidth: drawerWidth,
+          width: { xs: "100vw", md: drawerWidth },
+          minWidth: { xs: "100vw", md: drawerWidth },
+          maxWidth: { xs: "100vw", md: drawerWidth },
           background: palette.green,
           color: "white",
           display: "flex",
           flexDirection: "column",
-          height: "100vh",
+          height: { xs: "auto", md: "100vh" },
           boxShadow: "0 0 0 1px #e0e0e0",
-          position: "fixed",
-          left: 0,
-          top: 0,
+          position: { xs: "static", md: "fixed" },
+          left: { md: 0 },
+          top: { md: 0 },
           zIndex: 2000,
         }}
       >
@@ -418,8 +418,8 @@ function CursoPlayer() {
         component="main"
         sx={{
           flexGrow: 1,
-          ml: `${drawerWidth}px`,
-          width: `calc(100vw - ${drawerWidth}px)`,
+          ml: { xs: 0, md: `${drawerWidth}px` },
+          width: { xs: "100vw", md: `calc(100vw - ${drawerWidth}px)` },
           minHeight: "100vh",
           overflowY: "auto",
           backgroundColor: "#f5f5f5",
