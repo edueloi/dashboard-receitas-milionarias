@@ -17,7 +17,6 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import Collapse from "@mui/material/Collapse";
 import LinearProgress from "@mui/material/LinearProgress";
-import Checkbox from "@mui/material/Checkbox";
 import Divider from "@mui/material/Divider";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
@@ -33,7 +32,11 @@ import MDButton from "components/MDButton";
 
 const palette = {
   gold: "#C9A635",
-  green: "#1C3B32",
+  green: "#1C3B32", // Cor principal de destaque (original)
+  sidebarBg: "#FFFFFF", // Fundo da sidebar (branco/cinza claro)
+  sidebarBorder: "#e0e0e0", // Borda/divisória leve
+  sidebarText: "#333333", // Cor do texto da sidebar
+  sidebarActiveBg: "rgba(28, 59, 50, 0.08)", // Fundo leve para o item ativo
 };
 
 const drawerWidth = 360;
@@ -53,6 +56,15 @@ function CursoPlayer() {
   const [sidebarAberta, setSidebarAberta] = useState(true);
   const [certificadoModal, setCertificadoModal] = useState(false);
   const [certificado, setCertificado] = useState(null);
+
+  // Estado para Drawer mobile
+  const [drawerMobileOpen, setDrawerMobileOpen] = useState(false);
+  const handleDrawerMobileOpen = () => setDrawerMobileOpen(true);
+  const handleDrawerMobileClose = () => setDrawerMobileOpen(false);
+
+  // Buscar dados do curso (Omitido para brevidade, sem alterações lógicas)
+  // ... Seu código de fetchCurso, useEffect, toggleModulo, isAulaConcluida, etc. ...
+  // --- START: Código Inalterado ---
 
   // Buscar dados do curso
   const fetchCurso = useCallback(async () => {
@@ -148,7 +160,12 @@ function CursoPlayer() {
     }));
   };
 
-  // Selecionar aula
+  // Verificar se aula está concluída
+  const isAulaConcluida = (aulaId) => {
+    return progresso.some((p) => p.id_aula === aulaId && p.concluida);
+  };
+
+  // Selecionar aula (desktop)
   const selecionarAula = (aula, moduloTitulo) => {
     // Verificar se aula é gratuita ou se usuário está matriculado
     if (!aula.gratuita && !matricula) {
@@ -159,32 +176,10 @@ function CursoPlayer() {
     setAulaAtual({ ...aula, modulo_titulo: moduloTitulo });
   };
 
-  // Marcar aula como concluída
-  const marcarConcluida = async () => {
-    if (!aulaAtual || !matricula) return;
-
-    try {
-      await api.post(`/api/cursos/aulas/${aulaAtual.id}/concluir`);
-      toast.success("Aula marcada como concluída!");
-
-      // Atualizar progresso
-      const resProgresso = await api.get(`/api/cursos/${curso.id}/progresso`);
-      setMatricula(resProgresso.data.matricula);
-      setProgresso(resProgresso.data.progresso);
-
-      // Verificar se completou 100%
-      if (resProgresso.data.matricula.progresso_percentual >= 100) {
-        const resCert = await api.get(`/api/cursos/${curso.id}/certificado`);
-        setCertificado(resCert.data);
-        setCertificadoModal(true);
-      } else {
-        // Ir para próxima aula
-        proximaAula();
-      }
-    } catch (error) {
-      console.error("Erro ao marcar aula:", error);
-      toast.error("Erro ao marcar aula como concluída");
-    }
+  // Selecionar aula (mobile + fecha drawer)
+  const selecionarAulaMobile = (aula, moduloTitulo) => {
+    selecionarAula(aula, moduloTitulo);
+    setDrawerMobileOpen(false);
   };
 
   // Navegar para próxima aula
@@ -225,9 +220,32 @@ function CursoPlayer() {
     }
   };
 
-  // Verificar se aula está concluída
-  const isAulaConcluida = (aulaId) => {
-    return progresso.some((p) => p.id_aula === aulaId && p.concluida);
+  // Marcar aula como concluída
+  const marcarConcluida = async () => {
+    if (!aulaAtual || !matricula) return;
+
+    try {
+      await api.post(`/api/cursos/aulas/${aulaAtual.id}/concluir`);
+      toast.success("Aula marcada como concluída!");
+
+      // Atualizar progresso
+      const resProgresso = await api.get(`/api/cursos/${curso.id}/progresso`);
+      setMatricula(resProgresso.data.matricula);
+      setProgresso(resProgresso.data.progresso);
+
+      // Verificar se completou 100%
+      if (resProgresso.data.matricula.progresso_percentual >= 100) {
+        const resCert = await api.get(`/api/cursos/${curso.id}/certificado`);
+        setCertificado(resCert.data);
+        setCertificadoModal(true);
+      } else {
+        // Ir para próxima aula
+        proximaAula();
+      }
+    } catch (error) {
+      console.error("Erro ao marcar aula:", error);
+      toast.error("Erro ao marcar aula como concluída");
+    }
   };
 
   // Matricular no curso
@@ -279,36 +297,68 @@ function CursoPlayer() {
       </MDBox>
     );
   }
+  // --- END: Código Inalterado ---
 
   return (
     <Box sx={{ display: "flex", height: "100vh", overflow: "hidden", position: "relative" }}>
-      {/* Menu lateral exclusivo do curso */}
+      {/* Navbar mobile (SIMPLIFICADA e NÃO FIXA, mas apenas um botão de menu) */}
       <Box
         sx={{
-          width: { xs: "100vw", md: drawerWidth },
-          minWidth: { xs: "100vw", md: drawerWidth },
-          maxWidth: { xs: "100vw", md: drawerWidth },
-          background: palette.green,
-          color: "white",
-          display: "flex",
-          flexDirection: "column",
-          height: { xs: "auto", md: "100vh" },
-          boxShadow: "0 0 0 1px #e0e0e0",
-          position: { xs: "static", md: "fixed" },
-          left: { md: 0 },
-          top: { md: 0 },
-          zIndex: 2000,
+          display: { xs: "flex", md: "none" },
+          alignItems: "center",
+          justifyContent: "space-between",
+          px: 2,
+          py: 1,
+          background: "white", // Fundo branco para mobile
+          borderBottom: `1px solid ${palette.sidebarBorder}`,
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100vw",
+          zIndex: 2000, // Z-index alto para ficar acima de tudo (exceto o Drawer)
         }}
       >
-        <MDBox p={3}>
+        {/* Botão de Retorno */}
+        <MDButton
+          variant="text"
+          color="inherit"
+          onClick={() => navigate("/cursos")}
+          sx={{ color: palette.green, minWidth: 0, p: 1 }}
+        >
+          <Icon>arrow_back</Icon>
+        </MDButton>
+
+        {/* Botão de Menu (Sidebar) */}
+        <IconButton color="inherit" onClick={handleDrawerMobileOpen} sx={{ color: palette.green }}>
+          <Icon>menu</Icon>
+        </IconButton>
+      </Box>
+
+      {/* Drawer mobile (Novo Design) */}
+      <Drawer
+        anchor="left"
+        open={drawerMobileOpen}
+        onClose={handleDrawerMobileClose}
+        sx={{ display: { xs: "block", md: "none" }, zIndex: 2200 }}
+        PaperProps={{
+          // Fundo branco e texto escuro
+          sx: {
+            width: "80vw",
+            maxWidth: 340,
+            background: palette.sidebarBg,
+            color: palette.sidebarText,
+          },
+        }}
+      >
+        <MDBox p={3} sx={{ background: palette.green }}>
           <MDTypography variant="h6" fontWeight="bold" color="white">
             Conteúdo do Curso
           </MDTypography>
           <MDTypography variant="caption" color="white" sx={{ opacity: 0.9 }}>
-            {curso.titulo}
+            {curso?.titulo}
           </MDTypography>
         </MDBox>
-        <Divider sx={{ bgcolor: "#e0e0e0" }} />
+        <Divider sx={{ bgcolor: palette.sidebarBorder }} />
         {matricula && (
           <MDBox p={3} sx={{ backgroundColor: "#f5f5f5", color: palette.green }}>
             <MDBox display="flex" justifyContent="space-between" alignItems="center" mb={1}>
@@ -334,23 +384,27 @@ function CursoPlayer() {
             />
           </MDBox>
         )}
-        <Divider sx={{ bgcolor: "#e0e0e0" }} />
+        <Divider sx={{ bgcolor: palette.sidebarBorder }} />
         <Box sx={{ flex: 1, overflowY: "auto", pb: 2 }}>
           <List>
-            {curso.modulos.map((modulo, modIndex) => (
+            {curso?.modulos?.map((modulo, modIndex) => (
               <div key={modulo.id}>
-                <ListItemButton onClick={() => toggleModulo(modulo.id)} sx={{ color: "white" }}>
+                {/* Botão do Módulo */}
+                <ListItemButton
+                  onClick={() => toggleModulo(modulo.id)}
+                  sx={{ color: palette.sidebarText }}
+                >
                   <ListItemText
                     primary={
-                      <MDTypography variant="body2" fontWeight="bold" color="white">
+                      <MDTypography variant="body2" fontWeight="bold" color="inherit">
                         {modIndex + 1}. {modulo.titulo}
                       </MDTypography>
                     }
                     secondary={
-                      <span style={{ color: "#e0e0e0" }}>{modulo.aulas.length} aulas</span>
+                      <span style={{ color: "#888888" }}>{modulo.aulas.length} aulas</span>
                     }
                   />
-                  <Icon sx={{ color: "white" }}>
+                  <Icon sx={{ color: palette.sidebarText }}>
                     {modulosAbertos[modulo.id] ? "expand_less" : "expand_more"}
                   </Icon>
                 </ListItemButton>
@@ -365,14 +419,15 @@ function CursoPlayer() {
                           disablePadding
                           sx={{
                             backgroundColor: selecionada
-                              ? "rgba(201, 166, 53, 0.2)"
+                              ? palette.sidebarActiveBg // Novo fundo para item ativo
                               : "transparent",
                             borderLeft: selecionada ? `3px solid ${palette.gold}` : "none",
                           }}
                         >
+                          {/* Item da Aula */}
                           <ListItemButton
-                            sx={{ pl: 4, color: "white" }}
-                            onClick={() => selecionarAula(aula, modulo.titulo)}
+                            sx={{ pl: 4, color: palette.sidebarText }}
+                            onClick={() => selecionarAulaMobile(aula, modulo.titulo)}
                           >
                             <ListItemIcon sx={{ minWidth: 40 }}>
                               {concluida ? (
@@ -380,7 +435,7 @@ function CursoPlayer() {
                               ) : aula.gratuita ? (
                                 <Icon color="info">play_circle</Icon>
                               ) : matricula ? (
-                                <Icon>play_circle_outline</Icon>
+                                <Icon sx={{ color: palette.green }}>play_circle_outline</Icon>
                               ) : (
                                 <Icon color="disabled">lock</Icon>
                               )}
@@ -390,13 +445,150 @@ function CursoPlayer() {
                                 <MDTypography
                                   variant="caption"
                                   fontWeight={selecionada ? "bold" : "regular"}
-                                  color="white"
+                                  color="inherit" // Usa a cor do ListItemButton (sidebarText)
                                 >
                                   {aulaIndex + 1}. {aula.titulo}
                                 </MDTypography>
                               }
                               secondary={
-                                <MDTypography variant="caption" color="#e0e0e0">
+                                <MDTypography variant="caption" color="#888888">
+                                  {aula.duracao_min} min {aula.gratuita && "• Gratuita"}
+                                </MDTypography>
+                              }
+                            />
+                          </ListItemButton>
+                        </ListItem>
+                      );
+                    })}
+                  </List>
+                </Collapse>
+              </div>
+            ))}
+          </List>
+        </Box>
+      </Drawer>
+
+      {/* Menu lateral desktop (Novo Design) */}
+      <Box
+        sx={{
+          display: { xs: "none", md: "flex" },
+          width: drawerWidth,
+          minWidth: drawerWidth,
+          maxWidth: drawerWidth,
+          background: palette.sidebarBg, // Fundo branco/cinza claro
+          color: palette.sidebarText, // Texto escuro
+          flexDirection: "column",
+          height: "100vh",
+          boxShadow: `1px 0 0 0 ${palette.sidebarBorder}`, // Borda sutil à direita
+          position: "fixed",
+          left: 0,
+          top: 0,
+          zIndex: 2000,
+        }}
+      >
+        {/* Cabeçalho da Sidebar */}
+        <MDBox p={3} sx={{ background: palette.green }}>
+          <MDTypography variant="h6" fontWeight="bold" color="white">
+            Conteúdo do Curso
+          </MDTypography>
+          <MDTypography variant="caption" color="white" sx={{ opacity: 0.9 }}>
+            {curso.titulo}
+          </MDTypography>
+        </MDBox>
+        <Divider sx={{ bgcolor: palette.sidebarBorder }} />
+        {/* Progresso */}
+        {matricula && (
+          <MDBox p={3} sx={{ backgroundColor: "#f5f5f5", color: palette.green }}>
+            <MDBox display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+              <MDTypography variant="body2" fontWeight="bold" color="text">
+                Seu Progresso
+              </MDTypography>
+              <MDTypography variant="h6" fontWeight="bold" color={palette.green}>
+                {Number(matricula.progresso_percentual || 0).toFixed(0)}%
+              </MDTypography>
+            </MDBox>
+            <LinearProgress
+              variant="determinate"
+              value={Number(matricula.progresso_percentual || 0)}
+              sx={{
+                height: 8,
+                borderRadius: 4,
+                backgroundColor: "#e0e0e0",
+                "& .MuiLinearProgress-bar": {
+                  backgroundColor: palette.green,
+                  borderRadius: 4,
+                },
+              }}
+            />
+          </MDBox>
+        )}
+        <Divider sx={{ bgcolor: palette.sidebarBorder }} />
+        {/* Lista de Módulos e Aulas */}
+        <Box sx={{ flex: 1, overflowY: "auto", pb: 2 }}>
+          <List>
+            {curso.modulos.map((modulo, modIndex) => (
+              <div key={modulo.id}>
+                {/* Botão do Módulo */}
+                <ListItemButton
+                  onClick={() => toggleModulo(modulo.id)}
+                  sx={{ color: palette.sidebarText }}
+                >
+                  <ListItemText
+                    primary={
+                      <MDTypography variant="body2" fontWeight="bold" color="inherit">
+                        {modIndex + 1}. {modulo.titulo}
+                      </MDTypography>
+                    }
+                    secondary={
+                      <span style={{ color: "#888888" }}>{modulo.aulas.length} aulas</span>
+                    }
+                  />
+                  <Icon sx={{ color: palette.sidebarText }}>
+                    {modulosAbertos[modulo.id] ? "expand_less" : "expand_more"}
+                  </Icon>
+                </ListItemButton>
+                <Collapse in={modulosAbertos[modulo.id]} timeout="auto" unmountOnExit>
+                  <List component="div" disablePadding>
+                    {modulo.aulas.map((aula, aulaIndex) => {
+                      const concluida = isAulaConcluida(aula.id);
+                      const selecionada = aulaAtual?.id === aula.id;
+                      return (
+                        <ListItem
+                          key={aula.id}
+                          disablePadding
+                          sx={{
+                            backgroundColor: selecionada ? palette.sidebarActiveBg : "transparent",
+                            borderLeft: selecionada ? `3px solid ${palette.gold}` : "none",
+                          }}
+                        >
+                          {/* Item da Aula */}
+                          <ListItemButton
+                            sx={{ pl: 4, color: palette.sidebarText }}
+                            onClick={() => selecionarAula(aula, modulo.titulo)}
+                          >
+                            <ListItemIcon sx={{ minWidth: 40 }}>
+                              {concluida ? (
+                                <Icon color="success">check_circle</Icon>
+                              ) : aula.gratuita ? (
+                                <Icon color="info">play_circle</Icon>
+                              ) : matricula ? (
+                                <Icon sx={{ color: palette.green }}>play_circle_outline</Icon>
+                              ) : (
+                                <Icon color="disabled">lock</Icon>
+                              )}
+                            </ListItemIcon>
+                            <ListItemText
+                              primary={
+                                <MDTypography
+                                  variant="caption"
+                                  fontWeight={selecionada ? "bold" : "regular"}
+                                  color="inherit"
+                                >
+                                  {aulaIndex + 1}. {aula.titulo}
+                                </MDTypography>
+                              }
+                              secondary={
+                                <MDTypography variant="caption" color="#888888">
                                   {aula.duracao_min} min {aula.gratuita && "• Gratuita"}
                                 </MDTypography>
                               }
@@ -424,9 +616,10 @@ function CursoPlayer() {
           overflowY: "auto",
           backgroundColor: "#f5f5f5",
           position: "relative",
+          pt: { xs: 7, md: 0 }, // Adiciona padding no topo do mobile para compensar a navbar de 48px
         }}
       >
-        {/* Header */}
+        {/* Header (Manteve a cor branca, agora com z-index alto e topo 0 no desktop) */}
         <MDBox
           p={3}
           display="flex"
@@ -438,7 +631,7 @@ function CursoPlayer() {
             background: "white",
             boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
             position: "sticky",
-            top: 0,
+            top: { xs: 0, md: 0 }, // Agora o Header está fixo no topo (0)
             zIndex: 100,
           }}
         >
@@ -462,13 +655,19 @@ function CursoPlayer() {
             </MDBox>
           </MDBox>
 
-          <MDButton variant="outlined" color="dark" onClick={() => navigate("/cursos")}>
+          <MDButton
+            variant="outlined"
+            color="dark"
+            onClick={() => navigate("/cursos")}
+            sx={{ display: { xs: "none", md: "inline-flex" } }}
+          >
             <Icon sx={{ mr: 1 }}>arrow_back</Icon>
             Voltar
           </MDButton>
         </MDBox>
 
-        {/* Conteúdo da Aula */}
+        {/* Conteúdo da Aula (Sem alterações) */}
+        {/* ... Seu código de conteúdo da aula, botões e modal ... */}
         {aulaAtual ? (
           <MDBox p={4}>
             {/* Título da Aula */}
@@ -582,39 +781,70 @@ function CursoPlayer() {
 
             {/* Botões de Navegação */}
             <Card sx={{ p: 3 }}>
-              <MDBox display="flex" justifyContent="space-between" alignItems="center">
-                <MDButton variant="outlined" color="dark" onClick={aulaAnterior}>
+              <MDBox
+                display="flex"
+                justifyContent="space-between" // Espaça Aulas Anterior/Próxima nas pontas
+                alignItems="center"
+                flexWrap="wrap" // ESSENCIAL: Permite que os botões quebrem em telas pequenas
+                gap={2} // Espaço entre os botões
+              >
+                {/* 1. Botão Aula Anterior */}
+                <MDButton
+                  variant="outlined"
+                  color="dark"
+                  onClick={aulaAnterior}
+                  sx={{ order: { xs: 1, md: 1 } }}
+                >
                   <Icon sx={{ mr: 1 }}>arrow_back</Icon>
                   Aula Anterior
                 </MDButton>
 
-                {matricula && !isAulaConcluida(aulaAtual.id) && (
-                  <MDButton
-                    variant="gradient"
-                    color="success"
-                    onClick={marcarConcluida}
-                    sx={{
-                      backgroundColor: palette.green,
-                      "&:hover": {
-                        backgroundColor: palette.gold,
-                      },
-                    }}
-                  >
-                    <Icon sx={{ mr: 1 }}>check_circle</Icon>
-                    Marcar como Concluída
-                  </MDButton>
-                )}
+                {/* 2. Botão Marcar como Concluída / Status */}
+                <MDBox
+                  sx={{
+                    order: { xs: 3, md: 2 }, // No mobile, move para a linha de baixo (order: 3). No desktop, fica no centro (order: 2)
+                    width: { xs: "100%", md: "auto" }, // Ocupa a largura total no mobile para centralizar
+                    mt: { xs: 2, md: 0 }, // Adiciona margem superior no mobile, quando quebra
+                    textAlign: "center", // Centraliza o conteúdo (se for texto/ícone)
+                  }}
+                >
+                  {matricula && !isAulaConcluida(aulaAtual.id) && (
+                    <MDButton
+                      variant="gradient"
+                      color="success"
+                      onClick={marcarConcluida}
+                      sx={{
+                        backgroundColor: palette.green,
+                        "&:hover": {
+                          backgroundColor: palette.gold,
+                        },
+                      }}
+                    >
+                      <Icon sx={{ mr: 1 }}>check_circle</Icon>
+                      Marcar como Concluída
+                    </MDButton>
+                  )}
 
-                {matricula && isAulaConcluida(aulaAtual.id) && (
-                  <MDBox display="flex" alignItems="center" gap={1}>
-                    <Icon color="success">check_circle</Icon>
-                    <MDTypography variant="body2" color="success">
-                      Aula Concluída
-                    </MDTypography>
-                  </MDBox>
-                )}
+                  {matricula && isAulaConcluida(aulaAtual.id) && (
+                    <MDBox display="flex" alignItems="center" justifyContent="center" gap={1}>
+                      <Icon color="success">check_circle</Icon>
+                      <MDTypography variant="body2" color="success" fontWeight="bold">
+                        Aula Concluída
+                      </MDTypography>
+                    </MDBox>
+                  )}
+                </MDBox>
 
-                <MDButton variant="gradient" color="dark" onClick={proximaAula}>
+                {/* 3. Botão Próxima Aula */}
+                <MDButton
+                  variant="gradient"
+                  color="dark"
+                  onClick={proximaAula}
+                  sx={{
+                    order: { xs: 2, md: 3 }, // No mobile, fica na segunda posição (order: 2)
+                    ml: { xs: "auto", md: 0 }, // No mobile, joga para a direita (para ficar ao lado de 'Aula Anterior')
+                  }}
+                >
                   Próxima Aula
                   <Icon sx={{ ml: 1 }}>arrow_forward</Icon>
                 </MDButton>
@@ -678,7 +908,7 @@ function CursoPlayer() {
         )}
       </MDBox>
 
-      {/* Modal de Certificado */}
+      {/* Modal de Certificado (Sem alterações) */}
       <Dialog
         open={certificadoModal}
         onClose={() => setCertificadoModal(false)}
