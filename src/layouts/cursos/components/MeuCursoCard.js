@@ -20,11 +20,9 @@ const palette = {
 };
 
 // Variável de ambiente para a URL da API.
-// Note: O valor de API_URL será lido no momento da build,
-// por isso a importância de reiniciar o servidor após alterar o .env.
 const API_URL = process.env.REACT_APP_API_URL || "";
 
-// Função para normalizar a URL: garante que a base termine com '/' e remove a '/' inicial do path.
+// Função para normalizar a URL da Capa (Mantida para robustez)
 const getNormalizedCapaUrl = (baseUrl, relativePath) => {
   const placeholder = "https://via.placeholder.com/400x160?text=Adicionar+Capa";
 
@@ -42,16 +40,58 @@ const getNormalizedCapaUrl = (baseUrl, relativePath) => {
   // Remove a barra inicial do path se ela existir
   const normalizedPath = relativePath.startsWith("/") ? relativePath.substring(1) : relativePath;
 
+  // Usamos a URL base + caminho relativo (sem barra dupla)
   return `${normalizedBase}${normalizedPath}`;
 };
 
+// =========================================================================
+// SUBCOMPONENTE: StatsItem
+// Para evitar repetição de código no Grid de estatísticas
+// =========================================================================
+function StatsItem({ icon, title, value, color }) {
+  return (
+    <Grid item xs={6}>
+      <MDBox
+        display="flex"
+        flexDirection="column"
+        alignItems="center"
+        p={1.5}
+        sx={{
+          backgroundColor: `${color}08`,
+          borderRadius: 2,
+          border: `1px solid ${color}30`,
+        }}
+      >
+        <Icon sx={{ fontSize: 24, color: color, mb: 0.5 }}>{icon}</Icon>
+        <MDTypography variant="h6" fontWeight="bold">
+          {value}
+        </MDTypography>
+        <MDTypography variant="caption" color="text">
+          {title}
+        </MDTypography>
+      </MDBox>
+    </Grid>
+  );
+}
+
+StatsItem.propTypes = {
+  icon: PropTypes.string.isRequired,
+  title: PropTypes.string.isRequired,
+  value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  // Para evitar warnings, usamos strings de cores diretamente
+  color: PropTypes.string.isRequired,
+};
+
+// =========================================================================
+// COMPONENTE PRINCIPAL: MeuCursoCard
+// =========================================================================
 function MeuCursoCard({ curso, onEdit, onDelete }) {
   const navigate = useNavigate();
 
-  // CONSTRUÇÃO OTIMIZADA DA URL DA CAPA
+  // Construção da URL da capa
   const capaUrl = getNormalizedCapaUrl(API_URL, curso.capa_url);
 
-  // Badge de nível
+  // Mapeamento de Nível e Status (mantido)
   const nivelConfig = {
     iniciante: { label: "Iniciante", color: "success", icon: "emoji_events" },
     intermediario: { label: "Intermediário", color: "warning", icon: "trending_up" },
@@ -60,7 +100,6 @@ function MeuCursoCard({ curso, onEdit, onDelete }) {
 
   const nivel = nivelConfig[curso.nivel] || nivelConfig.iniciante;
 
-  // Status badge
   const statusConfig = {
     publicado: { label: "Publicado", color: "success", icon: "check_circle" },
     rascunho: { label: "Rascunho", color: "warning", icon: "edit" },
@@ -69,14 +108,14 @@ function MeuCursoCard({ curso, onEdit, onDelete }) {
 
   const statusInfo = statusConfig[curso.status] || statusConfig.rascunho;
 
-  // Handlers (mantidos)
-  const handleEdit = () => {
-    navigate(`/cursos/editar/${curso.id}`);
-  };
+  // Handlers
+  const handleEdit = () => navigate(`/cursos/editar/${curso.id}`);
+  const handlePreview = () => navigate(`/cursos/assistir/${curso.id}`);
+  const handleDelete = () => onDelete(curso);
 
-  const handlePreview = () => {
-    navigate(`/cursos/assistir/${curso.id}`);
-  };
+  // Cores customizadas em HEX para o StatsItem
+  const colorInfo = "#2196f3"; // Azul
+  const colorPurple = "#9c27b0"; // Roxo
 
   return (
     <Card
@@ -115,7 +154,7 @@ function MeuCursoCard({ curso, onEdit, onDelete }) {
           size="small"
           sx={{ fontWeight: "bold" }}
         />
-        {/* Ações (Visualizar, Editar, Excluir) */}
+        {/* Ações */}
         <MDBox display="flex" gap={1}>
           <Tooltip title="Visualizar curso" arrow>
             <IconButton size="small" onClick={handlePreview} sx={{ color: palette.green }}>
@@ -128,7 +167,7 @@ function MeuCursoCard({ curso, onEdit, onDelete }) {
             </IconButton>
           </Tooltip>
           <Tooltip title="Excluir curso" arrow>
-            <IconButton size="small" onClick={() => onDelete(curso)} sx={{ color: "error.main" }}>
+            <IconButton size="small" onClick={handleDelete} sx={{ color: "error.main" }}>
               <Icon>delete</Icon>
             </IconButton>
           </Tooltip>
@@ -139,7 +178,7 @@ function MeuCursoCard({ curso, onEdit, onDelete }) {
       <CardMedia
         component="img"
         height="160"
-        image={capaUrl} // URL agora é mais robusta
+        image={capaUrl}
         alt={curso.titulo}
         sx={{
           objectFit: "cover",
@@ -165,7 +204,7 @@ function MeuCursoCard({ curso, onEdit, onDelete }) {
           {curso.titulo}
         </MDTypography>
 
-        {/* Badge de Nível (Movido para dentro do CardContent para melhor alinhamento) */}
+        {/* Badge de Nível */}
         <Chip
           icon={<Icon fontSize="small">{nivel.icon}</Icon>}
           label={nivel.label}
@@ -193,105 +232,38 @@ function MeuCursoCard({ curso, onEdit, onDelete }) {
 
         <Divider sx={{ my: 2 }} />
 
-        {/* Estatísticas Grid (Módulos, Aulas, Duração, Alunos) */}
+        {/* Estatísticas Grid - USANDO StatsItem */}
         <Grid container spacing={2}>
-          {/* Módulos */}
-          <Grid item xs={6}>
-            <MDBox
-              display="flex"
-              flexDirection="column"
-              alignItems="center"
-              p={1.5}
-              sx={{
-                backgroundColor: `${palette.green}08`,
-                borderRadius: 2,
-                border: `1px solid ${palette.green}30`,
-              }}
-            >
-              <Icon sx={{ fontSize: 24, color: palette.green, mb: 0.5 }}>folder</Icon>
-              <MDTypography variant="h6" fontWeight="bold">
-                {curso.total_modulos || 0}
-              </MDTypography>
-              <MDTypography variant="caption" color="text">
-                Módulos
-              </MDTypography>
-            </MDBox>
-          </Grid>
-
-          {/* Aulas */}
-          <Grid item xs={6}>
-            <MDBox
-              display="flex"
-              flexDirection="column"
-              alignItems="center"
-              p={1.5}
-              sx={{
-                backgroundColor: `${palette.gold}08`,
-                borderRadius: 2,
-                border: `1px solid ${palette.gold}30`,
-              }}
-            >
-              <Icon sx={{ fontSize: 24, color: palette.gold, mb: 0.5 }}>play_circle</Icon>
-              <MDTypography variant="h6" fontWeight="bold">
-                {curso.total_aulas || 0}
-              </MDTypography>
-              <MDTypography variant="caption" color="text">
-                Aulas
-              </MDTypography>
-            </MDBox>
-          </Grid>
-
-          {/* Duração */}
-          <Grid item xs={6}>
-            <MDBox
-              display="flex"
-              flexDirection="column"
-              alignItems="center"
-              p={1.5}
-              sx={{
-                backgroundColor: "#2196f308",
-                borderRadius: 2,
-                border: "1px solid #2196f330",
-              }}
-            >
-              <Icon sx={{ fontSize: 24, color: "#2196f3", mb: 0.5 }}>schedule</Icon>
-              <MDTypography variant="h6" fontWeight="bold">
-                {Math.floor((curso.duracao_total_min || 0) / 60)}h
-              </MDTypography>
-              <MDTypography variant="caption" color="text">
-                Duração
-              </MDTypography>
-            </MDBox>
-          </Grid>
-
-          {/* Alunos */}
-          <Grid item xs={6}>
-            <MDBox
-              display="flex"
-              flexDirection="column"
-              alignItems="center"
-              p={1.5}
-              sx={{
-                backgroundColor: "#9c27b008",
-                borderRadius: 2,
-                border: "1px solid #9c27b030",
-              }}
-            >
-              <Icon sx={{ fontSize: 24, color: "#9c27b0", mb: 0.5 }}>people</Icon>
-              <MDTypography variant="h6" fontWeight="bold">
-                {curso.total_alunos || 0}
-              </MDTypography>
-              <MDTypography variant="caption" color="text">
-                Alunos
-              </MDTypography>
-            </MDBox>
-          </Grid>
+          <StatsItem
+            icon="folder"
+            title="Módulos"
+            value={curso.total_modulos || 0}
+            color={palette.green}
+          />
+          <StatsItem
+            icon="play_circle"
+            title="Aulas"
+            value={curso.total_aulas || 0}
+            color={palette.gold}
+          />
+          <StatsItem
+            icon="schedule"
+            title="Duração"
+            value={`${Math.floor((curso.duracao_total_min || 0) / 60)}h`}
+            color={colorInfo} // Azul
+          />
+          <StatsItem
+            icon="people"
+            title="Alunos"
+            value={curso.total_alunos || 0}
+            color={colorPurple} // Roxo
+          />
         </Grid>
       </CardContent>
 
       <Divider sx={{ my: 0 }} />
 
-      {/* Botão de Edição (Movido para o final do card e centralizado) */}
+      {/* Botão de Edição */}
       <MDBox p={2} pt={1} display="flex" justifyContent="center">
         <MDButton
           variant="gradient"
@@ -299,7 +271,7 @@ function MeuCursoCard({ curso, onEdit, onDelete }) {
           size="large"
           onClick={handleEdit}
           sx={{
-            background: `linear-gradient(135deg, ${palette.green} 0%, ${palette.gold} 100%)`,
+            background: palette.green,
             px: 4,
             py: 1,
             width: "100%",
@@ -313,7 +285,9 @@ function MeuCursoCard({ curso, onEdit, onDelete }) {
   );
 }
 
-// ... PropTypes e exportação (mantidos)
+// =========================================================================
+// PROPTYPES E EXPORTAÇÃO
+// =========================================================================
 
 MeuCursoCard.propTypes = {
   curso: PropTypes.shape({
