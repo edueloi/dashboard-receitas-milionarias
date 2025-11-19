@@ -282,28 +282,23 @@ function CursoPlayer() {
 
   return (
     <Box sx={{ display: "flex", height: "100vh", overflow: "hidden" }}>
-      {/* Sidebar - Módulos e Aulas */}
-      <Drawer
-        variant="persistent"
-        anchor="left"
-        open={sidebarAberta}
+      {/* Menu lateral exclusivo do curso */}
+      <Box
         sx={{
           width: drawerWidth,
-          flexShrink: 0,
-          "& .MuiDrawer-paper": {
-            width: drawerWidth,
-            boxSizing: "border-box",
-            top: 0,
-            height: "100vh",
-          },
+          minWidth: drawerWidth,
+          maxWidth: drawerWidth,
+          background: palette.green,
+          color: "white",
+          display: "flex",
+          flexDirection: "column",
+          height: "100vh",
+          boxShadow: "0 0 0 1px #e0e0e0",
+          position: "relative",
+          zIndex: 1100,
         }}
       >
-        <MDBox
-          p={2}
-          sx={{
-            backgroundColor: palette.green,
-          }}
-        >
+        <MDBox p={3}>
           <MDTypography variant="h6" fontWeight="bold" color="white">
             Conteúdo do Curso
           </MDTypography>
@@ -311,12 +306,9 @@ function CursoPlayer() {
             {curso.titulo}
           </MDTypography>
         </MDBox>
-
-        <Divider />
-
-        {/* Progresso */}
+        <Divider sx={{ bgcolor: "#e0e0e0" }} />
         {matricula && (
-          <MDBox p={2} sx={{ backgroundColor: "#f5f5f5" }}>
+          <MDBox p={3} sx={{ backgroundColor: "#f5f5f5", color: palette.green }}>
             <MDBox display="flex" justifyContent="space-between" alignItems="center" mb={1}>
               <MDTypography variant="body2" fontWeight="bold" color="text">
                 Seu Progresso
@@ -340,80 +332,84 @@ function CursoPlayer() {
             />
           </MDBox>
         )}
-
-        <Divider />
-
-        {/* Lista de Módulos */}
-        <List sx={{ overflowY: "auto", flex: 1 }}>
-          {curso.modulos.map((modulo, modIndex) => (
-            <div key={modulo.id}>
-              <ListItemButton onClick={() => toggleModulo(modulo.id)}>
-                <ListItemText
-                  primary={
-                    <MDTypography variant="body2" fontWeight="bold">
-                      {modIndex + 1}. {modulo.titulo}
-                    </MDTypography>
-                  }
-                  secondary={`${modulo.aulas.length} aulas`}
-                />
-                <Icon>{modulosAbertos[modulo.id] ? "expand_less" : "expand_more"}</Icon>
-              </ListItemButton>
-
-              <Collapse in={modulosAbertos[modulo.id]} timeout="auto" unmountOnExit>
-                <List component="div" disablePadding>
-                  {modulo.aulas.map((aula, aulaIndex) => {
-                    const concluida = isAulaConcluida(aula.id);
-                    const selecionada = aulaAtual?.id === aula.id;
-
-                    return (
-                      <ListItem
-                        key={aula.id}
-                        disablePadding
-                        sx={{
-                          backgroundColor: selecionada ? "rgba(201, 166, 53, 0.1)" : "transparent",
-                          borderLeft: selecionada ? `3px solid ${palette.gold}` : "none",
-                        }}
-                      >
-                        <ListItemButton
-                          sx={{ pl: 4 }}
-                          onClick={() => selecionarAula(aula, modulo.titulo)}
+        <Divider sx={{ bgcolor: "#e0e0e0" }} />
+        <Box sx={{ flex: 1, overflowY: "auto", pb: 2 }}>
+          <List>
+            {curso.modulos.map((modulo, modIndex) => (
+              <div key={modulo.id}>
+                <ListItemButton onClick={() => toggleModulo(modulo.id)} sx={{ color: "white" }}>
+                  <ListItemText
+                    primary={
+                      <MDTypography variant="body2" fontWeight="bold" color="white">
+                        {modIndex + 1}. {modulo.titulo}
+                      </MDTypography>
+                    }
+                    secondary={
+                      <span style={{ color: "#e0e0e0" }}>{modulo.aulas.length} aulas</span>
+                    }
+                  />
+                  <Icon sx={{ color: "white" }}>
+                    {modulosAbertos[modulo.id] ? "expand_less" : "expand_more"}
+                  </Icon>
+                </ListItemButton>
+                <Collapse in={modulosAbertos[modulo.id]} timeout="auto" unmountOnExit>
+                  <List component="div" disablePadding>
+                    {modulo.aulas.map((aula, aulaIndex) => {
+                      const concluida = isAulaConcluida(aula.id);
+                      const selecionada = aulaAtual?.id === aula.id;
+                      return (
+                        <ListItem
+                          key={aula.id}
+                          disablePadding
+                          sx={{
+                            backgroundColor: selecionada
+                              ? "rgba(201, 166, 53, 0.2)"
+                              : "transparent",
+                            borderLeft: selecionada ? `3px solid ${palette.gold}` : "none",
+                          }}
                         >
-                          <ListItemIcon sx={{ minWidth: 40 }}>
-                            {concluida ? (
-                              <Icon color="success">check_circle</Icon>
-                            ) : aula.gratuita ? (
-                              <Icon color="info">play_circle</Icon>
-                            ) : matricula ? (
-                              <Icon>play_circle_outline</Icon>
-                            ) : (
-                              <Icon color="disabled">lock</Icon>
-                            )}
-                          </ListItemIcon>
-                          <ListItemText
-                            primary={
-                              <MDTypography
-                                variant="caption"
-                                fontWeight={selecionada ? "bold" : "regular"}
-                              >
-                                {aulaIndex + 1}. {aula.titulo}
-                              </MDTypography>
-                            }
-                            secondary={
-                              <MDTypography variant="caption" color="text">
-                                {aula.duracao_min} min {aula.gratuita && "• Gratuita"}
-                              </MDTypography>
-                            }
-                          />
-                        </ListItemButton>
-                      </ListItem>
-                    );
-                  })}
-                </List>
-              </Collapse>
-            </div>
-          ))}
-        </List>
-      </Drawer>
+                          <ListItemButton
+                            sx={{ pl: 4, color: "white" }}
+                            onClick={() => selecionarAula(aula, modulo.titulo)}
+                          >
+                            <ListItemIcon sx={{ minWidth: 40 }}>
+                              {concluida ? (
+                                <Icon color="success">check_circle</Icon>
+                              ) : aula.gratuita ? (
+                                <Icon color="info">play_circle</Icon>
+                              ) : matricula ? (
+                                <Icon>play_circle_outline</Icon>
+                              ) : (
+                                <Icon color="disabled">lock</Icon>
+                              )}
+                            </ListItemIcon>
+                            <ListItemText
+                              primary={
+                                <MDTypography
+                                  variant="caption"
+                                  fontWeight={selecionada ? "bold" : "regular"}
+                                  color="white"
+                                >
+                                  {aulaIndex + 1}. {aula.titulo}
+                                </MDTypography>
+                              }
+                              secondary={
+                                <MDTypography variant="caption" color="#e0e0e0">
+                                  {aula.duracao_min} min {aula.gratuita && "• Gratuita"}
+                                </MDTypography>
+                              }
+                            />
+                          </ListItemButton>
+                        </ListItem>
+                      );
+                    })}
+                  </List>
+                </Collapse>
+              </div>
+            ))}
+          </List>
+        </Box>
+      </Box>
 
       {/* Área Principal - Player e Conteúdo */}
       <MDBox
