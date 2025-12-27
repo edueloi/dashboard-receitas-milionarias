@@ -13,6 +13,7 @@ const getPermissionsForRole = (roleName) => {
   const baseRoutes = new Set([
     "dashboard",
     "todas-as-receitas",
+    "cursos",
     "categories",
     "ebooks",
     "carteira",

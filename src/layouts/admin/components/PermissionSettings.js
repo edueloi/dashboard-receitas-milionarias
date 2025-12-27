@@ -40,6 +40,7 @@ const visibleRoutes = [
     color: "#ff9800",
   },
   { key: "receitas", name: "Minhas Receitas", icon: "book", color: "#4caf50" },
+  { key: "cursos", name: "Cursos", icon: "school", color: "#3f51b5" },
   { key: "categories", name: "Categorias", icon: "category", color: "#9c27b0" },
   { key: "ebooks", name: "Ebooks", icon: "menu_book", color: "#f44336" },
   { key: "relatorios", name: "Relatórios", icon: "assessment", color: "#00bcd4" },

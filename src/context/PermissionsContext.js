@@ -47,6 +47,7 @@ export const PermissionsProvider = ({ children }) => {
           dashboard: true,
           "todas-as-receitas": true,
           receitas: true,
+          cursos: true,
           categories: true,
           ebooks: true,
           relatorios: true,
@@ -87,6 +88,9 @@ export const PermissionsProvider = ({ children }) => {
     if (user && (roleId === 1 || roleId === "1" || roleName === "admin")) {
       return true;
     }
+    if (key === "cursos") {
+      return true;
+    }
     const hasAccess = permissions[key] === true;
     return hasAccess;
   };
@@ -109,6 +113,9 @@ export const PermissionsProvider = ({ children }) => {
     return routes.filter((route) => {
       // Sempre mostra logout, dividers e títulos
       if (route.key === "logout" || route.type === "divider" || route.type === "title") {
+        return true;
+      }
+      if (route.key === "cursos") {
         return true;
       }
 
