@@ -222,7 +222,11 @@ function CursoPlayer() {
 
   // Marcar aula como concluída
   const marcarConcluida = async () => {
-    if (!aulaAtual || !matricula) return;
+    if (!aulaAtual) return;
+    if (!matricula) {
+      toast.error("Você precisa estar matriculado para marcar a aula como concluída.");
+      return;
+    }
 
     try {
       await api.post(`/api/cursos/aulas/${aulaAtual.id}/concluir`);

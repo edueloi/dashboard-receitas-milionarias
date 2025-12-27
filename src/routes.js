@@ -19,11 +19,7 @@ import CriarEbook from "layouts/ebooks/CriarEbook";
 import ViewEbook from "layouts/ebooks/ViewEbook";
 import EditarEbook from "layouts/ebooks/EditarEbook";
 import EbookCategories from "layouts/ebook-categories";
-import LeadsLancamento from "layouts/leads-lancamento";
-import Cursos from "layouts/cursos";
-import MeusCursos from "layouts/cursos/MeusCursos";
-import CriarEditarCurso from "layouts/cursos/CriarEditarCurso";
-import CursoPlayer from "layouts/cursos/CursoPlayer";
+import ExternalCursosRedirect from "layouts/cursos/ExternalCursosRedirect";
 
 // --- Autenticação ---
 import SignInSplit from "layouts/authentication/sign-in";
@@ -100,37 +96,8 @@ const routes = [
     key: "cursos",
     icon: <Icon fontSize="small">school</Icon>,
     route: "/cursos",
-    component: <Cursos />,
-  },
-  {
-    type: "collapse",
-    name: "Meus Cursos",
-    key: "meus-cursos",
-    icon: <Icon fontSize="small">edit_note</Icon>,
-    route: "/meus-cursos",
-    component: <MeusCursos />,
-    visibleFor: ["admin", "produtor"], // Apenas admin e produtor veem
-  },
-  {
-    type: "hidden",
-    name: "Criar Curso",
-    key: "criar-curso",
-    route: "/cursos/criar",
-    component: <CriarEditarCurso />,
-  },
-  {
-    type: "hidden",
-    name: "Editar Curso",
-    key: "editar-curso",
-    route: "/cursos/editar/:id",
-    component: <CriarEditarCurso />,
-  },
-  {
-    type: "hidden",
-    name: "Assistir Curso",
-    key: "assistir-curso",
-    route: "/cursos/assistir/:id",
-    component: <CursoPlayer />,
+    href: "https://cursos.receitasmilionarias.com.br/",
+    component: <ExternalCursosRedirect />,
   },
   {
     type: "collapse",
@@ -163,15 +130,6 @@ const routes = [
     icon: <Icon fontSize="small">admin_panel_settings</Icon>,
     route: "/admin",
     component: <AdminPanel />,
-  },
-  {
-    type: "collapse",
-    name: "Leads Lançamento",
-    key: "leads-lancamento",
-    icon: <Icon fontSize="small">rocket_launch</Icon>,
-    route: "/leads-lancamento",
-    component: <LeadsLancamento />,
-    requiredPermissions: ["admin"],
   },
   {
     type: "collapse",
