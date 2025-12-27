@@ -250,6 +250,24 @@ function SignInSplit() {
                   </MDTypography>
                 </MDBox>
 
+                <MDBox display="flex" justifyContent="flex-end" mb={2}>
+                  <MDTypography
+                    component={Link}
+                    to="/authentication/forgot-password"
+                    variant="caption"
+                    color="text"
+                    sx={{
+                      cursor: "pointer",
+                      userSelect: "none",
+                      fontWeight: 600,
+                      textDecoration: "none",
+                      "&:hover": { textDecoration: "underline" },
+                    }}
+                  >
+                    Esqueci a senha
+                  </MDTypography>
+                </MDBox>
+
                 {/* Botão de Entrar */}
                 <MDBox mt={4} mb={1}>
                   <MDButton

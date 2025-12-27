@@ -25,6 +25,8 @@ import ExternalCursosRedirect from "layouts/cursos/ExternalCursosRedirect";
 import SignInSplit from "layouts/authentication/sign-in";
 import SignUpWizard from "layouts/authentication/sign-up/SignUpWizard";
 import AuthLayout from "layouts/authentication/AuthLayout";
+import ForgotPassword from "layouts/authentication/forgot-password";
+import ResetPassword from "layouts/authentication/reset-password";
 
 import PagamentoPage from "layouts/pagamento";
 import PagamentoSucesso from "layouts/pagamento/PagamentoSucesso";
@@ -45,6 +47,16 @@ const routes = [
         key: "sign-up",
         route: "/authentication/sign-up",
         component: <SignUpWizard />,
+      },
+      {
+        key: "forgot-password",
+        route: "/authentication/forgot-password",
+        component: <ForgotPassword />,
+      },
+      {
+        key: "reset-password",
+        route: "/authentication/reset-password",
+        component: <ResetPassword />,
       },
     ],
   },
