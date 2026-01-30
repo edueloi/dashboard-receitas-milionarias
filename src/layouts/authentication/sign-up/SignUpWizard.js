@@ -95,7 +95,7 @@ function SignUpCover() {
         email: formData.email,
         firstName: formData.firstName,
         lastName: formData.lastName,
-        affiliateId: formData.affiliateCode,
+        affiliateCode: formData.affiliateCode,
       });
 
       const session = response.data;

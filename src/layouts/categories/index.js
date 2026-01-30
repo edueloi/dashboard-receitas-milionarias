@@ -48,6 +48,11 @@ const palette = {
   gold: "#C9A635",
   green: "#1C3B32",
 };
+const SORT_OPTIONS = [
+  { value: "recentes", label: "Mais Recentes" },
+  { value: "alfabetica-az", label: "A ??? Z" },
+  { value: "alfabetica-za", label: "Z ??? A" },
+];
 
 const modalStyle = {
   position: "absolute",
@@ -460,19 +465,10 @@ function Categories() {
                   <Autocomplete
                     disablePortal
                     size="small"
-                    options={[
-                      { value: "recentes", label: "Mais Recentes" },
-                      { value: "alfabetica-az", label: "A → Z" },
-                      { value: "alfabetica-za", label: "Z → A" },
-                    ]}
+                    options={SORT_OPTIONS}
                     getOptionLabel={(o) => o.label}
-                    value={
-                      [
-                        { value: "recentes", label: "Mais Recentes" },
-                        { value: "alfabetica-az", label: "A → Z" },
-                        { value: "alfabetica-za", label: "Z → A" },
-                      ].find((o) => o.value === categorySortOrder) || null
-                    }
+                    value={SORT_OPTIONS.find((o) => o.value === categorySortOrder) || null}
+                    isOptionEqualToValue={(option, value) => option.value === value.value}
                     onChange={(_e, v) => setCategorySortOrder(v ? v.value : "recentes")}
                     sx={{ width: { xs: "100%", sm: 180 } }}
                     renderInput={(params) => (
@@ -689,17 +685,13 @@ function Categories() {
                   />
                   <Autocomplete
                     size="small"
-                    value={tagSortOrder}
-                    onChange={(event, newValue) => {
-                      setTagSortOrder(newValue || "recentes");
-                    }}
-                    options={[
-                      { value: "recentes", label: "Mais Recentes" },
-                      { value: "alfabetica-az", label: "A → Z" },
-                      { value: "alfabetica-za", label: "Z → A" },
-                    ]}
-                    getOptionLabel={(option) => option.label || ""}
+                    value={SORT_OPTIONS.find((o) => o.value === tagSortOrder) || null}
                     isOptionEqualToValue={(option, value) => option.value === value.value}
+                    onChange={(event, newValue) => {
+                      setTagSortOrder(newValue ? newValue.value : "recentes");
+                    }}
+                    options={SORT_OPTIONS}
+                    getOptionLabel={(option) => option.label || ""}
                     renderInput={(params) => (
                       <TextField
                         {...params}

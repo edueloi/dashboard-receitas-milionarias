@@ -27,6 +27,7 @@ import VerticalBarChart from "examples/Charts/BarCharts/VerticalBarChart";
 import api from "services/api";
 import toast from "react-hot-toast";
 import { useAuth } from "context/AuthContext";
+import { formatDisabledReason, formatRequirementsList } from "utils/stripeRequirements";
 
 const palette = { gold: "#C9A635", green: "#1C3B32" };
 const brl = (v) =>
@@ -42,24 +43,39 @@ function MinhaCarteira() {
   const [referredUsers, setReferredUsers] = useState([]);
   const [monthlyEarnings, setMonthlyEarnings] = useState([]);
   const [connectedAccount, setConnectedAccount] = useState(null);
+  const [totalRepassadoMes, setTotalRepassadoMes] = useState(0);
 
   const isAdmin = user?.permissao === "admin";
+  const needsOnboarding =
+    connectedAccount?.requires_onboarding ||
+    (connectedAccount?.connected &&
+      (!connectedAccount?.account?.details_submitted ||
+        !connectedAccount?.account?.payouts_enabled));
+  const pendingRequirements = formatRequirementsList(
+    connectedAccount?.account?.requirements?.currently_due || []
+  );
+  const disabledReason = formatDisabledReason(
+    connectedAccount?.account?.requirements?.disabled_reason
+  );
 
   const fetchWallet = useCallback(async () => {
     try {
       setLoading(true);
+      const range = period === "7d" ? "7d" : period === "30d" ? "30d" : "all";
       const [
         { data: balanceData },
         { data: commissionsData },
         { data: referredUsersData },
         { data: monthlyEarningsData },
         { data: accountData },
+        { data: stripeData },
       ] = await Promise.all([
         api.get("/wallet/balance"),
         api.get("/commissions").catch(() => ({ data: [] })),
         api.get("/users/referred").catch(() => ({ data: [] })),
         api.get("/earnings/monthly").catch(() => ({ data: [] })),
         api.get("/stripe/connect/account").catch(() => ({ data: { connected: false } })),
+        api.get(`/stripe-dashboard-data?range=${range}`).catch(() => ({ data: null })),
       ]);
 
       setConnectedAccount(accountData);
@@ -69,9 +85,12 @@ function MinhaCarteira() {
         setSaldoDisponivel(balanceData.disponivel[0].valor);
         setGanhosPendentes(balanceData.pendente[0].valor);
       } else {
-        setSaldoDisponivel(balanceData.disponivel[0]?.valor || 0);
-        setGanhosPendentes(0);
+        const availableBrl = stripeData?.balance?.availableBrl ?? 0;
+        const pendingBrl = stripeData?.balance?.pendingBrl ?? 0;
+        setSaldoDisponivel(availableBrl / 100);
+        setGanhosPendentes(pendingBrl / 100);
       }
+      setTotalRepassadoMes((stripeData?.totalTransferencias ?? 0) / 100);
 
       // Garantir que sempre sejam arrays
       setCommissions(Array.isArray(commissionsData) ? commissionsData : []);
@@ -92,10 +111,15 @@ function MinhaCarteira() {
   const handleStripeConnect = async () => {
     try {
       const { data } = await api.post("/stripe/connect/onboard-user");
-      window.location.href = data.url;
+      const url = data?.url;
+      if (url) {
+        window.open(url, "_blank", "noopener,noreferrer");
+      } else {
+        toast.error("Resposta inesperada do servidor ao conectar Stripe.");
+      }
     } catch (error) {
       console.error(error);
-      toast.error("Não foi possível conectar com o Stripe.");
+      toast.error("Nao foi possivel conectar com o Stripe.");
     }
   };
 
@@ -264,16 +288,12 @@ function MinhaCarteira() {
                 <ComplexStatisticsCard
                   color="success"
                   icon="payments"
-                  title="Total de Comissões"
-                  count={brl(
-                    Array.isArray(commissions)
-                      ? commissions.reduce((sum, c) => sum + (c.valor || 0), 0)
-                      : 0
-                  )}
+                  title="Total repassado"
+                  count={brl(totalRepassadoMes)}
                   percentage={{
                     color: "success",
-                    amount: `${Array.isArray(commissions) ? commissions.length : 0}`,
-                    label: "Comissões recebidas",
+                    amount: "",
+                    label: "M??s atual",
                   }}
                 />
               )}
@@ -310,7 +330,7 @@ function MinhaCarteira() {
                   <MDTypography variant="button" fontWeight="medium" textAlign="center">
                     {connectedAccount.account?.payouts_enabled
                       ? "Stripe Conectado"
-                      : "Aguardando Aprovação"}
+                      : "Cadastro incompleto"}
                   </MDTypography>
                   <MDTypography
                     variant="caption"
@@ -320,7 +340,7 @@ function MinhaCarteira() {
                   >
                     {connectedAccount.account?.email || "Conta configurada"}
                   </MDTypography>
-                  {connectedAccount.account?.payouts_enabled && (
+                  {connectedAccount.account?.payouts_enabled ? (
                     <MDTypography
                       variant="caption"
                       color="success"
@@ -329,6 +349,46 @@ function MinhaCarteira() {
                     >
                       ✓ Repasses habilitados
                     </MDTypography>
+                  ) : (
+                    <>
+                      {disabledReason && (
+                        <MDTypography
+                          variant="caption"
+                          color="text"
+                          textAlign="center"
+                          sx={{ fontSize: "0.7rem" }}
+                        >
+                          Motivo: {disabledReason}
+                        </MDTypography>
+                      )}
+                      {pendingRequirements.length > 0 && (
+                        <MDTypography
+                          variant="caption"
+                          color="text"
+                          textAlign="center"
+                          sx={{ fontSize: "0.7rem" }}
+                        >
+                          Pendências: {pendingRequirements.join(", ")}
+                        </MDTypography>
+                      )}
+                      <MDButton
+                        variant="outlined"
+                        onClick={handleStripeConnect}
+                        startIcon={<Icon>link</Icon>}
+                        sx={{
+                          mt: 0.5,
+                          py: 0.5,
+                          color: palette.green,
+                          borderColor: palette.green,
+                          "&:hover": {
+                            backgroundColor: alpha(palette.green, 0.08),
+                            borderColor: palette.green,
+                          },
+                        }}
+                      >
+                        Completar cadastro
+                      </MDButton>
+                    </>
                   )}
                 </>
               ) : (

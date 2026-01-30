@@ -34,6 +34,7 @@ import MDInput from "components/MDInput";
 import DataTable from "examples/Tables/DataTable";
 
 import PermissionSettings from "./components/PermissionSettings";
+import AffiliateCommissionSettings from "./components/AffiliateCommissionSettings";
 
 // ---------- theme colors ----------
 const palette = { gold: "#C9A635", green: "#1C3B32" };
@@ -97,6 +98,7 @@ function AdminPanel() {
   // delete modal (padrão do app)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
+  const [reprocessando, setReprocessando] = useState(false);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -258,6 +260,22 @@ function AdminPanel() {
     }
   };
 
+  const handleReprocessTransfers = async () => {
+    try {
+      setReprocessando(true);
+      const { data } = await api.post("/admin/reprocess-stripe-transfers");
+      toast.success(
+        `Reprocessamento concluido. Sucesso: ${data?.success || 0}, Falhas: ${
+          data?.failed || 0
+        }, Pulados: ${data?.skipped || 0}`
+      );
+    } catch (err) {
+      toast.error("Nao foi possivel reprocessar os repasses.");
+    } finally {
+      setReprocessando(false);
+    }
+  };
+
   // -------- table --------
   const columns = useMemo(
     () => [
@@ -376,6 +394,7 @@ function AdminPanel() {
       >
         <Tab icon={<Icon>group</Icon>} iconPosition="start" label="Gerenciar Usuários" />
         <Tab icon={<Icon>tune</Icon>} iconPosition="start" label="Gerenciar Permissões" />
+        <Tab icon={<Icon>paid</Icon>} iconPosition="start" label="Comissões" />
       </Tabs>
 
       {activeTab === 0 && (
@@ -407,6 +426,38 @@ function AdminPanel() {
           }}
         >
           Atualizar
+        </MDButton>
+      )}
+      {activeTab === 2 && (
+        <MDButton
+          onClick={handleReprocessTransfers}
+          startIcon={<Icon>{reprocessando ? "sync" : "refresh"}</Icon>}
+          disabled={reprocessando}
+          sx={{
+            background: `linear-gradient(135deg, ${palette.green} 0%, ${alpha(
+              palette.green,
+              0.85
+            )} 100%)`,
+            color: "#fff",
+            px: { xs: 2, sm: 3 },
+            py: 1,
+            fontSize: { xs: "0.8rem", sm: "0.875rem" },
+            fontWeight: 600,
+            textTransform: "none",
+            borderRadius: 2,
+            boxShadow: `0 4px 12px ${alpha(palette.green, 0.3)}`,
+            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+            "&:hover": {
+              background: `linear-gradient(135deg, ${palette.gold} 0%, ${alpha(
+                palette.gold,
+                0.85
+              )} 100%)`,
+              boxShadow: `0 6px 16px ${alpha(palette.gold, 0.4)}`,
+              transform: "translateY(-2px)",
+            },
+          }}
+        >
+          {reprocessando ? "Reprocessando..." : "Reprocessar repasses"}
         </MDButton>
       )}
     </Stack>
@@ -531,7 +582,7 @@ function AdminPanel() {
                       >
                         Nada por aqui…
                       </MDTypography>
-                      <MDTypography variant="body2" color="text.secondary">
+                      <MDTypography variant="body2" sx={{ color: "text.secondary" }}>
                         Ajuste o termo de busca ou tente atualizar a lista.
                       </MDTypography>
                       {query && (
@@ -568,6 +619,7 @@ function AdminPanel() {
             )}
 
             {activeTab === 1 && <PermissionSettings />}
+            {activeTab === 2 && <AffiliateCommissionSettings />}
           </MDBox>
         </Card>
       </MDBox>

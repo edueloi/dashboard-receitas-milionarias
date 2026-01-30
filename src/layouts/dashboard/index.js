@@ -34,6 +34,7 @@ import DataTable from "examples/Tables/DataTable";
 // API & Auth
 import api from "services/api";
 import { useAuth } from "context/AuthContext";
+import { formatDisabledReason, formatRequirementsList } from "utils/stripeRequirements";
 
 // Helpers
 const toBRL = (value) => {
@@ -87,7 +88,15 @@ function Dashboard() {
 
           // Mostrar modal se não for admin, não estiver conectado E não tiver fechado na sessão atual
           const modalDismissed = sessionStorage.getItem("stripeModalDismissed");
-          if (user.permissao !== "admin" && !resp.data?.connected && !modalDismissed) {
+          const needsOnboarding =
+            resp.data?.requires_onboarding ||
+            (resp.data?.connected &&
+              (!resp.data?.account?.details_submitted || !resp.data?.account?.payouts_enabled));
+          if (
+            user.permissao !== "admin" &&
+            (!resp.data?.connected || needsOnboarding) &&
+            !modalDismissed
+          ) {
             setShowStripeModal(true);
           }
         } catch (err) {
@@ -325,26 +334,15 @@ function Dashboard() {
   }
 
   const handleConnectStripe = async () => {
-    // Abre uma aba em branco imediatamente para evitar bloqueadores de pop-up.
-    const popup = window.open("about:blank", "_blank", "noopener,noreferrer");
     try {
       const response = await api.post("/stripe/connect/onboard-user");
       const url = response.data?.url;
       if (url) {
-        // Navega a aba previamente aberta para o URL do Stripe
-        try {
-          if (popup) popup.location.href = url;
-          else window.open(url, "_blank", "noopener,noreferrer");
-        } catch (navErr) {
-          // Em alguns browsers pode haver restrição; tentar abrir diretamente
-          window.open(url, "_blank", "noopener,noreferrer");
-        }
+        window.open(url, "_blank", "noopener,noreferrer");
       } else {
-        if (popup) popup.close();
         toast.error("Resposta inesperada do servidor ao conectar Stripe.");
       }
     } catch (error) {
-      if (popup) popup.close();
       toast.error("Não foi possível iniciar o processo de conexão com o Stripe.");
     }
   };
@@ -364,7 +362,11 @@ function Dashboard() {
       {/* Mostrar alerta para usuários que não são admin e não têm conta Stripe conectada */}
       {user?.permissao !== "admin" && (
         <MDBox my={2}>
-          {!(connectedAccount && connectedAccount.connected) ? (
+          {!(connectedAccount && connectedAccount.connected) ||
+          connectedAccount?.requires_onboarding ||
+          (connectedAccount?.connected &&
+            (!connectedAccount?.account?.details_submitted ||
+              !connectedAccount?.account?.payouts_enabled)) ? (
             <MDBox
               sx={{
                 background: "linear-gradient(135deg, #1C3B32 0%, #C9A635 100%)",
@@ -416,11 +418,27 @@ function Dashboard() {
                   </Icon>
                   <MDBox>
                     <MDTypography variant="h6" color="white" fontWeight="bold" mb={0.5}>
-                      💰 Conecte sua Conta Stripe
+                      💰 Complete sua Conta Stripe
                     </MDTypography>
                     <MDTypography variant="button" color="white" sx={{ opacity: 0.95 }}>
-                      Configure em poucos minutos e comece a receber suas comissões automaticamente
+                      Finalize o cadastro para liberar repasses automáticos
                     </MDTypography>
+                    {connectedAccount?.account?.requirements?.disabled_reason && (
+                      <MDTypography variant="caption" color="white" sx={{ opacity: 0.9 }}>
+                        Motivo:{" "}
+                        {formatDisabledReason(
+                          connectedAccount.account.requirements.disabled_reason
+                        )}
+                      </MDTypography>
+                    )}
+                    {connectedAccount?.account?.requirements?.currently_due?.length > 0 && (
+                      <MDTypography variant="caption" color="white" sx={{ opacity: 0.9 }}>
+                        Pendências:{" "}
+                        {formatRequirementsList(
+                          connectedAccount.account.requirements.currently_due
+                        ).join(", ")}
+                      </MDTypography>
+                    )}
                   </MDBox>
                 </MDBox>
                 <MDButton
@@ -443,7 +461,7 @@ function Dashboard() {
                   }}
                 >
                   <Icon sx={{ mr: 1 }}>link</Icon>
-                  Conectar Agora
+                  Continuar cadastro
                 </MDButton>
               </MDBox>
             </MDBox>
@@ -469,7 +487,7 @@ function Dashboard() {
                       icon="south_west"
                       title="Total repassado"
                       count={loading ? "-" : toBRL(stats?.totalTransferencias)}
-                      percentage={{ color: "info", amount: "", label: `Período: ${range}` }}
+                      percentage={{ color: "info", amount: "", label: "Mes atual" }}
                     />
                   </MDBox>
                 </Grid>

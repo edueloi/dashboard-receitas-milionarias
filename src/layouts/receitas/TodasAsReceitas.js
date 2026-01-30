@@ -46,6 +46,11 @@ const palette = {
   gold: "#C9A635",
   green: "#1C3B32",
 };
+const SORT_OPTIONS = [
+  { value: "recentes", label: "Mais Recentes" },
+  { value: "alfabetica-az", label: "A â†’ Z" },
+  { value: "alfabetica-za", label: "Z â†’ A" },
+];
 
 function TodasAsReceitas() {
   const { uiPermissions } = useAuth();
@@ -437,19 +442,10 @@ function TodasAsReceitas() {
               <Autocomplete
                 disablePortal
                 size="small"
-                options={[
-                  { value: "recentes", label: "Mais Recentes" },
-                  { value: "alfabetica-az", label: "A → Z" },
-                  { value: "alfabetica-za", label: "Z → A" },
-                ]}
+                options={SORT_OPTIONS}
                 getOptionLabel={(o) => o.label}
-                value={
-                  [
-                    { value: "recentes", label: "Mais Recentes" },
-                    { value: "alfabetica-az", label: "A → Z" },
-                    { value: "alfabetica-za", label: "Z → A" },
-                  ].find((o) => o.value === sortOrder) || null
-                }
+                value={SORT_OPTIONS.find((o) => o.value === sortOrder) || null}
+                isOptionEqualToValue={(option, value) => option.value === value.value}
                 onChange={(_e, v) => setSortOrder(v ? v.value : "recentes")}
                 sx={{ width: { xs: "100%", md: 200 } }}
                 renderInput={(params) => (

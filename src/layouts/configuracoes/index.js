@@ -108,6 +108,10 @@ export default function Configuracoes() {
   }, [selectedSection]);
 
   const selectedItem = MENU.find((item) => item.id === selectedSection);
+  const selectedLabel = selectedItem?.label || "Configurações";
+  const selectedDescription = selectedItem?.description || "";
+  const selectedIcon = selectedItem?.icon || "settings";
+  const selectedColor = selectedItem?.color || palette.green;
 
   const headerActions = null;
 
@@ -274,11 +278,11 @@ export default function Configuracoes() {
             <MDBox
               sx={{
                 p: 3,
-                background: `linear-gradient(135deg, ${alpha(
-                  selectedItem?.color || palette.green,
-                  0.1
-                )} 0%, ${alpha(selectedItem?.color || palette.green, 0.05)} 100%)`,
-                borderBottom: `2px solid ${alpha(selectedItem?.color || palette.green, 0.2)}`,
+                background: `linear-gradient(135deg, ${alpha(selectedColor, 0.1)} 0%, ${alpha(
+                  selectedColor,
+                  0.05
+                )} 100%)`,
+                borderBottom: `2px solid ${alpha(selectedColor, 0.2)}`,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
@@ -293,22 +297,22 @@ export default function Configuracoes() {
                     width: 48,
                     height: 48,
                     borderRadius: 2,
-                    backgroundColor: alpha(selectedItem?.color || palette.green, 0.15),
-                    color: selectedItem?.color || palette.green,
+                    backgroundColor: alpha(selectedColor, 0.15),
+                    color: selectedColor,
                   }}
                 >
-                  <Icon sx={{ fontSize: 28 }}>{selectedItem?.icon}</Icon>
+                  <Icon sx={{ fontSize: 28 }}>{selectedIcon}</Icon>
                 </MDBox>
                 <MDBox>
                   <MDTypography
                     variant="h5"
                     fontWeight="bold"
-                    sx={{ color: selectedItem?.color || palette.green, mb: 0.5 }}
+                    sx={{ color: selectedColor, mb: 0.5 }}
                   >
-                    {selectedItem?.label}
+                    {selectedLabel}
                   </MDTypography>
                   <MDTypography variant="caption" sx={{ color: "text.secondary" }}>
-                    {selectedItem?.description}
+                    {selectedDescription}
                   </MDTypography>
                 </MDBox>
               </MDBox>
@@ -317,8 +321,8 @@ export default function Configuracoes() {
                 sx={{
                   color: "text.secondary",
                   "&:hover": {
-                    backgroundColor: alpha(selectedItem?.color || palette.green, 0.1),
-                    color: selectedItem?.color || palette.green,
+                    backgroundColor: alpha(selectedColor, 0.1),
+                    color: selectedColor,
                   },
                 }}
               >
@@ -340,10 +344,10 @@ export default function Configuracoes() {
                   borderRadius: 4,
                 },
                 "&::-webkit-scrollbar-thumb": {
-                  backgroundColor: alpha(selectedItem?.color || palette.green, 0.3),
+                  backgroundColor: alpha(selectedColor, 0.3),
                   borderRadius: 4,
                   "&:hover": {
-                    backgroundColor: alpha(selectedItem?.color || palette.green, 0.5),
+                    backgroundColor: alpha(selectedColor, 0.5),
                   },
                 },
               }}
