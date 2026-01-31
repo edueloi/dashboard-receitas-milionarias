@@ -73,7 +73,7 @@ function AffiliateCommissionSettings() {
         });
         setSettings(merged);
       } catch (error) {
-        toast.error("NÃ£o foi possÃ­vel carregar as comissÃµes.", {
+        toast.error("Não foi possível carregar as comissões.", {
           duration: 4000,
           style: {
             background: `linear-gradient(135deg, #f44336 0%, ${alpha("#f44336", 0.9)} 100%)`,

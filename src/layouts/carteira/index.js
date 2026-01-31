@@ -43,7 +43,6 @@ function MinhaCarteira() {
   const [referredUsers, setReferredUsers] = useState([]);
   const [monthlyEarnings, setMonthlyEarnings] = useState([]);
   const [connectedAccount, setConnectedAccount] = useState(null);
-  const [totalRepassadoMes, setTotalRepassadoMes] = useState(0);
 
   const isAdmin = user?.permissao === "admin";
   const needsOnboarding =
@@ -69,6 +68,7 @@ function MinhaCarteira() {
         { data: monthlyEarningsData },
         { data: accountData },
         { data: stripeData },
+        { data: userBalances },
       ] = await Promise.all([
         api.get("/wallet/balance"),
         api.get("/commissions").catch(() => ({ data: [] })),
@@ -76,6 +76,7 @@ function MinhaCarteira() {
         api.get("/earnings/monthly").catch(() => ({ data: [] })),
         api.get("/stripe/connect/account").catch(() => ({ data: { connected: false } })),
         api.get(`/stripe-dashboard-data?range=${range}`).catch(() => ({ data: null })),
+        api.get("/wallet/me/balances").catch(() => ({ data: null })),
       ]);
 
       setConnectedAccount(accountData);
@@ -85,12 +86,11 @@ function MinhaCarteira() {
         setSaldoDisponivel(balanceData.disponivel[0].valor);
         setGanhosPendentes(balanceData.pendente[0].valor);
       } else {
-        const availableBrl = stripeData?.balance?.availableBrl ?? 0;
-        const pendingBrl = stripeData?.balance?.pendingBrl ?? 0;
-        setSaldoDisponivel(availableBrl / 100);
-        setGanhosPendentes(pendingBrl / 100);
+        const available = Number(userBalances?.saldo_disponivel || 0);
+        const pending = Number(userBalances?.saldo_pendente || 0);
+        setSaldoDisponivel(available);
+        setGanhosPendentes(pending);
       }
-      setTotalRepassadoMes((stripeData?.totalTransferencias ?? 0) / 100);
 
       // Garantir que sempre sejam arrays
       setCommissions(Array.isArray(commissionsData) ? commissionsData : []);
@@ -286,14 +286,14 @@ function MinhaCarteira() {
                 <Skeleton variant="rounded" height={134} />
               ) : (
                 <ComplexStatisticsCard
-                  color="success"
-                  icon="payments"
-                  title="Total repassado"
-                  count={brl(totalRepassadoMes)}
+                  color="info"
+                  icon="hourglass_top"
+                  title="Saldo pendente"
+                  count={brl(ganhosPendentes)}
                   percentage={{
-                    color: "success",
+                    color: "info",
                     amount: "",
-                    label: "M??s atual",
+                    label: "Aguardando Liberação",
                   }}
                 />
               )}

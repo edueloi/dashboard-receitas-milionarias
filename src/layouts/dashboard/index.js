@@ -51,6 +51,7 @@ function Dashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [connectedAccount, setConnectedAccount] = useState(null);
+  const [userBalances, setUserBalances] = useState({ saldo_disponivel: 0, saldo_pendente: 0 });
   const [range, setRange] = useState("7d");
   const [userStatusFilter, setUserStatusFilter] = useState("all");
   const [showStripeModal, setShowStripeModal] = useState(false);
@@ -68,6 +69,10 @@ function Dashboard() {
           response = await api.get(`/stripe-dashboard-data?range=${currentRange}`);
         }
         setStats(response.data);
+        if (user?.permissao !== "admin") {
+          const balancesResp = await api.get("/wallet/me/balances");
+          setUserBalances(balancesResp.data || { saldo_disponivel: 0, saldo_pendente: 0 });
+        }
       } catch (error) {
         toast.error("Erro ao carregar dados do painel.");
       } finally {
@@ -475,7 +480,11 @@ function Dashboard() {
                       color="success"
                       icon="account_balance_wallet"
                       title="Saldo disponível"
-                      count={loading ? "-" : toBRL(stats?.balance?.availableBrl)}
+                      count={
+                        loading
+                          ? "-"
+                          : toBRL((Number(userBalances?.saldo_disponivel || 0) || 0) * 100)
+                      }
                       percentage={{ color: "info", amount: "", label: "Saldo na sua conta Stripe" }}
                     />
                   </MDBox>
@@ -484,10 +493,14 @@ function Dashboard() {
                   <MDBox mb={1.5}>
                     <ComplexStatisticsCard
                       color="info"
-                      icon="south_west"
-                      title="Total repassado"
-                      count={loading ? "-" : toBRL(stats?.totalTransferencias)}
-                      percentage={{ color: "info", amount: "", label: "Mes atual" }}
+                      icon="hourglass_top"
+                      title="Saldo pendente"
+                      count={
+                        loading
+                          ? "-"
+                          : toBRL((Number(userBalances?.saldo_pendente || 0) || 0) * 100)
+                      }
+                      percentage={{ color: "info", amount: "", label: "Aguardando Liberação" }}
                     />
                   </MDBox>
                 </Grid>
@@ -705,7 +718,7 @@ function Dashboard() {
         )}
 
         {/* Card Motivacional para Não-Admins sem saldo */}
-        {user?.permissao !== "admin" && stats?.balance?.availableBrl === 0 && (
+        {user?.permissao !== "admin" && Number(userBalances?.saldo_disponivel || 0) === 0 && (
           <MDBox mt={4.5}>
             <MDBox
               sx={{
