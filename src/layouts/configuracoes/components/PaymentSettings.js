@@ -17,16 +17,22 @@ import MDButton from "components/MDButton";
 // API
 import api from "services/api";
 import { formatDisabledReason, formatRequirementsList } from "utils/stripeRequirements";
+import { useAuth } from "context/AuthContext";
 
 const palette = { gold: "#C9A635", green: "#1C3B32" };
 
 function PaymentSettings() {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [connectedAccount, setConnectedAccount] = useState(null);
 
   const fetchAccount = async () => {
     try {
       setLoading(true);
+      if (user?.permissao === "admin") {
+        setConnectedAccount(null);
+        return;
+      }
       const { data } = await api.get("/stripe/connect/account");
       setConnectedAccount(data);
     } catch (error) {
@@ -40,7 +46,7 @@ function PaymentSettings() {
 
   useEffect(() => {
     fetchAccount();
-  }, []);
+  }, [user]);
 
   const handleStripeConnect = async () => {
     try {
@@ -120,7 +126,12 @@ function PaymentSettings() {
           </MDBox>
 
           <MDBox p={{ xs: 2, sm: 3 }}>
-            {loading ? (
+            {user?.permissao === "admin" ? (
+              <MDTypography variant="caption" color="text">
+                Administradores usam a conta principal da plataforma e não precisam conectar uma
+                conta Stripe.
+              </MDTypography>
+            ) : loading ? (
               <MDTypography variant="caption" color="text">
                 Carregando status...
               </MDTypography>
@@ -182,7 +193,7 @@ function PaymentSettings() {
               variant="outlined"
               color="dark"
               onClick={fetchAccount}
-              disabled={loading}
+              disabled={loading || user?.permissao === "admin"}
               startIcon={<Icon>refresh</Icon>}
               sx={{
                 fontSize: { xs: "0.75rem", sm: "0.875rem" },
@@ -198,7 +209,7 @@ function PaymentSettings() {
             >
               Atualizar
             </MDButton>
-            {(!connected || needsOnboarding) && (
+            {user?.permissao !== "admin" && (!connected || needsOnboarding) && (
               <MDButton
                 variant="gradient"
                 color="success"

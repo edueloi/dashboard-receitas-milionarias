@@ -66,7 +66,7 @@ function MinhaCarteira() {
         { data: commissionsData },
         { data: referredUsersData },
         { data: monthlyEarningsData },
-        { data: accountData },
+        accountResp,
         { data: stripeData },
         { data: userBalances },
       ] = await Promise.all([
@@ -74,12 +74,14 @@ function MinhaCarteira() {
         api.get("/commissions").catch(() => ({ data: [] })),
         api.get("/users/referred").catch(() => ({ data: [] })),
         api.get("/earnings/monthly").catch(() => ({ data: [] })),
-        api.get("/stripe/connect/account").catch(() => ({ data: { connected: false } })),
+        isAdmin
+          ? Promise.resolve({ data: null })
+          : api.get("/stripe/connect/account").catch(() => ({ data: { connected: false } })),
         api.get(`/stripe-dashboard-data?range=${range}`).catch(() => ({ data: null })),
         api.get("/wallet/me/balances").catch(() => ({ data: null })),
       ]);
 
-      setConnectedAccount(accountData);
+      setConnectedAccount(accountResp?.data || null);
 
       // Apenas admins veem ganhos pendentes
       if (isAdmin && balanceData.origem === "stripe") {
@@ -300,122 +302,124 @@ function MinhaCarteira() {
             </Grid>
           )}
 
-          <Grid item xs={12} sm={6} md={isAdmin ? 3 : 12}>
-            <Card
-              sx={{
-                height: "100%",
-                minHeight: 134,
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                p: 2,
-                gap: 1,
-              }}
-            >
-              {loading ? (
-                <CircularProgress size={24} />
-              ) : connectedAccount && connectedAccount.connected ? (
-                <>
-                  <Icon
-                    sx={{
-                      fontSize: "2.5rem !important",
-                      color: connectedAccount.account?.payouts_enabled
-                        ? palette.green
-                        : palette.gold,
-                    }}
-                  >
-                    {connectedAccount.account?.payouts_enabled ? "check_circle" : "pending"}
-                  </Icon>
-                  <MDTypography variant="button" fontWeight="medium" textAlign="center">
-                    {connectedAccount.account?.payouts_enabled
-                      ? "Stripe Conectado"
-                      : "Cadastro incompleto"}
-                  </MDTypography>
-                  <MDTypography
-                    variant="caption"
-                    color="text"
-                    textAlign="center"
-                    sx={{ fontSize: "0.7rem" }}
-                  >
-                    {connectedAccount.account?.email || "Conta configurada"}
-                  </MDTypography>
-                  {connectedAccount.account?.payouts_enabled ? (
+          {!isAdmin && (
+            <Grid item xs={12} sm={6} md={12}>
+              <Card
+                sx={{
+                  height: "100%",
+                  minHeight: 134,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  p: 2,
+                  gap: 1,
+                }}
+              >
+                {loading ? (
+                  <CircularProgress size={24} />
+                ) : connectedAccount && connectedAccount.connected ? (
+                  <>
+                    <Icon
+                      sx={{
+                        fontSize: "2.5rem !important",
+                        color: connectedAccount.account?.payouts_enabled
+                          ? palette.green
+                          : palette.gold,
+                      }}
+                    >
+                      {connectedAccount.account?.payouts_enabled ? "check_circle" : "pending"}
+                    </Icon>
+                    <MDTypography variant="button" fontWeight="medium" textAlign="center">
+                      {connectedAccount.account?.payouts_enabled
+                        ? "Stripe Conectado"
+                        : "Cadastro incompleto"}
+                    </MDTypography>
                     <MDTypography
                       variant="caption"
-                      color="success"
-                      fontWeight="medium"
+                      color="text"
                       textAlign="center"
+                      sx={{ fontSize: "0.7rem" }}
                     >
-                      ✓ Repasses habilitados
+                      {connectedAccount.account?.email || "Conta configurada"}
                     </MDTypography>
-                  ) : (
-                    <>
-                      {disabledReason && (
-                        <MDTypography
-                          variant="caption"
-                          color="text"
-                          textAlign="center"
-                          sx={{ fontSize: "0.7rem" }}
-                        >
-                          Motivo: {disabledReason}
-                        </MDTypography>
-                      )}
-                      {pendingRequirements.length > 0 && (
-                        <MDTypography
-                          variant="caption"
-                          color="text"
-                          textAlign="center"
-                          sx={{ fontSize: "0.7rem" }}
-                        >
-                          Pendências: {pendingRequirements.join(", ")}
-                        </MDTypography>
-                      )}
-                      <MDButton
-                        variant="outlined"
-                        onClick={handleStripeConnect}
-                        startIcon={<Icon>link</Icon>}
-                        sx={{
-                          mt: 0.5,
-                          py: 0.5,
-                          color: palette.green,
-                          borderColor: palette.green,
-                          "&:hover": {
-                            backgroundColor: alpha(palette.green, 0.08),
-                            borderColor: palette.green,
-                          },
-                        }}
+                    {connectedAccount.account?.payouts_enabled ? (
+                      <MDTypography
+                        variant="caption"
+                        color="success"
+                        fontWeight="medium"
+                        textAlign="center"
                       >
-                        Completar cadastro
-                      </MDButton>
-                    </>
-                  )}
-                </>
-              ) : (
-                <MDButton
-                  variant="outlined"
-                  onClick={handleStripeConnect}
-                  startIcon={<Icon>link</Icon>}
-                  fullWidth
-                  sx={{
-                    py: 1.25,
-                    color: palette.green,
-                    borderColor: palette.green,
-                    "&:hover": {
-                      backgroundColor: alpha(palette.green, 0.08),
+                        ✓ Repasses habilitados
+                      </MDTypography>
+                    ) : (
+                      <>
+                        {disabledReason && (
+                          <MDTypography
+                            variant="caption"
+                            color="text"
+                            textAlign="center"
+                            sx={{ fontSize: "0.7rem" }}
+                          >
+                            Motivo: {disabledReason}
+                          </MDTypography>
+                        )}
+                        {pendingRequirements.length > 0 && (
+                          <MDTypography
+                            variant="caption"
+                            color="text"
+                            textAlign="center"
+                            sx={{ fontSize: "0.7rem" }}
+                          >
+                            Pendências: {pendingRequirements.join(", ")}
+                          </MDTypography>
+                        )}
+                        <MDButton
+                          variant="outlined"
+                          onClick={handleStripeConnect}
+                          startIcon={<Icon>link</Icon>}
+                          sx={{
+                            mt: 0.5,
+                            py: 0.5,
+                            color: palette.green,
+                            borderColor: palette.green,
+                            "&:hover": {
+                              backgroundColor: alpha(palette.green, 0.08),
+                              borderColor: palette.green,
+                            },
+                          }}
+                        >
+                          Completar cadastro
+                        </MDButton>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <MDButton
+                    variant="outlined"
+                    onClick={handleStripeConnect}
+                    startIcon={<Icon>link</Icon>}
+                    fullWidth
+                    sx={{
+                      py: 1.25,
+                      color: palette.green,
                       borderColor: palette.green,
-                    },
-                  }}
-                >
-                  Conectar com o Stripe
-                </MDButton>
-              )}
-            </Card>
-          </Grid>
+                      "&:hover": {
+                        backgroundColor: alpha(palette.green, 0.08),
+                        borderColor: palette.green,
+                      },
+                    }}
+                  >
+                    Conectar com o Stripe
+                  </MDButton>
+                )}
+              </Card>
+            </Grid>
+          )}
         </Grid>
 
         {/* Aviso informativo sobre pagamentos automáticos */}
-        {connectedAccount?.connected && connectedAccount?.account?.payouts_enabled && (
+        {!isAdmin && connectedAccount?.connected && connectedAccount?.account?.payouts_enabled && (
           <Card
             sx={{
               mb: 3,

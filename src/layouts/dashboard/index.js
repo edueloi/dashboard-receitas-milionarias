@@ -86,6 +86,11 @@ function Dashboard() {
     if (user) {
       fetchDashboardData(range, userStatusFilter);
       // buscar status da conta conectada (se não for admin)
+      if (user.permissao === "admin") {
+        setConnectedAccount(null);
+        setShowStripeModal(false);
+        return;
+      }
       (async () => {
         try {
           const resp = await api.get("/stripe/connect/account");
@@ -109,7 +114,7 @@ function Dashboard() {
 
           // Se erro e não for admin, também mostrar modal (se não foi dispensado)
           const modalDismissed = sessionStorage.getItem("stripeModalDismissed");
-          if (user.permissao !== "admin" && !modalDismissed) {
+          if (!modalDismissed) {
             setShowStripeModal(true);
           }
         }
@@ -1062,460 +1067,464 @@ function Dashboard() {
       </MDBox>
 
       {/* Modal informativo sobre conexão Stripe */}
-      <Dialog
-        open={showStripeModal}
-        onClose={() => setShowStripeModal(false)}
-        maxWidth="md"
-        fullWidth
-        PaperProps={{
-          sx: {
-            borderRadius: 3,
-            boxShadow: "0 20px 27px 0 rgba(0,0,0,0.15)",
-            overflow: "hidden",
-            animation: "slideDown 0.3s ease-out",
-            "@keyframes slideDown": {
-              from: {
-                transform: "translateY(-50px)",
-                opacity: 0,
+      {user?.permissao !== "admin" && (
+        <Dialog
+          open={showStripeModal}
+          onClose={() => setShowStripeModal(false)}
+          maxWidth="md"
+          fullWidth
+          PaperProps={{
+            sx: {
+              borderRadius: 3,
+              boxShadow: "0 20px 27px 0 rgba(0,0,0,0.15)",
+              overflow: "hidden",
+              animation: "slideDown 0.3s ease-out",
+              "@keyframes slideDown": {
+                from: {
+                  transform: "translateY(-50px)",
+                  opacity: 0,
+                },
+                to: {
+                  transform: "translateY(0)",
+                  opacity: 1,
+                },
               },
-              to: {
-                transform: "translateY(0)",
-                opacity: 1,
+              "@keyframes spin": {
+                from: { transform: "rotate(0deg)" },
+                to: { transform: "rotate(360deg)" },
               },
-            },
-            "@keyframes spin": {
-              from: { transform: "rotate(0deg)" },
-              to: { transform: "rotate(360deg)" },
-            },
-          },
-        }}
-      >
-        <MDBox
-          sx={{
-            background: "linear-gradient(135deg, #1C3B32 0%, #2ECC71 100%)",
-            borderRadius: "12px 12px 0 0",
-            p: 3,
-            position: "relative",
-            overflow: "hidden",
-            "&::before": {
-              content: '""',
-              position: "absolute",
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background:
-                "radial-gradient(circle at 20% 50%, rgba(201, 166, 53, 0.3) 0%, transparent 50%)",
-              animation: "pulse 3s ease-in-out infinite",
-            },
-            "@keyframes pulse": {
-              "0%, 100%": { opacity: 0.5 },
-              "50%": { opacity: 1 },
             },
           }}
         >
-          <MDBox display="flex" alignItems="center" position="relative" zIndex={1}>
-            <Icon
-              sx={{
-                color: "#C9A635",
-                fontSize: 48,
-                mr: 2,
-                animation: "bounce 2s ease-in-out infinite",
-                "@keyframes bounce": {
-                  "0%, 100%": { transform: "translateY(0)" },
-                  "50%": { transform: "translateY(-10px)" },
-                },
-              }}
-            >
-              account_balance_wallet
-            </Icon>
-            <MDBox>
-              <MDTypography variant="h5" color="white" fontWeight="bold">
-                💰 Conecte sua Conta Stripe
-              </MDTypography>
-              <MDTypography variant="button" color="white" fontWeight="regular" opacity={0.9}>
-                Configure seus pagamentos em poucos minutos
-              </MDTypography>
-            </MDBox>
-          </MDBox>
-        </MDBox>
-
-        <DialogContent sx={{ px: 3, pt: 3, pb: 2 }}>
-          <MDBox mb={3}>
-            <MDTypography variant="h6" fontWeight="medium" mb={1}>
-              🎉 Bem-vindo ao Programa de Afiliados!
-            </MDTypography>
-            <MDTypography variant="button" color="text" fontWeight="regular">
-              Para começar a receber suas comissões, você precisa conectar uma conta Stripe. É
-              rápido, seguro e gratuito!
-            </MDTypography>
-          </MDBox>
-
-          <MDBox mb={3}>
-            <MDTypography variant="h6" fontWeight="medium" mb={2}>
-              ✨ Benefícios da Conexão
-            </MDTypography>
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <MDBox
-                  display="flex"
-                  alignItems="flex-start"
-                  p={2}
-                  sx={{
-                    background:
-                      "linear-gradient(135deg, rgba(201, 166, 53, 0.1) 0%, rgba(201, 166, 53, 0.05) 100%)",
-                    borderRadius: 2,
-                    border: "2px solid #C9A635",
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      transform: "translateY(-5px)",
-                      boxShadow: "0 8px 16px rgba(201, 166, 53, 0.3)",
-                      borderColor: "#1C3B32",
-                    },
-                  }}
-                >
-                  <Icon sx={{ color: "#C9A635", mr: 1.5, mt: 0.3, fontSize: 28 }}>
-                    check_circle
-                  </Icon>
-                  <MDBox>
-                    <MDTypography variant="button" fontWeight="bold" color="text">
-                      Pagamentos Automáticos
-                    </MDTypography>
-                    <MDTypography variant="caption" color="text" display="block">
-                      Receba suas comissões direto na conta
-                    </MDTypography>
-                  </MDBox>
-                </MDBox>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <MDBox
-                  display="flex"
-                  alignItems="flex-start"
-                  p={2}
-                  sx={{
-                    background:
-                      "linear-gradient(135deg, rgba(28, 59, 50, 0.1) 0%, rgba(28, 59, 50, 0.05) 100%)",
-                    borderRadius: 2,
-                    border: "2px solid #1C3B32",
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      transform: "translateY(-5px)",
-                      boxShadow: "0 8px 16px rgba(28, 59, 50, 0.3)",
-                      borderColor: "#C9A635",
-                    },
-                  }}
-                >
-                  <Icon sx={{ color: "#1C3B32", mr: 1.5, mt: 0.3, fontSize: 28 }}>security</Icon>
-                  <MDBox>
-                    <MDTypography variant="button" fontWeight="bold" color="text">
-                      Segurança Garantida
-                    </MDTypography>
-                    <MDTypography variant="caption" color="text" display="block">
-                      Plataforma segura e confiável
-                    </MDTypography>
-                  </MDBox>
-                </MDBox>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <MDBox
-                  display="flex"
-                  alignItems="flex-start"
-                  p={2}
-                  sx={{
-                    background:
-                      "linear-gradient(135deg, rgba(28, 59, 50, 0.1) 0%, rgba(28, 59, 50, 0.05) 100%)",
-                    borderRadius: 2,
-                    border: "2px solid #1C3B32",
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      transform: "translateY(-5px)",
-                      boxShadow: "0 8px 16px rgba(28, 59, 50, 0.3)",
-                      borderColor: "#C9A635",
-                    },
-                  }}
-                >
-                  <Icon sx={{ color: "#1C3B32", mr: 1.5, mt: 0.3, fontSize: 28 }}>speed</Icon>
-                  <MDBox>
-                    <MDTypography variant="button" fontWeight="bold" color="text">
-                      Configuração Rápida
-                    </MDTypography>
-                    <MDTypography variant="caption" color="text" display="block">
-                      Apenas alguns minutos para configurar
-                    </MDTypography>
-                  </MDBox>
-                </MDBox>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <MDBox
-                  display="flex"
-                  alignItems="flex-start"
-                  p={2}
-                  sx={{
-                    background:
-                      "linear-gradient(135deg, rgba(201, 166, 53, 0.1) 0%, rgba(201, 166, 53, 0.05) 100%)",
-                    borderRadius: 2,
-                    border: "2px solid #C9A635",
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      transform: "translateY(-5px)",
-                      boxShadow: "0 8px 16px rgba(201, 166, 53, 0.3)",
-                      borderColor: "#1C3B32",
-                    },
-                  }}
-                >
-                  <Icon sx={{ color: "#C9A635", mr: 1.5, mt: 0.3, fontSize: 28 }}>trending_up</Icon>
-                  <MDBox>
-                    <MDTypography variant="button" fontWeight="bold" color="text">
-                      Acompanhamento Real
-                    </MDTypography>
-                    <MDTypography variant="caption" color="text" display="block">
-                      Visualize ganhos em tempo real
-                    </MDTypography>
-                  </MDBox>
-                </MDBox>
-              </Grid>
-            </Grid>
-          </MDBox>
-
-          <MDBox mb={3}>
-            <MDTypography variant="h6" fontWeight="medium" mb={2}>
-              🚀 Como Funciona?
-            </MDTypography>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <MDBox
-                  display="flex"
-                  alignItems="center"
-                  p={2}
-                  sx={{
-                    background:
-                      "linear-gradient(90deg, rgba(201, 166, 53, 0.15) 0%, transparent 100%)",
-                    borderRadius: 2,
-                    borderLeft: "4px solid #C9A635",
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      transform: "translateX(10px)",
-                      background:
-                        "linear-gradient(90deg, rgba(201, 166, 53, 0.25) 0%, transparent 100%)",
-                    },
-                  }}
-                >
-                  <MDBox
-                    sx={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: "50%",
-                      background: "linear-gradient(135deg, #C9A635 0%, #B39530 100%)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      mr: 2,
-                      boxShadow: "0 4px 12px rgba(201, 166, 53, 0.4)",
-                    }}
-                  >
-                    <MDTypography variant="h5" color="white" fontWeight="bold">
-                      1
-                    </MDTypography>
-                  </MDBox>
-                  <MDBox>
-                    <MDTypography variant="button" fontWeight="bold" color="text">
-                      Clique em &quot;Conectar Agora&quot;
-                    </MDTypography>
-                    <MDTypography variant="caption" color="text" display="block">
-                      Você será redirecionado para o Stripe de forma segura
-                    </MDTypography>
-                  </MDBox>
-                </MDBox>
-              </Grid>
-              <Grid item xs={12}>
-                <MDBox
-                  display="flex"
-                  alignItems="center"
-                  p={2}
-                  sx={{
-                    background:
-                      "linear-gradient(90deg, rgba(28, 59, 50, 0.15) 0%, transparent 100%)",
-                    borderRadius: 2,
-                    borderLeft: "4px solid #1C3B32",
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      transform: "translateX(10px)",
-                      background:
-                        "linear-gradient(90deg, rgba(28, 59, 50, 0.25) 0%, transparent 100%)",
-                    },
-                  }}
-                >
-                  <MDBox
-                    sx={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: "50%",
-                      background: "linear-gradient(135deg, #1C3B32 0%, #152C26 100%)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      mr: 2,
-                      boxShadow: "0 4px 12px rgba(28, 59, 50, 0.4)",
-                    }}
-                  >
-                    <MDTypography variant="h5" color="white" fontWeight="bold">
-                      2
-                    </MDTypography>
-                  </MDBox>
-                  <MDBox>
-                    <MDTypography variant="button" fontWeight="bold" color="text">
-                      Preencha suas informações
-                    </MDTypography>
-                    <MDTypography variant="caption" color="text" display="block">
-                      O Stripe precisa de alguns dados básicos para cumprir regulamentações
-                    </MDTypography>
-                  </MDBox>
-                </MDBox>
-              </Grid>
-              <Grid item xs={12}>
-                <MDBox
-                  display="flex"
-                  alignItems="center"
-                  p={2}
-                  sx={{
-                    background:
-                      "linear-gradient(90deg, rgba(201, 166, 53, 0.15) 0%, transparent 100%)",
-                    borderRadius: 2,
-                    borderLeft: "4px solid #C9A635",
-                    transition: "all 0.3s ease",
-                    "&:hover": {
-                      transform: "translateX(10px)",
-                      background:
-                        "linear-gradient(90deg, rgba(201, 166, 53, 0.25) 0%, transparent 100%)",
-                    },
-                  }}
-                >
-                  <MDBox
-                    sx={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: "50%",
-                      background: "linear-gradient(135deg, #C9A635 0%, #B39530 100%)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      mr: 2,
-                      boxShadow: "0 4px 12px rgba(201, 166, 53, 0.4)",
-                    }}
-                  >
-                    <MDTypography variant="h5" color="white" fontWeight="bold">
-                      3
-                    </MDTypography>
-                  </MDBox>
-                  <MDBox>
-                    <MDTypography variant="button" fontWeight="bold" color="text">
-                      Comece a ganhar! 💸
-                    </MDTypography>
-                    <MDTypography variant="caption" color="text" display="block">
-                      Assim que sua conta for aprovada, você já pode receber comissões
-                    </MDTypography>
-                  </MDBox>
-                </MDBox>
-              </Grid>
-            </Grid>
-          </MDBox>
-
           <MDBox
             sx={{
-              background: "linear-gradient(135deg, #C9A635 0%, #1C3B32 100%)",
-              borderRadius: 2,
+              background: "linear-gradient(135deg, #1C3B32 0%, #2ECC71 100%)",
+              borderRadius: "12px 12px 0 0",
               p: 3,
               position: "relative",
               overflow: "hidden",
               "&::before": {
                 content: '""',
                 position: "absolute",
-                top: "-50%",
-                left: "-50%",
-                width: "200%",
-                height: "200%",
-                background: "radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)",
-                animation: "rotate 10s linear infinite",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background:
+                  "radial-gradient(circle at 20% 50%, rgba(201, 166, 53, 0.3) 0%, transparent 50%)",
+                animation: "pulse 3s ease-in-out infinite",
               },
-              "@keyframes rotate": {
-                "0%": { transform: "rotate(0deg)" },
-                "100%": { transform: "rotate(360deg)" },
+              "@keyframes pulse": {
+                "0%, 100%": { opacity: 0.5 },
+                "50%": { opacity: 1 },
               },
             }}
           >
             <MDBox display="flex" alignItems="center" position="relative" zIndex={1}>
               <Icon
                 sx={{
-                  color: "white",
-                  fontSize: 32,
-                  mr: 1.5,
-                  animation: "shake 2s ease-in-out infinite",
-                  "@keyframes shake": {
-                    "0%, 100%": { transform: "rotate(0deg)" },
-                    "25%": { transform: "rotate(-10deg)" },
-                    "75%": { transform: "rotate(10deg)" },
+                  color: "#C9A635",
+                  fontSize: 48,
+                  mr: 2,
+                  animation: "bounce 2s ease-in-out infinite",
+                  "@keyframes bounce": {
+                    "0%, 100%": { transform: "translateY(0)" },
+                    "50%": { transform: "translateY(-10px)" },
                   },
                 }}
               >
-                warning
+                account_balance_wallet
               </Icon>
               <MDBox>
-                <MDTypography variant="button" color="white" fontWeight="bold">
-                  ⚠️ Importante: Não perca suas comissões!
+                <MDTypography variant="h5" color="white" fontWeight="bold">
+                  💰 Conecte sua Conta Stripe
                 </MDTypography>
-                <MDTypography
-                  variant="caption"
-                  color="white"
-                  display="block"
-                  sx={{ opacity: 0.95 }}
-                >
-                  Sem uma conta Stripe conectada, você não poderá receber pagamentos pelas vendas
-                  que indicar.
+                <MDTypography variant="button" color="white" fontWeight="regular" opacity={0.9}>
+                  Configure seus pagamentos em poucos minutos
                 </MDTypography>
               </MDBox>
             </MDBox>
           </MDBox>
-        </DialogContent>
 
-        <DialogActions sx={{ px: 3, pb: 3, pt: 1 }}>
-          <MDButton
-            variant="outlined"
-            color="dark"
-            onClick={handleDismissModal}
-            sx={{
-              borderWidth: 2,
-              "&:hover": {
+          <DialogContent sx={{ px: 3, pt: 3, pb: 2 }}>
+            <MDBox mb={3}>
+              <MDTypography variant="h6" fontWeight="medium" mb={1}>
+                🎉 Bem-vindo ao Programa de Afiliados!
+              </MDTypography>
+              <MDTypography variant="button" color="text" fontWeight="regular">
+                Para começar a receber suas comissões, você precisa conectar uma conta Stripe. É
+                rápido, seguro e gratuito!
+              </MDTypography>
+            </MDBox>
+
+            <MDBox mb={3}>
+              <MDTypography variant="h6" fontWeight="medium" mb={2}>
+                ✨ Benefícios da Conexão
+              </MDTypography>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <MDBox
+                    display="flex"
+                    alignItems="flex-start"
+                    p={2}
+                    sx={{
+                      background:
+                        "linear-gradient(135deg, rgba(201, 166, 53, 0.1) 0%, rgba(201, 166, 53, 0.05) 100%)",
+                      borderRadius: 2,
+                      border: "2px solid #C9A635",
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        transform: "translateY(-5px)",
+                        boxShadow: "0 8px 16px rgba(201, 166, 53, 0.3)",
+                        borderColor: "#1C3B32",
+                      },
+                    }}
+                  >
+                    <Icon sx={{ color: "#C9A635", mr: 1.5, mt: 0.3, fontSize: 28 }}>
+                      check_circle
+                    </Icon>
+                    <MDBox>
+                      <MDTypography variant="button" fontWeight="bold" color="text">
+                        Pagamentos Automáticos
+                      </MDTypography>
+                      <MDTypography variant="caption" color="text" display="block">
+                        Receba suas comissões direto na conta
+                      </MDTypography>
+                    </MDBox>
+                  </MDBox>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <MDBox
+                    display="flex"
+                    alignItems="flex-start"
+                    p={2}
+                    sx={{
+                      background:
+                        "linear-gradient(135deg, rgba(28, 59, 50, 0.1) 0%, rgba(28, 59, 50, 0.05) 100%)",
+                      borderRadius: 2,
+                      border: "2px solid #1C3B32",
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        transform: "translateY(-5px)",
+                        boxShadow: "0 8px 16px rgba(28, 59, 50, 0.3)",
+                        borderColor: "#C9A635",
+                      },
+                    }}
+                  >
+                    <Icon sx={{ color: "#1C3B32", mr: 1.5, mt: 0.3, fontSize: 28 }}>security</Icon>
+                    <MDBox>
+                      <MDTypography variant="button" fontWeight="bold" color="text">
+                        Segurança Garantida
+                      </MDTypography>
+                      <MDTypography variant="caption" color="text" display="block">
+                        Plataforma segura e confiável
+                      </MDTypography>
+                    </MDBox>
+                  </MDBox>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <MDBox
+                    display="flex"
+                    alignItems="flex-start"
+                    p={2}
+                    sx={{
+                      background:
+                        "linear-gradient(135deg, rgba(28, 59, 50, 0.1) 0%, rgba(28, 59, 50, 0.05) 100%)",
+                      borderRadius: 2,
+                      border: "2px solid #1C3B32",
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        transform: "translateY(-5px)",
+                        boxShadow: "0 8px 16px rgba(28, 59, 50, 0.3)",
+                        borderColor: "#C9A635",
+                      },
+                    }}
+                  >
+                    <Icon sx={{ color: "#1C3B32", mr: 1.5, mt: 0.3, fontSize: 28 }}>speed</Icon>
+                    <MDBox>
+                      <MDTypography variant="button" fontWeight="bold" color="text">
+                        Configuração Rápida
+                      </MDTypography>
+                      <MDTypography variant="caption" color="text" display="block">
+                        Apenas alguns minutos para configurar
+                      </MDTypography>
+                    </MDBox>
+                  </MDBox>
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <MDBox
+                    display="flex"
+                    alignItems="flex-start"
+                    p={2}
+                    sx={{
+                      background:
+                        "linear-gradient(135deg, rgba(201, 166, 53, 0.1) 0%, rgba(201, 166, 53, 0.05) 100%)",
+                      borderRadius: 2,
+                      border: "2px solid #C9A635",
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        transform: "translateY(-5px)",
+                        boxShadow: "0 8px 16px rgba(201, 166, 53, 0.3)",
+                        borderColor: "#1C3B32",
+                      },
+                    }}
+                  >
+                    <Icon sx={{ color: "#C9A635", mr: 1.5, mt: 0.3, fontSize: 28 }}>
+                      trending_up
+                    </Icon>
+                    <MDBox>
+                      <MDTypography variant="button" fontWeight="bold" color="text">
+                        Acompanhamento Real
+                      </MDTypography>
+                      <MDTypography variant="caption" color="text" display="block">
+                        Visualize ganhos em tempo real
+                      </MDTypography>
+                    </MDBox>
+                  </MDBox>
+                </Grid>
+              </Grid>
+            </MDBox>
+
+            <MDBox mb={3}>
+              <MDTypography variant="h6" fontWeight="medium" mb={2}>
+                🚀 Como Funciona?
+              </MDTypography>
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <MDBox
+                    display="flex"
+                    alignItems="center"
+                    p={2}
+                    sx={{
+                      background:
+                        "linear-gradient(90deg, rgba(201, 166, 53, 0.15) 0%, transparent 100%)",
+                      borderRadius: 2,
+                      borderLeft: "4px solid #C9A635",
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        transform: "translateX(10px)",
+                        background:
+                          "linear-gradient(90deg, rgba(201, 166, 53, 0.25) 0%, transparent 100%)",
+                      },
+                    }}
+                  >
+                    <MDBox
+                      sx={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: "50%",
+                        background: "linear-gradient(135deg, #C9A635 0%, #B39530 100%)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        mr: 2,
+                        boxShadow: "0 4px 12px rgba(201, 166, 53, 0.4)",
+                      }}
+                    >
+                      <MDTypography variant="h5" color="white" fontWeight="bold">
+                        1
+                      </MDTypography>
+                    </MDBox>
+                    <MDBox>
+                      <MDTypography variant="button" fontWeight="bold" color="text">
+                        Clique em &quot;Conectar Agora&quot;
+                      </MDTypography>
+                      <MDTypography variant="caption" color="text" display="block">
+                        Você será redirecionado para o Stripe de forma segura
+                      </MDTypography>
+                    </MDBox>
+                  </MDBox>
+                </Grid>
+                <Grid item xs={12}>
+                  <MDBox
+                    display="flex"
+                    alignItems="center"
+                    p={2}
+                    sx={{
+                      background:
+                        "linear-gradient(90deg, rgba(28, 59, 50, 0.15) 0%, transparent 100%)",
+                      borderRadius: 2,
+                      borderLeft: "4px solid #1C3B32",
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        transform: "translateX(10px)",
+                        background:
+                          "linear-gradient(90deg, rgba(28, 59, 50, 0.25) 0%, transparent 100%)",
+                      },
+                    }}
+                  >
+                    <MDBox
+                      sx={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: "50%",
+                        background: "linear-gradient(135deg, #1C3B32 0%, #152C26 100%)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        mr: 2,
+                        boxShadow: "0 4px 12px rgba(28, 59, 50, 0.4)",
+                      }}
+                    >
+                      <MDTypography variant="h5" color="white" fontWeight="bold">
+                        2
+                      </MDTypography>
+                    </MDBox>
+                    <MDBox>
+                      <MDTypography variant="button" fontWeight="bold" color="text">
+                        Preencha suas informações
+                      </MDTypography>
+                      <MDTypography variant="caption" color="text" display="block">
+                        O Stripe precisa de alguns dados básicos para cumprir regulamentações
+                      </MDTypography>
+                    </MDBox>
+                  </MDBox>
+                </Grid>
+                <Grid item xs={12}>
+                  <MDBox
+                    display="flex"
+                    alignItems="center"
+                    p={2}
+                    sx={{
+                      background:
+                        "linear-gradient(90deg, rgba(201, 166, 53, 0.15) 0%, transparent 100%)",
+                      borderRadius: 2,
+                      borderLeft: "4px solid #C9A635",
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        transform: "translateX(10px)",
+                        background:
+                          "linear-gradient(90deg, rgba(201, 166, 53, 0.25) 0%, transparent 100%)",
+                      },
+                    }}
+                  >
+                    <MDBox
+                      sx={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: "50%",
+                        background: "linear-gradient(135deg, #C9A635 0%, #B39530 100%)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        mr: 2,
+                        boxShadow: "0 4px 12px rgba(201, 166, 53, 0.4)",
+                      }}
+                    >
+                      <MDTypography variant="h5" color="white" fontWeight="bold">
+                        3
+                      </MDTypography>
+                    </MDBox>
+                    <MDBox>
+                      <MDTypography variant="button" fontWeight="bold" color="text">
+                        Comece a ganhar! 💸
+                      </MDTypography>
+                      <MDTypography variant="caption" color="text" display="block">
+                        Assim que sua conta for aprovada, você já pode receber comissões
+                      </MDTypography>
+                    </MDBox>
+                  </MDBox>
+                </Grid>
+              </Grid>
+            </MDBox>
+
+            <MDBox
+              sx={{
+                background: "linear-gradient(135deg, #C9A635 0%, #1C3B32 100%)",
+                borderRadius: 2,
+                p: 3,
+                position: "relative",
+                overflow: "hidden",
+                "&::before": {
+                  content: '""',
+                  position: "absolute",
+                  top: "-50%",
+                  left: "-50%",
+                  width: "200%",
+                  height: "200%",
+                  background: "radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)",
+                  animation: "rotate 10s linear infinite",
+                },
+                "@keyframes rotate": {
+                  "0%": { transform: "rotate(0deg)" },
+                  "100%": { transform: "rotate(360deg)" },
+                },
+              }}
+            >
+              <MDBox display="flex" alignItems="center" position="relative" zIndex={1}>
+                <Icon
+                  sx={{
+                    color: "white",
+                    fontSize: 32,
+                    mr: 1.5,
+                    animation: "shake 2s ease-in-out infinite",
+                    "@keyframes shake": {
+                      "0%, 100%": { transform: "rotate(0deg)" },
+                      "25%": { transform: "rotate(-10deg)" },
+                      "75%": { transform: "rotate(10deg)" },
+                    },
+                  }}
+                >
+                  warning
+                </Icon>
+                <MDBox>
+                  <MDTypography variant="button" color="white" fontWeight="bold">
+                    ⚠️ Importante: Não perca suas comissões!
+                  </MDTypography>
+                  <MDTypography
+                    variant="caption"
+                    color="white"
+                    display="block"
+                    sx={{ opacity: 0.95 }}
+                  >
+                    Sem uma conta Stripe conectada, você não poderá receber pagamentos pelas vendas
+                    que indicar.
+                  </MDTypography>
+                </MDBox>
+              </MDBox>
+            </MDBox>
+          </DialogContent>
+
+          <DialogActions sx={{ px: 3, pb: 3, pt: 1 }}>
+            <MDButton
+              variant="outlined"
+              color="dark"
+              onClick={handleDismissModal}
+              sx={{
                 borderWidth: 2,
-                transform: "scale(1.05)",
-              },
-            }}
-          >
-            Lembrar Depois
-          </MDButton>
-          <MDButton
-            variant="gradient"
-            color="success"
-            onClick={() => {
-              sessionStorage.setItem("stripeModalDismissed", "true");
-              setShowStripeModal(false);
-              window.location.href = "/carteira";
-            }}
-            sx={{
-              ml: 1,
-              background: "linear-gradient(135deg, #C9A635 0%, #1C3B32 100%)",
-              boxShadow: "0 4px 12px rgba(201, 166, 53, 0.4)",
-              transition: "all 0.3s ease",
-              "&:hover": {
-                transform: "scale(1.08)",
-                boxShadow: "0 6px 20px rgba(201, 166, 53, 0.6)",
-              },
-            }}
-          >
-            <Icon sx={{ mr: 1, animation: "spin 2s linear infinite" }}>account_balance</Icon>
-            Conectar Agora
-          </MDButton>
-        </DialogActions>
-      </Dialog>
+                "&:hover": {
+                  borderWidth: 2,
+                  transform: "scale(1.05)",
+                },
+              }}
+            >
+              Lembrar Depois
+            </MDButton>
+            <MDButton
+              variant="gradient"
+              color="success"
+              onClick={() => {
+                sessionStorage.setItem("stripeModalDismissed", "true");
+                setShowStripeModal(false);
+                window.location.href = "/carteira";
+              }}
+              sx={{
+                ml: 1,
+                background: "linear-gradient(135deg, #C9A635 0%, #1C3B32 100%)",
+                boxShadow: "0 4px 12px rgba(201, 166, 53, 0.4)",
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  transform: "scale(1.08)",
+                  boxShadow: "0 6px 20px rgba(201, 166, 53, 0.6)",
+                },
+              }}
+            >
+              <Icon sx={{ mr: 1, animation: "spin 2s linear infinite" }}>account_balance</Icon>
+              Conectar Agora
+            </MDButton>
+          </DialogActions>
+        </Dialog>
+      )}
     </PageWrapper>
   );
 }

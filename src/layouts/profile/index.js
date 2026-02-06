@@ -5,9 +5,6 @@ import PropTypes from "prop-types";
 import Grid from "@mui/material/Grid";
 import Icon from "@mui/material/Icon";
 import Tooltip from "@mui/material/Tooltip";
-import FacebookIcon from "@mui/icons-material/Facebook";
-import TwitterIcon from "@mui/icons-material/Twitter";
-import InstagramIcon from "@mui/icons-material/Instagram";
 import { Card, alpha } from "@mui/material";
 
 import MDBox from "components/MDBox";
@@ -70,64 +67,12 @@ InfoLine.defaultProps = {
   value: "",
 };
 
-function Socials() {
-  const socialData = [
-    { link: "https://www.facebook.com/eduardoeloi/", icon: <FacebookIcon />, color: "facebook" },
-    { link: "https://twitter.com/eduardoeloi", icon: <TwitterIcon />, color: "twitter" },
-    {
-      link: "https://www.instagram.com/eduardoeloi/",
-      icon: <InstagramIcon />,
-      color: "instagram",
-    },
-  ];
-
-  return (
-    <MDBox mt={2}>
-      <MDTypography
-        variant="button"
-        fontWeight="bold"
-        sx={{ color: palette.green, fontSize: { xs: "0.75rem", md: "0.8125rem" }, mb: 1.5 }}
-      >
-        Redes Sociais
-      </MDTypography>
-      <MDBox display="flex" gap={1.5} flexWrap="wrap">
-        {socialData.map(({ link, icon, color }) => (
-          <Tooltip
-            title={color.charAt(0).toUpperCase() + color.slice(1)}
-            placement="top"
-            key={color}
-          >
-            <MDBox
-              component="a"
-              href={link}
-              target="_blank"
-              rel="noreferrer"
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: { xs: 36, md: 40 },
-                height: { xs: 36, md: 40 },
-                borderRadius: "50%",
-                backgroundColor: alpha(palette.green, 0.08),
-                color: palette.green,
-                fontSize: { xs: "1.25rem", md: "1.4rem" },
-                transition: "all 0.3s ease",
-                "&:hover": {
-                  backgroundColor: palette.gold,
-                  color: "#fff",
-                  transform: "translateY(-4px) scale(1.1)",
-                  boxShadow: `0 8px 16px ${alpha(palette.gold, 0.4)}`,
-                },
-              }}
-            >
-              {icon}
-            </MDBox>
-          </Tooltip>
-        ))}
-      </MDBox>
-    </MDBox>
-  );
+function normalizeAffiliateCode(code) {
+  if (!code) return "";
+  if (code.startsWith("afiliado_")) {
+    return code.replace("afiliado_", "");
+  }
+  return code;
 }
 
 // --- Main Component ---
@@ -136,6 +81,7 @@ function Overview() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const fetchUserData = async () => {
     setLoading(true);
@@ -354,7 +300,86 @@ function Overview() {
                   border: `1px solid ${alpha(palette.gold, 0.15)}`,
                 }}
               >
-                <Socials />
+                <MDBox>
+                  <MDTypography
+                    variant="button"
+                    fontWeight="bold"
+                    sx={{
+                      color: palette.green,
+                      fontSize: { xs: "0.75rem", md: "0.8125rem" },
+                      mb: 1.5,
+                    }}
+                  >
+                    Compartilhar Link
+                  </MDTypography>
+                  {userData?.codigo_afiliado_proprio ? (
+                    <>
+                      <MDTypography
+                        variant="caption"
+                        sx={{ color: "text.secondary", display: "block", mb: 1 }}
+                      >
+                        Envie este link para convidar novos afiliados:
+                      </MDTypography>
+                      <MDBox
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <MDBox
+                          sx={{
+                            flex: 1,
+                            minWidth: 220,
+                            p: 1.25,
+                            borderRadius: 1.5,
+                            backgroundColor: "#fff",
+                            border: `1px solid ${alpha(palette.green, 0.15)}`,
+                            overflow: "hidden",
+                          }}
+                        >
+                          <MDTypography
+                            variant="caption"
+                            sx={{
+                              color: palette.green,
+                              fontSize: "0.75rem",
+                              wordBreak: "break-all",
+                            }}
+                          >
+                            {`https://receitasmilionarias.com.br/cadastro.html?ref=${normalizeAffiliateCode(
+                              userData.codigo_afiliado_proprio
+                            )}`}
+                          </MDTypography>
+                        </MDBox>
+                        <MDButton
+                          variant="contained"
+                          color="success"
+                          size="small"
+                          onClick={async () => {
+                            const link = `https://receitasmilionarias.com.br/cadastro.html?ref=${normalizeAffiliateCode(
+                              userData.codigo_afiliado_proprio
+                            )}`;
+                            try {
+                              await navigator.clipboard.writeText(link);
+                              setCopied(true);
+                              setTimeout(() => setCopied(false), 2000);
+                            } catch (err) {
+                              console.error("Erro ao copiar link:", err);
+                            }
+                          }}
+                          sx={{ textTransform: "none", fontSize: "0.75rem" }}
+                        >
+                          {copied ? "Copiado!" : "Copiar link"}
+                        </MDButton>
+                      </MDBox>
+                    </>
+                  ) : (
+                    <MDTypography variant="caption" sx={{ color: "text.secondary" }}>
+                      Seu código de afiliado ainda não está disponível.
+                    </MDTypography>
+                  )}
+                </MDBox>
               </MDBox>
             </MDBox>
           </Card>
