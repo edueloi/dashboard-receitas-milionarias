@@ -21,6 +21,8 @@ import FormControl from "@mui/material/FormControl";
 import TextField from "@mui/material/TextField";
 import Skeleton from "@mui/material/Skeleton";
 import { alpha } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { useTheme } from "@mui/material/styles";
 import Fade from "@mui/material/Fade";
 import Grow from "@mui/material/Grow";
 
@@ -79,6 +81,8 @@ const centerModal = {
 };
 
 function AdminPanel() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const { user: authUser } = useAuth(); // <- para esconder o próprio usuário
   const currentEmail = authUser?.email;
 
@@ -323,8 +327,16 @@ function AdminPanel() {
   };
 
   // -------- table --------
-  const columns = useMemo(
-    () => [
+  const columns = useMemo(() => {
+    if (isMobile) {
+      return [
+        { Header: "nome", accessor: "nome", align: "left" },
+        { Header: "email", accessor: "email", align: "left" },
+        { Header: "status", accessor: "statusName", align: "center" },
+        { Header: "ação", accessor: "action", align: "center" },
+      ];
+    }
+    return [
       { Header: "nome", accessor: "nome", align: "left" },
       { Header: "sobrenome", accessor: "sobrenome", align: "left" },
       { Header: "email", accessor: "email", align: "left" },
@@ -332,16 +344,23 @@ function AdminPanel() {
       { Header: "status", accessor: "statusName", align: "center" },
       { Header: "cadastro", accessor: "registrationDate", align: "center" },
       { Header: "ação", accessor: "action", align: "center" },
-    ],
-    []
-  );
+    ];
+  }, [isMobile]);
 
   const rows = useMemo(
     () =>
       filtered.map((row) => ({
-        nome: <MDTypography variant="caption">{row.nome || "-"}</MDTypography>,
+        nome: (
+          <MDTypography variant="caption" fontWeight="medium">
+            {row.nome || "-"}
+          </MDTypography>
+        ),
         sobrenome: <MDTypography variant="caption">{row.sobrenome || "-"}</MDTypography>,
-        email: <MDTypography variant="caption">{row.email || "-"}</MDTypography>,
+        email: (
+          <MDTypography variant="caption" sx={{ wordBreak: "break-all" }}>
+            {row.email || "-"}
+          </MDTypography>
+        ),
         roleName: <MDTypography variant="caption">{capitalize(row.roleName || "-")}</MDTypography>,
         statusName: (
           <MDBadge
@@ -414,18 +433,28 @@ function AdminPanel() {
 
   // header actions
   const headerActions = (
-    <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap" gap={1}>
+    <Stack
+      direction={{ xs: "column", md: "row" }}
+      spacing={1}
+      justifyContent="center"
+      flexWrap="wrap"
+      gap={1}
+      sx={{ width: "100%" }}
+    >
       <Tabs
         value={activeTab}
         onChange={(_e, v) => setActiveTab(v)}
         aria-label="abas-admin"
+        variant="scrollable"
+        scrollButtons="auto"
+        allowScrollButtonsMobile
         sx={{
           "& .MuiTab-root": {
             textTransform: "none",
             minHeight: 48,
             fontWeight: 600,
-            fontSize: { xs: "0.8rem", sm: "0.875rem" },
-            px: { xs: 2, sm: 3 },
+            fontSize: { xs: "0.75rem", sm: "0.875rem" },
+            px: { xs: 1.5, sm: 3 },
             transition: "all 0.3s",
             "&.Mui-selected": {
               color: palette.gold,
@@ -436,6 +465,9 @@ function AdminPanel() {
             height: 3,
           },
           "& .MuiTabs-flexContainer": { gap: { xs: 0.5, sm: 1 } },
+          "& .MuiTabs-scrollButtons": {
+            color: palette.green,
+          },
         }}
       >
         <Tab icon={<Icon>group</Icon>} iconPosition="start" label="Gerenciar Usuários" />
@@ -524,7 +556,7 @@ function AdminPanel() {
             boxShadow: `0 4px 24px ${alpha(palette.green, 0.08)}`,
           }}
         >
-          <MDBox p={{ xs: 2, md: 3 }}>
+          <MDBox p={{ xs: 1.5, md: 3 }}>
             {activeTab === 0 && (
               <Grid container spacing={2}>
                 <Grid item xs={12} md={6} lg={5}>
@@ -653,13 +685,15 @@ function AdminPanel() {
                       )}
                     </MDBox>
                   ) : (
-                    <DataTable
-                      table={{ columns, rows }}
-                      isSorted={false}
-                      entriesPerPage={{ defaultValue: 10, entries: [5, 10, 20, 50] }}
-                      showTotalEntries
-                      noEndBorder
-                    />
+                    <MDBox sx={{ overflowX: "auto" }}>
+                      <DataTable
+                        table={{ columns, rows }}
+                        isSorted={false}
+                        entriesPerPage={{ defaultValue: 10, entries: [5, 10, 20, 50] }}
+                        showTotalEntries
+                        noEndBorder
+                      />
+                    </MDBox>
                   )}
                 </Grid>
               </Grid>
@@ -781,67 +815,77 @@ function AdminPanel() {
                           Nenhum registro encontrado.
                         </MDTypography>
                       ) : (
-                        <DataTable
-                          table={{
-                            columns: [
-                              { Header: "nome", accessor: "nome", align: "left" },
-                              { Header: "email", accessor: "email", align: "left" },
-                              { Header: "status", accessor: "status", align: "center" },
-                              { Header: "expira", accessor: "expires_at", align: "center" },
-                              { Header: "aceite", accessor: "accepted_at", align: "center" },
-                              { Header: "recusa", accessor: "rejected_at", align: "center" },
-                            ],
-                            rows: contractRows.map((row) => ({
-                              nome: (
-                                <MDTypography variant="caption">{row.nome || "-"}</MDTypography>
-                              ),
-                              email: (
-                                <MDTypography variant="caption">{row.email || "-"}</MDTypography>
-                              ),
-                              status: (
-                                <MDBadge
-                                  badgeContent={row.status || "-"}
-                                  color={
-                                    row.status === "accepted"
-                                      ? "success"
-                                      : row.status === "rejected"
-                                      ? "error"
-                                      : row.status === "expired"
-                                      ? "warning"
-                                      : "secondary"
-                                  }
-                                  variant="gradient"
-                                  size="sm"
-                                />
-                              ),
-                              expires_at: (
-                                <MDTypography variant="caption">
-                                  {row.expires_at
-                                    ? new Date(row.expires_at).toLocaleString("pt-BR")
-                                    : "-"}
-                                </MDTypography>
-                              ),
-                              accepted_at: (
-                                <MDTypography variant="caption">
-                                  {row.accepted_at
-                                    ? new Date(row.accepted_at).toLocaleString("pt-BR")
-                                    : "-"}
-                                </MDTypography>
-                              ),
-                              rejected_at: (
-                                <MDTypography variant="caption">
-                                  {row.rejected_at
-                                    ? new Date(row.rejected_at).toLocaleString("pt-BR")
-                                    : "-"}
-                                </MDTypography>
-                              ),
-                            })),
-                          }}
-                          isSorted={false}
-                          entriesPerPage={{ defaultValue: 10, entries: [5, 10, 20] }}
-                          showTotalEntries
-                          noEndBorder
-                        />
+                        <MDBox sx={{ overflowX: "auto" }}>
+                          <DataTable
+                            table={{
+                              columns: isMobile
+                                ? [
+                                    { Header: "nome", accessor: "nome", align: "left" },
+                                    { Header: "status", accessor: "status", align: "center" },
+                                    { Header: "aceite", accessor: "accepted_at", align: "center" },
+                                  ]
+                                : [
+                                    { Header: "nome", accessor: "nome", align: "left" },
+                                    { Header: "email", accessor: "email", align: "left" },
+                                    { Header: "status", accessor: "status", align: "center" },
+                                    { Header: "expira", accessor: "expires_at", align: "center" },
+                                    { Header: "aceite", accessor: "accepted_at", align: "center" },
+                                    { Header: "recusa", accessor: "rejected_at", align: "center" },
+                                  ],
+                              rows: contractRows.map((row) => ({
+                                nome: (
+                                  <MDTypography variant="caption">{row.nome || "-"}</MDTypography>
+                                ),
+                                email: (
+                                  <MDTypography variant="caption" sx={{ wordBreak: "break-all" }}>
+                                    {row.email || "-"}
+                                  </MDTypography>
+                                ),
+                                status: (
+                                  <MDBadge
+                                    badgeContent={row.status || "-"}
+                                    color={
+                                      row.status === "accepted"
+                                        ? "success"
+                                        : row.status === "rejected"
+                                        ? "error"
+                                        : row.status === "expired"
+                                        ? "warning"
+                                        : "secondary"
+                                    }
+                                    variant="gradient"
+                                    size="sm"
+                                  />
+                                ),
+                                expires_at: (
+                                  <MDTypography variant="caption">
+                                    {row.expires_at
+                                      ? new Date(row.expires_at).toLocaleString("pt-BR")
+                                      : "-"}
+                                  </MDTypography>
+                                ),
+                                accepted_at: (
+                                  <MDTypography variant="caption">
+                                    {row.accepted_at
+                                      ? new Date(row.accepted_at).toLocaleString("pt-BR")
+                                      : "-"}
+                                  </MDTypography>
+                                ),
+                                rejected_at: (
+                                  <MDTypography variant="caption">
+                                    {row.rejected_at
+                                      ? new Date(row.rejected_at).toLocaleString("pt-BR")
+                                      : "-"}
+                                  </MDTypography>
+                                ),
+                              })),
+                            }}
+                            isSorted={false}
+                            entriesPerPage={{ defaultValue: 10, entries: [5, 10, 20] }}
+                            showTotalEntries
+                            noEndBorder
+                          />
+                        </MDBox>
                       )}
                     </MDBox>
                   </Grid>

@@ -34,6 +34,7 @@ function collapseItem(theme, ownerState) {
     width: "100%",
     padding: `${pxToRem(8)} ${pxToRem(10)}`,
     margin: `${pxToRem(1.5)} ${pxToRem(16)}`,
+    minHeight: pxToRem(40),
     borderRadius: borderRadius.md,
     cursor: "pointer",
     userSelect: "none",
@@ -59,6 +60,11 @@ function collapseItem(theme, ownerState) {
 
         return backgroundValue;
       },
+    },
+    [breakpoints.down("md")]: {
+      padding: `${pxToRem(12)} ${pxToRem(14)}`,
+      margin: `${pxToRem(4)} ${pxToRem(12)}`,
+      minHeight: pxToRem(48),
     },
   };
 }
@@ -120,6 +126,12 @@ function collapseText(theme, ownerState) {
       fontWeight: active ? fontWeightRegular : fontWeightLight,
       fontSize: size.sm,
       lineHeight: 0,
+    },
+    [breakpoints.down("md")]: {
+      "& span": {
+        fontSize: size.md,
+        lineHeight: 1,
+      },
     },
   };
 }

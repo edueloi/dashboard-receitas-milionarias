@@ -252,10 +252,14 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
 
       <List
         sx={{
-          px: { xs: 1, sm: 1.25 },
+          px: { xs: 1.5, sm: 1.25 },
           py: 1,
           overflowY: "auto",
-          height: { xs: "calc(100vh - 100px)", sm: "calc(100vh - 120px)" },
+          height: {
+            xs: "calc(100dvh - 120px)",
+            sm: "calc(100vh - 120px)",
+          },
+          paddingBottom: "env(safe-area-inset-bottom, 12px)",
           "&::-webkit-scrollbar": {
             width: "6px",
           },

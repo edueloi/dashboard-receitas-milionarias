@@ -5,7 +5,7 @@ export default styled(Drawer)(({ theme, ownerState }) => {
   const { palette, boxShadows, transitions, breakpoints, zIndex } = theme;
   const { transparentSidenav, whiteSidenav, darkMode, isMobile } = ownerState;
 
-  const sidebarWidth = isMobile ? 280 : 250;
+  const sidebarWidth = isMobile ? "88vw" : 250;
   const { transparent, white, background, secondary } = palette;
   const { xxl } = boxShadows;
 
@@ -42,10 +42,12 @@ export default styled(Drawer)(({ theme, ownerState }) => {
         WebkitBackdropFilter: "saturate(180%) blur(8px)",
         background: backgroundValue,
         width: sidebarWidth,
+        maxWidth: 360,
         zIndex: zIndex.drawer + 2,
         borderTopRightRadius: "16px",
         borderBottomRightRadius: "16px",
         boxShadow: "0 10px 40px rgba(0,0,0,0.2)",
+        paddingBottom: "env(safe-area-inset-bottom, 0px)",
       }
     : {};
 
