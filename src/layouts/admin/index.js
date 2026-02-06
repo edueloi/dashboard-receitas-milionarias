@@ -99,6 +99,17 @@ function AdminPanel() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
   const [reprocessando, setReprocessando] = useState(false);
+  const [inviteBaseUrl, setInviteBaseUrl] = useState(
+    () =>
+      localStorage.getItem("rm_afiliado_pro_base_url") ||
+      "https://receitasmilionarias.com.br/afiliado-pro.html"
+  );
+  const [inviteLink, setInviteLink] = useState("");
+  const [inviteExpiresAt, setInviteExpiresAt] = useState(null);
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [contractRows, setContractRows] = useState([]);
+  const [contractLoading, setContractLoading] = useState(false);
+  const [contractError, setContractError] = useState(null);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -118,6 +129,24 @@ function AdminPanel() {
   useEffect(() => {
     if (activeTab === 0) fetchUsers();
   }, [activeTab, fetchUsers]);
+
+  useEffect(() => {
+    if (activeTab !== 3) return;
+    const fetchContracts = async () => {
+      try {
+        setContractLoading(true);
+        const { data } = await api.get("/admin/affiliate-pro-contracts");
+        setContractRows(data || []);
+        setContractError(null);
+      } catch (err) {
+        setContractError("Erro ao carregar contratos.");
+        setContractRows([]);
+      } finally {
+        setContractLoading(false);
+      }
+    };
+    fetchContracts();
+  }, [activeTab]);
 
   // filtro local
   useEffect(() => {
@@ -276,6 +305,23 @@ function AdminPanel() {
     }
   };
 
+  const handleGenerateInvite = async () => {
+    try {
+      setInviteLoading(true);
+      localStorage.setItem("rm_afiliado_pro_base_url", inviteBaseUrl);
+      const { data } = await api.post("/admin/affiliate-pro-invite", {
+        baseUrl: inviteBaseUrl,
+      });
+      setInviteLink(data?.url || "");
+      setInviteExpiresAt(data?.expiresAt || null);
+      toast.success("Link de cadastro gerado com sucesso!");
+    } catch (err) {
+      toast.error("Nao foi possivel gerar o link de cadastro.");
+    } finally {
+      setInviteLoading(false);
+    }
+  };
+
   // -------- table --------
   const columns = useMemo(
     () => [
@@ -395,6 +441,7 @@ function AdminPanel() {
         <Tab icon={<Icon>group</Icon>} iconPosition="start" label="Gerenciar Usuários" />
         <Tab icon={<Icon>tune</Icon>} iconPosition="start" label="Gerenciar Permissões" />
         <Tab icon={<Icon>paid</Icon>} iconPosition="start" label="Comissões" />
+        <Tab icon={<Icon>link</Icon>} iconPosition="start" label="Cadastro Afiliado Pro" />
       </Tabs>
 
       {activeTab === 0 && (
@@ -620,6 +667,187 @@ function AdminPanel() {
 
             {activeTab === 1 && <PermissionSettings />}
             {activeTab === 2 && <AffiliateCommissionSettings />}
+            {activeTab === 3 && (
+              <MDBox>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={7}>
+                    <MDTypography variant="h5" mb={1}>
+                      Link de cadastro externo
+                    </MDTypography>
+                    <MDTypography variant="body2" color="text">
+                      Gere um link de cadastro para Afiliado Pro com expiração de 4 horas. O
+                      cadastro é externo e não passa pelo Stripe.
+                    </MDTypography>
+                  </Grid>
+                  <Grid item xs={12} md={5}>
+                    <MDInput
+                      fullWidth
+                      value={inviteBaseUrl}
+                      label="URL base da página de cadastro"
+                      onChange={(e) => setInviteBaseUrl(e.target.value)}
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <MDButton
+                      onClick={handleGenerateInvite}
+                      startIcon={<Icon>{inviteLoading ? "sync" : "add_link"}</Icon>}
+                      disabled={inviteLoading}
+                      sx={{
+                        background: `linear-gradient(135deg, ${palette.green} 0%, ${alpha(
+                          palette.green,
+                          0.85
+                        )} 100%)`,
+                        color: "#fff",
+                        px: { xs: 2, sm: 3 },
+                        py: 1,
+                        fontSize: { xs: "0.8rem", sm: "0.875rem" },
+                        fontWeight: 600,
+                        textTransform: "none",
+                        borderRadius: 2,
+                        boxShadow: `0 4px 12px ${alpha(palette.green, 0.3)}`,
+                        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                        "&:hover": {
+                          background: `linear-gradient(135deg, ${palette.gold} 0%, ${alpha(
+                            palette.gold,
+                            0.85
+                          )} 100%)`,
+                          boxShadow: `0 6px 16px ${alpha(palette.gold, 0.4)}`,
+                          transform: "translateY(-2px)",
+                        },
+                      }}
+                    >
+                      {inviteLoading ? "Gerando..." : "Gerar link (4h)"}
+                    </MDButton>
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Card
+                      sx={{
+                        mt: 2,
+                        borderRadius: 2,
+                        border: `1px solid ${alpha(palette.green, 0.1)}`,
+                        background: alpha(palette.green, 0.04),
+                        boxShadow: "none",
+                      }}
+                    >
+                      <MDBox p={2}>
+                        <MDTypography variant="subtitle2" color="text" mb={1}>
+                          Link atual
+                        </MDTypography>
+                        {inviteLink ? (
+                          <MDBox>
+                            <MDTypography variant="body2" sx={{ wordBreak: "break-all" }}>
+                              {inviteLink}
+                            </MDTypography>
+                            <MDBox mt={1} display="flex" gap={1} flexWrap="wrap">
+                              <MDButton
+                                variant="gradient"
+                                color="info"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(inviteLink);
+                                  toast.success("Link copiado!");
+                                }}
+                              >
+                                Copiar link
+                              </MDButton>
+                              {inviteExpiresAt && (
+                                <MDTypography variant="caption" color="text">
+                                  Expira em {new Date(inviteExpiresAt).toLocaleString("pt-BR")}
+                                </MDTypography>
+                              )}
+                            </MDBox>
+                          </MDBox>
+                        ) : (
+                          <MDTypography variant="body2" color="text">
+                            Nenhum link gerado ainda.
+                          </MDTypography>
+                        )}
+                      </MDBox>
+                    </Card>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <MDBox mt={2}>
+                      <MDTypography variant="h6" mb={1}>
+                        Contratos (aceitos / recusados)
+                      </MDTypography>
+                      {contractLoading ? (
+                        <Skeleton variant="rounded" height={56} sx={{ mb: 1.5, borderRadius: 2 }} />
+                      ) : contractError ? (
+                        <MDTypography variant="body2" color="error">
+                          {contractError}
+                        </MDTypography>
+                      ) : contractRows.length === 0 ? (
+                        <MDTypography variant="body2" color="text">
+                          Nenhum registro encontrado.
+                        </MDTypography>
+                      ) : (
+                        <DataTable
+                          table={{
+                            columns: [
+                              { Header: "nome", accessor: "nome", align: "left" },
+                              { Header: "email", accessor: "email", align: "left" },
+                              { Header: "status", accessor: "status", align: "center" },
+                              { Header: "expira", accessor: "expires_at", align: "center" },
+                              { Header: "aceite", accessor: "accepted_at", align: "center" },
+                              { Header: "recusa", accessor: "rejected_at", align: "center" },
+                            ],
+                            rows: contractRows.map((row) => ({
+                              nome: (
+                                <MDTypography variant="caption">{row.nome || "-"}</MDTypography>
+                              ),
+                              email: (
+                                <MDTypography variant="caption">{row.email || "-"}</MDTypography>
+                              ),
+                              status: (
+                                <MDBadge
+                                  badgeContent={row.status || "-"}
+                                  color={
+                                    row.status === "accepted"
+                                      ? "success"
+                                      : row.status === "rejected"
+                                      ? "error"
+                                      : row.status === "expired"
+                                      ? "warning"
+                                      : "secondary"
+                                  }
+                                  variant="gradient"
+                                  size="sm"
+                                />
+                              ),
+                              expires_at: (
+                                <MDTypography variant="caption">
+                                  {row.expires_at
+                                    ? new Date(row.expires_at).toLocaleString("pt-BR")
+                                    : "-"}
+                                </MDTypography>
+                              ),
+                              accepted_at: (
+                                <MDTypography variant="caption">
+                                  {row.accepted_at
+                                    ? new Date(row.accepted_at).toLocaleString("pt-BR")
+                                    : "-"}
+                                </MDTypography>
+                              ),
+                              rejected_at: (
+                                <MDTypography variant="caption">
+                                  {row.rejected_at
+                                    ? new Date(row.rejected_at).toLocaleString("pt-BR")
+                                    : "-"}
+                                </MDTypography>
+                              ),
+                            })),
+                          }}
+                          isSorted={false}
+                          entriesPerPage={{ defaultValue: 10, entries: [5, 10, 20] }}
+                          showTotalEntries
+                          noEndBorder
+                        />
+                      )}
+                    </MDBox>
+                  </Grid>
+                </Grid>
+              </MDBox>
+            )}
           </MDBox>
         </Card>
       </MDBox>

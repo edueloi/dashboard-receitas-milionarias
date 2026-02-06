@@ -102,9 +102,7 @@ function SignInSplit() {
   const redirectToStripeCheckout = async (userData) => {
     try {
       // Carrega o Stripe
-      const stripe = window.Stripe(
-        "pk_live_51SMf3SIDMhvKPy02zS4MR3PQR3l2uIESt1X0qTvabJjlYPn7tuoperw30O8qq8UGaSynVfrtSpQVYNKuFLaYRlZ400m2bDaWBv"
-      );
+      const stripe = window.Stripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
       // Cria a sessão de checkout
       const response = await api.post("/create-checkout-session", {
