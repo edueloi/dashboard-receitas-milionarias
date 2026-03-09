@@ -126,48 +126,23 @@ export default function ProfileSettings() {
     try {
       setSaving(true);
 
-      // atualiza dados textuais
-      const payload = {
-        nome: form.name,
-        biografia: form.bio,
-        telefone: form.telefone,
-        endereco: form.endereco,
-      };
-      await api.put("/users/me", payload);
-
-      // Se marcou para deletar a foto antiga
-      if (shouldDeleteAvatar && originalAvatarPath) {
-        try {
-          await api.delete("/users/me/avatar", {
-            data: { filePath: originalAvatarPath },
-          });
-          console.log("Foto antiga deletada:", originalAvatarPath);
-        } catch (deleteErr) {
-          console.error("Erro ao deletar foto antiga:", deleteErr);
-        }
+      // Usar FormData para enviar tudo em uma única requisição PUT /users/me
+      const fd = new FormData();
+      fd.append("nome", form.name);
+      fd.append("biografia", form.bio);
+      fd.append("telefone", form.telefone);
+      fd.append("endereco", form.endereco);
+      if (shouldDeleteAvatar) {
+        fd.append("remover_foto_perfil", "true");
       }
 
       // Se tem uma nova foto para enviar
       if (avatarFile) {
-        // Se tinha foto antiga e está trocando, deleta a antiga primeiro
-        if (originalAvatarPath && !shouldDeleteAvatar) {
-          try {
-            await api.delete("/users/me/avatar", {
-              data: { filePath: originalAvatarPath },
-            });
-            console.log("Foto antiga deletada antes de enviar nova:", originalAvatarPath);
-          } catch (deleteErr) {
-            console.error("Erro ao deletar foto antiga:", deleteErr);
-          }
-        }
-
-        // Envia a nova foto
-        const fd = new FormData();
-        fd.append("avatar", avatarFile);
-        await api.post("/users/me/avatar", fd, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        fd.append("foto_perfil", avatarFile);
       }
+
+      // Envia os dados
+      await api.put("/users/me", fd);
 
       // atualiza contexto
       const token = localStorage.getItem("authToken");
