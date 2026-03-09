@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import api from "services/api";
 import toast from "react-hot-toast";
@@ -27,6 +27,7 @@ function VideoUpload({ onUploadComplete, currentUrl }) {
   const [uploadedUrl, setUploadedUrl] = useState(currentUrl || "");
   const [fileName, setFileName] = useState("");
   const [fileSize, setFileSize] = useState(0);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (currentUrl) {
@@ -43,6 +44,7 @@ function VideoUpload({ onUploadComplete, currentUrl }) {
   };
 
   const handleFileSelect = async (event) => {
+    if (event && event.stopPropagation) event.stopPropagation();
     const file = event.target.files[0];
     if (!file) return;
 
@@ -99,7 +101,11 @@ function VideoUpload({ onUploadComplete, currentUrl }) {
     }
   };
 
-  const handleRemove = () => {
+  const handleRemove = (e) => {
+    if (e) {
+      if (e.stopPropagation) e.stopPropagation();
+      if (e.preventDefault) e.preventDefault();
+    }
     setUploadedUrl("");
     setFileName("");
     setFileSize(0);
@@ -127,13 +133,22 @@ function VideoUpload({ onUploadComplete, currentUrl }) {
           }}
         >
           <input
+            ref={fileInputRef}
             accept="video/mp4,video/mpeg,video/quicktime,video/x-msvideo,video/webm"
             style={{ display: "none" }}
-            id="video-upload-input"
             type="file"
             onChange={handleFileSelect}
+            onClick={(e) => {
+              if (e && e.stopPropagation) e.stopPropagation();
+            }}
           />
-          <label htmlFor="video-upload-input" style={{ cursor: "pointer", width: "100%" }}>
+          <MDBox 
+            onClick={(e) => { 
+              if (e && e.stopPropagation) e.stopPropagation(); 
+              if (fileInputRef.current) fileInputRef.current.click();
+            }} 
+            style={{ cursor: "pointer", width: "100%" }}
+          >
             <MDBox>
               <Icon
                 sx={{
@@ -160,7 +175,7 @@ function VideoUpload({ onUploadComplete, currentUrl }) {
                 Tamanho máximo: 500MB
               </MDTypography>
             </MDBox>
-          </label>
+          </MDBox>
         </Card>
       ) : uploading ? (
         <Card

@@ -41,6 +41,7 @@ function ImageUploadCurso({ onUploadComplete, currentUrl }) {
   };
 
   const handleFileSelect = async (event) => {
+    if (event && event.stopPropagation) event.stopPropagation();
     const file = event.target.files[0];
     if (!file) return;
 
@@ -91,7 +92,11 @@ function ImageUploadCurso({ onUploadComplete, currentUrl }) {
     }
   };
 
-  const handleRemove = () => {
+  const handleRemove = (e) => {
+    if (e) {
+      if (e.stopPropagation) e.stopPropagation();
+      if (e.preventDefault) e.preventDefault();
+    }
     setUploadedUrl("");
     setFileName("");
     setFileSize(0);
@@ -119,13 +124,22 @@ function ImageUploadCurso({ onUploadComplete, currentUrl }) {
           }}
         >
           <input
+            ref={fileInputRef}
             accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
             style={{ display: "none" }}
-            id="image-upload-curso-input"
             type="file"
             onChange={handleFileSelect}
+            onClick={(e) => {
+              if (e && e.stopPropagation) e.stopPropagation();
+            }}
           />
-          <label htmlFor="image-upload-curso-input" style={{ cursor: "pointer", width: "100%" }}>
+          <MDBox 
+            onClick={(e) => { 
+              if (e && e.stopPropagation) e.stopPropagation(); 
+              if (fileInputRef.current) fileInputRef.current.click();
+            }} 
+            style={{ cursor: "pointer", width: "100%" }}
+          >
             <MDBox>
               <Icon
                 sx={{
@@ -146,7 +160,7 @@ function ImageUploadCurso({ onUploadComplete, currentUrl }) {
                 Recomendado: 1280x720px (proporção 16:9)
               </MDTypography>
             </MDBox>
-          </label>
+          </MDBox>
         </Card>
       ) : uploading ? (
         <Card variant="outlined" sx={{ p: 3, backgroundColor: "#fafafa" }}>
@@ -228,8 +242,16 @@ function ImageUploadCurso({ onUploadComplete, currentUrl }) {
                   id="image-change-curso-input"
                   type="file"
                   onChange={handleFileSelect}
+                  onClick={(e) => {
+                    if (e && e.stopPropagation) e.stopPropagation();
+                  }}
                 />
-                <label htmlFor="image-change-curso-input">
+                <label
+                  htmlFor="image-change-curso-input"
+                  onClick={(e) => {
+                    if (e && e.stopPropagation) e.stopPropagation();
+                  }}
+                >
                   <IconButton
                     component="span"
                     size="small"

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import api from "services/api";
@@ -106,7 +106,11 @@ function CriarEbook() {
     };
   }, []);
 
+  const coverInputRef = useRef(null);
+  const ebookInputRef = useRef(null);
+
   const handleFileChange = (e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
     setEbookFile(e.target.files[0]);
   };
 
@@ -528,10 +532,20 @@ function CriarEbook() {
                       id="ebook-file-upload"
                       type="file"
                       onChange={handleFileChange}
+                      onClick={(e) => {
+                        if (e && e.stopPropagation) e.stopPropagation();
+                      }}
                     />
                     <MDButton
                       variant="gradient"
-                      component="span"
+                      onClick={(e) => {
+                        if (e) {
+                          e.stopPropagation();
+                          e.preventDefault();
+                        }
+                        const input = document.getElementById("ebook-file-upload");
+                        if (input) input.click();
+                      }}
                       startIcon={<Icon>upload_file</Icon>}
                       fullWidth
                       sx={{

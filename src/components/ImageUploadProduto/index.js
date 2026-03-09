@@ -92,6 +92,7 @@ function ImageUploadProduto({ onUploadComplete, currentUrl }) {
   };
 
   const handleFileSelect = async (event) => {
+    if (event && event.stopPropagation) event.stopPropagation();
     const file = event.target.files[0];
     if (!file) return;
     await uploadImage(file);
@@ -134,7 +135,11 @@ function ImageUploadProduto({ onUploadComplete, currentUrl }) {
     event.stopPropagation();
   };
 
-  const handleRemove = () => {
+  const handleRemove = (e) => {
+    if (e) {
+      if (e.stopPropagation) e.stopPropagation();
+      if (e.preventDefault) e.preventDefault();
+    }
     setUploadedUrl("");
     setFileName("");
     setFileSize(0);
@@ -145,7 +150,11 @@ function ImageUploadProduto({ onUploadComplete, currentUrl }) {
     toast.success("Imagem removida");
   };
 
-  const handleEdit = () => {
+  const handleEdit = (e) => {
+    if (e) {
+      if (e.stopPropagation) e.stopPropagation();
+      if (e.preventDefault) e.preventDefault();
+    }
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
@@ -184,11 +193,19 @@ function ImageUploadProduto({ onUploadComplete, currentUrl }) {
             ref={fileInputRef}
             accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
             style={{ display: "none" }}
-            id="image-upload-input-produto"
             type="file"
             onChange={handleFileSelect}
+            onClick={(e) => {
+              if (e && e.stopPropagation) e.stopPropagation();
+            }}
           />
-          <label htmlFor="image-upload-input-produto" style={{ cursor: "pointer", width: "100%" }}>
+          <MDBox 
+            onClick={(e) => { 
+              if (e && e.stopPropagation) e.stopPropagation(); 
+              if (fileInputRef.current) fileInputRef.current.click();
+            }} 
+            style={{ cursor: "pointer", width: "100%" }}
+          >
             <MDBox>
               <Icon
                 sx={{
@@ -226,7 +243,7 @@ function ImageUploadProduto({ onUploadComplete, currentUrl }) {
                 />
               </MDBox>
             </MDBox>
-          </label>
+          </MDBox>
         </Card>
       ) : uploading ? (
         <Card variant="outlined" sx={{ p: 3 }}>

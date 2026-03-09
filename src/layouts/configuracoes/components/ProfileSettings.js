@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
 import Avatar from "@mui/material/Avatar";
@@ -31,6 +31,7 @@ export default function ProfileSettings() {
   const [avatarFile, setAvatarFile] = useState(null);
   const [shouldDeleteAvatar, setShouldDeleteAvatar] = useState(false);
   const [originalAvatarPath, setOriginalAvatarPath] = useState(null);
+  const fileInputRef = useRef(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -81,25 +82,39 @@ export default function ProfileSettings() {
   };
 
   const onPickAvatar = (e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("A imagem deve ter no máximo 5MB.");
+
+    const MAX_SIZE_MB = 5;
+    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+      toast.error(`A imagem não pode ter mais de ${MAX_SIZE_MB}MB.`);
       return;
     }
-    // Quando seleciona uma nova foto, guarda a foto antiga para deletar depois
+    if (!file.type.match(/image\/(jpeg|jpg|png|gif|webp)/)) {
+      toast.error("Apenas imagens JPG, PNG, GIF ou WEBP são permitidas.");
+      return;
+    }
+
     setAvatarFile(file);
     setAvatarPreview(URL.createObjectURL(file));
-    setShouldDeleteAvatar(false); // Vai substituir, não remover
+    setShouldDeleteAvatar(false);
   };
 
-  const onRemoveAvatar = () => {
+  const onRemoveAvatar = (e) => {
+    if (e) {
+      if (e.stopPropagation) e.stopPropagation();
+      if (e.preventDefault) e.preventDefault();
+    }
     // Remove a foto temporária se tiver
     setAvatarFile(null);
     // Remove a preview
     setAvatarPreview(null);
     // Marca para deletar a foto antiga ao salvar
     setShouldDeleteAvatar(true);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const onSave = async () => {
@@ -238,10 +253,16 @@ export default function ProfileSettings() {
             </MDTypography>
             <Stack direction="row" spacing={1.5} mt={1}>
               <MDButton
-                component="label"
                 variant="gradient"
                 color="dark"
                 size="small"
+                onClick={(e) => {
+                  if (e) {
+                    if (e.stopPropagation) e.stopPropagation();
+                    if (e.preventDefault) e.preventDefault();
+                  }
+                  if (fileInputRef.current) fileInputRef.current.click();
+                }}
                 startIcon={<Icon>photo_camera</Icon>}
                 sx={{
                   background: `linear-gradient(135deg, ${palette.green} 0%, ${alpha(
@@ -257,7 +278,17 @@ export default function ProfileSettings() {
                 }}
               >
                 {avatarPreview ? "Alterar Foto" : "Adicionar Foto"}
-                <input type="file" accept="image/*" hidden onChange={onPickAvatar} />
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/*"
+                  hidden
+                  onChange={onPickAvatar}
+                  onClick={(e) => {
+                    if (e && e.stopPropagation) e.stopPropagation();
+                  }}
+                  style={{ display: "none" }}
+                />
               </MDButton>
               {avatarPreview && (
                 <MDButton

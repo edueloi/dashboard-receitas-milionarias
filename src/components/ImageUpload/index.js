@@ -146,6 +146,7 @@ function ImageUpload({ onImageChange, onImageDelete, initialImage = null }) {
 
   const handleFileChange = useCallback(
     (event) => {
+      if (event && event.stopPropagation) event.stopPropagation();
       const file = event.target.files[0];
       if (!file) return;
 
@@ -156,17 +157,19 @@ function ImageUpload({ onImageChange, onImageDelete, initialImage = null }) {
       }
 
       // Validar tipo de arquivo
-      if (!file.type.match(/image\/(jpeg|jpg|png|gif)/)) {
-        toast.error("Apenas imagens JPG, PNG ou GIF são permitidas.");
+      if (!file.type.match(/image\/(jpeg|jpg|png|gif|webp)/)) {
+        toast.error("Apenas imagens JPG, PNG, GIF ou WEBP são permitidas.");
         return;
       }
 
       setLoading(true);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPreview(reader.result);
-        onImageChange(file);
+        const result = reader.result;
+        setPreview(result);
         setLoading(false);
+        // Chama o callback do pai após atualizar o estado interno
+        onImageChange(file);
         toast.success("Imagem carregada com sucesso!");
       };
       reader.onerror = () => {
@@ -207,7 +210,10 @@ function ImageUpload({ onImageChange, onImageDelete, initialImage = null }) {
   );
 
   const handleDelete = (e) => {
-    e.stopPropagation(); // Evita abrir o seletor de arquivo
+    if (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
     setPreview(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = ""; // Limpa o input de arquivo
@@ -218,8 +224,12 @@ function ImageUpload({ onImageChange, onImageDelete, initialImage = null }) {
     toast.success("Imagem removida!");
   };
 
-  const handleClick = () => {
-    if (!loading) {
+  const handleClick = (e) => {
+    if (e) {
+      if (e.stopPropagation) e.stopPropagation();
+      // e.preventDefault(); // Comentado para testar se resolve falha no seletor
+    }
+    if (!loading && fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
@@ -351,6 +361,11 @@ function ImageUpload({ onImageChange, onImageDelete, initialImage = null }) {
         accept="image/jpeg,image/png,image/gif"
         ref={fileInputRef}
         onChange={handleFileChange}
+        onClick={(e) => {
+          if (e && e.stopPropagation) {
+            e.stopPropagation();
+          }
+        }}
         style={{ display: "none" }}
       />
       {renderContent()}

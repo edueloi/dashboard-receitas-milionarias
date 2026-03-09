@@ -56,19 +56,31 @@ export const AuthProvider = ({ children }) => {
     setUiPermissions([]);
   }, []);
 
-  const processUserData = (userData) => {
-    if (userData && userData.status && userData.status.toLowerCase() === "ativo") {
-      setUser(userData);
-      setIsAuthenticated(true);
-      // Usa a string de permissão diretamente da API
-      const permissions = getPermissionsForRole(userData.permissao);
-      setUiPermissions(permissions);
-      return true;
-    } else {
-      logout();
-      return false;
-    }
-  };
+  const processUserData = useCallback(
+    (userData) => {
+      if (userData && userData.status && userData.status.toLowerCase() === "ativo") {
+        setUser((prev) => {
+          // Comparação profunda simples para evitar re-renders se os dados forem idênticos
+          if (JSON.stringify(prev) === JSON.stringify(userData)) return prev;
+          return userData;
+        });
+
+        setIsAuthenticated(true);
+
+        const newPermissions = getPermissionsForRole(userData.permissao);
+        setUiPermissions((prev) => {
+          if (JSON.stringify(prev) === JSON.stringify(newPermissions)) return prev;
+          return newPermissions;
+        });
+
+        return true;
+      } else {
+        logout();
+        return false;
+      }
+    },
+    [logout]
+  );
 
   const login = useCallback(
     async (token) => {
@@ -119,22 +131,22 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const handleFocus = async () => {
       try {
-        if (!isAuthenticated) return;
+        if (!isAuthenticated || document.visibilityState !== "visible") return;
         const now = Date.now();
-        // Debounce refetches to avoid spamming
-        if (now - lastRefetch.current < 5000) return;
+        // Debounce refetches to avoid spamming - increased to 30s
+        if (now - lastRefetch.current < 30000) return;
         lastRefetch.current = now;
         const response = await api.get("/users/me");
         processUserData(response.data);
       } catch (err) {
         // Ignore errors silently
-        // console.warn('Falha ao refetch perfil no focus:', err);
+        console.warn("Falha ao refetch perfil no focus:", err);
       }
     };
 
     window.addEventListener("focus", handleFocus);
     return () => window.removeEventListener("focus", handleFocus);
-  }, [isAuthenticated]);
+  }, [isAuthenticated, processUserData]);
 
   const authContextValue = {
     user,

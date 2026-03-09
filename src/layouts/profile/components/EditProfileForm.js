@@ -54,8 +54,19 @@ function EditProfileForm({ userData, onSave, onCancel }) {
   };
 
   const handleFileChange = (e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
     const file = e.target.files[0];
     if (file) {
+      const MAX_SIZE_MB = 5;
+      if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+        toast.error(`A imagem não pode ter mais de ${MAX_SIZE_MB}MB.`);
+        return;
+      }
+      if (!file.type.match(/image\/(jpeg|jpg|png|gif|webp)/)) {
+        toast.error("Apenas imagens JPG, PNG, GIF ou WEBP são permitidas.");
+        return;
+      }
+
       setSelectedFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -168,7 +179,13 @@ function EditProfileForm({ userData, onSave, onCancel }) {
               variant="outlined"
               size="small"
               startIcon={<Icon sx={{ fontSize: 16 }}>photo_camera</Icon>}
-              onClick={() => fileInputRef.current.click()}
+              onClick={(e) => {
+                if (e) {
+                  if (e.stopPropagation) e.stopPropagation();
+                  if (e.preventDefault) e.preventDefault();
+                }
+                if (fileInputRef.current) fileInputRef.current.click();
+              }}
               sx={{
                 fontSize: { xs: "0.75rem", md: "0.8125rem" },
                 py: { xs: 0.625, md: 0.75 },
@@ -187,6 +204,9 @@ function EditProfileForm({ userData, onSave, onCancel }) {
               type="file"
               ref={fileInputRef}
               onChange={handleFileChange}
+              onClick={(e) => {
+                if (e && e.stopPropagation) e.stopPropagation();
+              }}
               style={{ display: "none" }}
               accept="image/*"
             />
