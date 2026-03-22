@@ -125,10 +125,6 @@ function Ebooks() {
     }
   };
 
-  const handleDownload = (id) => {
-    window.open(`${api.defaults.baseURL}ebooks/${id}/download`);
-  };
-
   const absUrl = (p) =>
     !p
       ? ""
@@ -367,7 +363,6 @@ function Ebooks() {
                   description={ebook.descricao_curta}
                   category={ebook.categoria_nome}
                   onRead={() => navigate(`/ebooks/${ebook.id}`)}
-                  onDownload={() => handleDownload(ebook.id)}
                   onEdit={
                     canCreate && user && ebook.usuario_id === user.id
                       ? () => handleEdit(ebook.id)

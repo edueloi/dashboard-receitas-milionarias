@@ -17,7 +17,7 @@ const palette = {
   green: "#1C3B32",
 };
 
-function EbookCard({ image, title, description, category, onRead, onDownload, onEdit, onDelete }) {
+function EbookCard({ image, title, description, category, onRead, onEdit, onDelete }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
 
@@ -306,29 +306,6 @@ function EbookCard({ image, title, description, category, onRead, onDownload, on
             Ver
           </MDBox>
         </MDButton>
-        <MDButton
-          variant="contained"
-          startIcon={<Icon sx={{ fontSize: { xs: 16, md: 18 } }}>download</Icon>}
-          onClick={onDownload}
-          fullWidth
-          sx={{
-            fontSize: { xs: "0.6875rem", sm: "0.75rem", md: "0.8125rem" },
-            py: { xs: 0.625, sm: 0.75, md: 0.875 },
-            px: { xs: 1, md: 1.5 },
-            backgroundColor: palette.gold,
-            color: "#fff !important",
-            fontWeight: 600,
-            minWidth: 0,
-            boxShadow: `0 2px 8px ${alpha(palette.gold, 0.3)}`,
-            "&:hover": {
-              backgroundColor: alpha(palette.gold, 0.9),
-              transform: "scale(1.02)",
-              boxShadow: `0 4px 12px ${alpha(palette.gold, 0.4)}`,
-            },
-          }}
-        >
-          Baixar
-        </MDButton>
       </MDBox>
     </Card>
   );
@@ -340,7 +317,6 @@ EbookCard.propTypes = {
   description: PropTypes.string.isRequired,
   category: PropTypes.string,
   onRead: PropTypes.func.isRequired,
-  onDownload: PropTypes.func.isRequired,
   onEdit: PropTypes.func,
   onDelete: PropTypes.func,
 };
