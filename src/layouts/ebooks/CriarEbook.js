@@ -416,7 +416,9 @@ function CriarEbook() {
                     <MDBox display="flex" justifyContent="flex-end" mt={0.5}>
                       <MDTypography
                         variant="caption"
-                        color={ebookInfo.descricao_curta.length >= MAX_DESCRICAO_CURTA ? "error" : "text"}
+                        color={
+                          ebookInfo.descricao_curta.length >= MAX_DESCRICAO_CURTA ? "error" : "text"
+                        }
                       >
                         {ebookInfo.descricao_curta.length} / {MAX_DESCRICAO_CURTA}
                       </MDTypography>
