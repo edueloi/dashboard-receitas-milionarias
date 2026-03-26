@@ -44,6 +44,10 @@ const modalStyle = {
   p: { xs: 2, sm: 2.5, md: 3 },
 };
 
+const MAX_TITULO = 100;
+const MAX_DESCRICAO_CURTA = 255;
+const MAX_DESCRICAO = 5000;
+
 function CriarEbook() {
   const navigate = useNavigate();
   const [ebookCategories, setEbookCategories] = useState([]);
@@ -74,10 +78,17 @@ function CriarEbook() {
   }, []);
 
   const handleChange = (e) => {
-    setEbookInfo((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    if (name === "titulo" && value.length > MAX_TITULO) return;
+    if (name === "descricao_curta" && value.length > MAX_DESCRICAO_CURTA) return;
+    setEbookInfo((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleContentChange = (content) => {
+    if (content.length > MAX_DESCRICAO) {
+      toast.error(`Descrição completa excedeu o limite de ${MAX_DESCRICAO} caracteres.`);
+      return;
+    }
     setEbookInfo((prev) => ({ ...prev, descricao: content }));
   };
 
@@ -300,30 +311,41 @@ function CriarEbook() {
                 </MDBox>
 
                 <Stack spacing={2.5}>
-                  <MDInput
-                    name="titulo"
-                    label="Título do Ebook"
-                    placeholder="Digite o título do ebook"
-                    value={ebookInfo.titulo}
-                    onChange={handleChange}
-                    required
-                    fullWidth
-                    InputProps={{
-                      sx: {
-                        fontSize: { xs: "0.875rem", md: "0.9375rem" },
-                        "& .MuiOutlinedInput-notchedOutline": {
-                          borderColor: alpha(palette.green, 0.2),
+                  <MDBox>
+                    <MDInput
+                      name="titulo"
+                      label="Título do Ebook"
+                      placeholder="Digite o título do ebook"
+                      value={ebookInfo.titulo}
+                      onChange={handleChange}
+                      required
+                      fullWidth
+                      inputProps={{ maxLength: MAX_TITULO }}
+                      InputProps={{
+                        sx: {
+                          fontSize: { xs: "0.875rem", md: "0.9375rem" },
+                          "& .MuiOutlinedInput-notchedOutline": {
+                            borderColor: alpha(palette.green, 0.2),
+                          },
+                          "&:hover .MuiOutlinedInput-notchedOutline": {
+                            borderColor: alpha(palette.green, 0.4),
+                          },
+                          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                            borderColor: palette.gold,
+                            borderWidth: 2,
+                          },
                         },
-                        "&:hover .MuiOutlinedInput-notchedOutline": {
-                          borderColor: alpha(palette.green, 0.4),
-                        },
-                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                          borderColor: palette.gold,
-                          borderWidth: 2,
-                        },
-                      },
-                    }}
-                  />
+                      }}
+                    />
+                    <MDBox display="flex" justifyContent="flex-end" mt={0.5}>
+                      <MDTypography
+                        variant="caption"
+                        color={ebookInfo.titulo.length >= MAX_TITULO ? "error" : "text"}
+                      >
+                        {ebookInfo.titulo.length} / {MAX_TITULO}
+                      </MDTypography>
+                    </MDBox>
+                  </MDBox>
 
                   <Autocomplete
                     options={ebookCategories}
@@ -364,31 +386,42 @@ function CriarEbook() {
                     fullWidth
                   />
 
-                  <MDInput
-                    name="descricao_curta"
-                    label="Descrição Curta"
-                    placeholder="Uma breve descrição do ebook"
-                    value={ebookInfo.descricao_curta}
-                    onChange={handleChange}
-                    fullWidth
-                    multiline
-                    rows={3}
-                    InputProps={{
-                      sx: {
-                        fontSize: { xs: "0.875rem", md: "0.9375rem" },
-                        "& .MuiOutlinedInput-notchedOutline": {
-                          borderColor: alpha(palette.green, 0.2),
+                  <MDBox>
+                    <MDInput
+                      name="descricao_curta"
+                      label="Descrição Curta"
+                      placeholder="Uma breve descrição do ebook"
+                      value={ebookInfo.descricao_curta}
+                      onChange={handleChange}
+                      fullWidth
+                      multiline
+                      rows={3}
+                      inputProps={{ maxLength: MAX_DESCRICAO_CURTA }}
+                      InputProps={{
+                        sx: {
+                          fontSize: { xs: "0.875rem", md: "0.9375rem" },
+                          "& .MuiOutlinedInput-notchedOutline": {
+                            borderColor: alpha(palette.green, 0.2),
+                          },
+                          "&:hover .MuiOutlinedInput-notchedOutline": {
+                            borderColor: alpha(palette.green, 0.4),
+                          },
+                          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                            borderColor: palette.gold,
+                            borderWidth: 2,
+                          },
                         },
-                        "&:hover .MuiOutlinedInput-notchedOutline": {
-                          borderColor: alpha(palette.green, 0.4),
-                        },
-                        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                          borderColor: palette.gold,
-                          borderWidth: 2,
-                        },
-                      },
-                    }}
-                  />
+                      }}
+                    />
+                    <MDBox display="flex" justifyContent="flex-end" mt={0.5}>
+                      <MDTypography
+                        variant="caption"
+                        color={ebookInfo.descricao_curta.length >= MAX_DESCRICAO_CURTA ? "error" : "text"}
+                      >
+                        {ebookInfo.descricao_curta.length} / {MAX_DESCRICAO_CURTA}
+                      </MDTypography>
+                    </MDBox>
+                  </MDBox>
                 </Stack>
               </MDBox>
             </Card>
@@ -501,6 +534,14 @@ function CriarEbook() {
                       "link",
                     ]}
                   />
+                  <MDBox display="flex" justifyContent="flex-end" mt={0.5}>
+                    <MDTypography
+                      variant="caption"
+                      color={ebookInfo.descricao.length >= MAX_DESCRICAO ? "error" : "text"}
+                    >
+                      {ebookInfo.descricao.length} / {MAX_DESCRICAO}
+                    </MDTypography>
+                  </MDBox>
                 </MDBox>
               </MDBox>
             </Card>
