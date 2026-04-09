@@ -95,9 +95,9 @@ function EditarEbook() {
       try {
         const { data: ebook } = await api.get(`/ebooks/${id}`);
         setEbookInfo({
-          titulo: ebook.titulo,
-          descricao_curta: ebook.descricao_curta,
-          descricao: ebook.descricao,
+          titulo: ebook.titulo ?? "",
+          descricao_curta: ebook.descricao_curta ?? "",
+          descricao: ebook.descricao ?? "",
           categoria_id: ebookCategories.find((c) => c.id === ebook.categoria_id) || null,
           capa_url: absUrl(ebook.capa_url),
           arquivo_url: ebook.arquivo_url ? absUrl(ebook.arquivo_url) : null,
