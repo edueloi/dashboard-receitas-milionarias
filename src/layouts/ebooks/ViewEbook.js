@@ -221,14 +221,19 @@ function ViewEbook() {
     }
   }, [showReader]); // eslint-disable-line
 
+  const apiBase = (() => {
+    const b = api.defaults.baseURL || "";
+    return b.endsWith("/") ? b : `${b}/`;
+  })();
+
   const handleOpenReader = () => {
-    pdfUrlRef.current = `${absUrl("")}ebooks/${id}/view?t=${Date.now()}`;
+    pdfUrlRef.current = `${apiBase}ebooks/${id}/view?t=${Date.now()}`;
     setShowReader(true);
   };
   const handleCloseReader = () => setShowReader(false);
 
   const handleDownload = () => {
-    window.open(`${absUrl("")}ebooks/${id}/download`, "_blank", "noopener");
+    window.open(`${apiBase}ebooks/${id}/download`, "_blank", "noopener");
   };
 
   if (pageLoading) return <PageWrapper title="Carregando..." />;
