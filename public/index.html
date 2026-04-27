@@ -29,6 +29,13 @@ Software.
     />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <script src="https://js.stripe.com/v3/"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+      if (window.pdfjsLib) {
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+          "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      }
+    </script>
     <title>Receitas Milionárias</title>
     <link
       rel="stylesheet"
