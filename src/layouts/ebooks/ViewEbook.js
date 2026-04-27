@@ -192,9 +192,9 @@ function ViewEbook() {
   const [pageLoading, setPageLoading] = useState(true);
   const [showReader, setShowReader] = useState(false);
   const readerSectionRef = useRef(null);
+  const pdfUrlRef = useRef(null);
 
-  const pdfUrl = `${absUrl("")}ebooks/${id}/view`;
-  const reader = usePdfReader(showReader ? pdfUrl : null);
+  const reader = usePdfReader(showReader ? pdfUrlRef.current : null);
 
   useEffect(() => {
     api
@@ -221,7 +221,10 @@ function ViewEbook() {
     }
   }, [showReader]); // eslint-disable-line
 
-  const handleOpenReader = () => setShowReader(true);
+  const handleOpenReader = () => {
+    pdfUrlRef.current = `${absUrl("")}ebooks/${id}/view?t=${Date.now()}`;
+    setShowReader(true);
+  };
   const handleCloseReader = () => setShowReader(false);
 
   const handleDownload = () => {
