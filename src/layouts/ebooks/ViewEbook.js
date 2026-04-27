@@ -78,29 +78,32 @@ function usePdfReader(pdfUrl) {
     }
   }, [pdfUrl, defaultZoom]);
 
-  const renderPage = useCallback(async (pageNum) => {
-    const doc = pdfRef.current;
-    if (!doc || renderedRef.current.has(pageNum)) return;
-    const canvas = canvasRefs.current[pageNum];
-    if (!canvas) return;
+  const renderPage = useCallback(
+    async (pageNum) => {
+      const doc = pdfRef.current;
+      if (!doc || renderedRef.current.has(pageNum)) return;
+      const canvas = canvasRefs.current[pageNum];
+      if (!canvas) return;
 
-    renderedRef.current.add(pageNum);
-    try {
-      const page = await doc.getPage(pageNum);
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      const vp = page.getViewport({ scale: zoom * dpr });
-      const displayVp = page.getViewport({ scale: zoom });
+      renderedRef.current.add(pageNum);
+      try {
+        const page = await doc.getPage(pageNum);
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const vp = page.getViewport({ scale: zoom * dpr });
+        const displayVp = page.getViewport({ scale: zoom });
 
-      canvas.width = Math.floor(vp.width);
-      canvas.height = Math.floor(vp.height);
-      canvas.style.width = Math.floor(displayVp.width) + "px";
-      canvas.style.height = Math.floor(displayVp.height) + "px";
+        canvas.width = Math.floor(vp.width);
+        canvas.height = Math.floor(vp.height);
+        canvas.style.width = Math.floor(displayVp.width) + "px";
+        canvas.style.height = Math.floor(displayVp.height) + "px";
 
-      await page.render({ canvasContext: canvas.getContext("2d"), viewport: vp }).promise;
-    } catch {
-      renderedRef.current.delete(pageNum);
-    }
-  }, [zoom]);
+        await page.render({ canvasContext: canvas.getContext("2d"), viewport: vp }).promise;
+      } catch {
+        renderedRef.current.delete(pageNum);
+      }
+    },
+    [zoom]
+  );
 
   // Lazy render via IntersectionObserver
   useEffect(() => {
@@ -146,12 +149,15 @@ function usePdfReader(pdfUrl) {
     }
   }, [zoom, status]);
 
-  const goToPage = useCallback((n) => {
-    const page = Math.max(1, Math.min(n, totalPages));
-    setCurrentPage(page);
-    const el = canvasRefs.current[page]?.parentElement;
-    el?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, [totalPages]);
+  const goToPage = useCallback(
+    (n) => {
+      const page = Math.max(1, Math.min(n, totalPages));
+      setCurrentPage(page);
+      const el = canvasRefs.current[page]?.parentElement;
+      el?.scrollIntoView({ behavior: "smooth", block: "start" });
+    },
+    [totalPages]
+  );
 
   const changeZoom = useCallback((delta) => {
     setZoom((z) => Math.max(0.4, Math.min(3.0, z + delta)));
@@ -162,8 +168,17 @@ function usePdfReader(pdfUrl) {
   }, []);
 
   return {
-    pdfDoc, totalPages, currentPage, zoom, loadProgress, status,
-    containerRef, load, goToPage, changeZoom, registerCanvas,
+    pdfDoc,
+    totalPages,
+    currentPage,
+    zoom,
+    loadProgress,
+    status,
+    containerRef,
+    load,
+    goToPage,
+    changeZoom,
+    registerCanvas,
   };
 }
 
@@ -182,7 +197,8 @@ function ViewEbook() {
   const reader = usePdfReader(showReader ? pdfUrl : null);
 
   useEffect(() => {
-    api.get(`/ebooks/${id}`)
+    api
+      .get(`/ebooks/${id}`)
       .then(({ data }) => {
         setEbook({
           ...data,
@@ -217,8 +233,7 @@ function ViewEbook() {
 
   const coverSrc = ebook.capa_url || "/static/images/default-ebook-cover.jpg";
   const showShortDesc =
-    ebook.descricao_curta &&
-    ebook.descricao_curta.trim() !== (ebook.descricao || "").trim();
+    ebook.descricao_curta && ebook.descricao_curta.trim() !== (ebook.descricao || "").trim();
 
   const pageSubtitle = (
     <Stack direction="row" spacing={1.5} alignItems="center" pt={0.5}>
@@ -255,7 +270,9 @@ function ViewEbook() {
                     <img
                       src={coverSrc}
                       alt={`Capa: ${ebook.titulo}`}
-                      onError={(e) => { e.currentTarget.src = "/static/images/default-ebook-cover.jpg"; }}
+                      onError={(e) => {
+                        e.currentTarget.src = "/static/images/default-ebook-cover.jpg";
+                      }}
                       style={{
                         maxWidth: "100%",
                         height: "auto",
@@ -280,7 +297,9 @@ function ViewEbook() {
                             size="large"
                             sx={{
                               background: `linear-gradient(195deg, ${palette.green}, #2d6b56)`,
-                              "&:hover": { background: `linear-gradient(195deg, #255045, ${palette.green})` },
+                              "&:hover": {
+                                background: `linear-gradient(195deg, #255045, ${palette.green})`,
+                              },
                             }}
                           >
                             Começar a Ler
@@ -308,7 +327,9 @@ function ViewEbook() {
                           textAlign="center"
                           sx={{ borderRadius: 2, backgroundColor: alpha(palette.green, 0.05) }}
                         >
-                          <Icon sx={{ color: "text.secondary", fontSize: 32 }}>hourglass_empty</Icon>
+                          <Icon sx={{ color: "text.secondary", fontSize: 32 }}>
+                            hourglass_empty
+                          </Icon>
                           <MDTypography variant="body2" color="text.secondary" mt={0.5}>
                             Arquivo ainda não disponível
                           </MDTypography>
@@ -344,7 +365,10 @@ function ViewEbook() {
                           fontFamily: (t) => `${t.typography.fontFamily} !important`,
                         },
                         "& p, & li": { fontSize: "1rem !important", lineHeight: "1.7 !important" },
-                        "& ul, & ol": { paddingLeft: "20px !important", marginBottom: "1em !important" },
+                        "& ul, & ol": {
+                          paddingLeft: "20px !important",
+                          marginBottom: "1em !important",
+                        },
                         "& ul li": { listStyleType: "disc !important" },
                         "& ol li": { listStyleType: "decimal !important" },
                         pt: 1,
@@ -444,7 +468,10 @@ function ViewEbook() {
                     {ebook.titulo}
                   </MDTypography>
                   {reader.totalPages > 0 && (
-                    <MDTypography variant="caption" sx={{ color: "rgba(255,255,255,.65)", flexShrink: 0 }}>
+                    <MDTypography
+                      variant="caption"
+                      sx={{ color: "rgba(255,255,255,.65)", flexShrink: 0 }}
+                    >
                       {reader.currentPage}/{reader.totalPages}
                     </MDTypography>
                   )}
@@ -453,24 +480,35 @@ function ViewEbook() {
                 {/* Controles */}
                 <Stack direction="row" spacing={0.5} alignItems="center">
                   {/* Zoom (oculto no mobile) */}
-                  <MDBox sx={{ display: { xs: "none", sm: "flex" }, alignItems: "center", gap: 0.5 }}>
+                  <MDBox
+                    sx={{ display: { xs: "none", sm: "flex" }, alignItems: "center", gap: 0.5 }}
+                  >
                     <Tooltip title="Diminuir">
                       <IconButton
                         size="small"
                         onClick={() => reader.changeZoom(-0.15)}
-                        sx={{ color: "rgba(255,255,255,.8)", "&:hover": { backgroundColor: "rgba(255,255,255,.15)" } }}
+                        sx={{
+                          color: "rgba(255,255,255,.8)",
+                          "&:hover": { backgroundColor: "rgba(255,255,255,.15)" },
+                        }}
                       >
                         <Icon sx={{ fontSize: 20 }}>remove</Icon>
                       </IconButton>
                     </Tooltip>
-                    <MDTypography variant="caption" sx={{ color: "rgba(255,255,255,.7)", minWidth: 36, textAlign: "center" }}>
+                    <MDTypography
+                      variant="caption"
+                      sx={{ color: "rgba(255,255,255,.7)", minWidth: 36, textAlign: "center" }}
+                    >
                       {Math.round(reader.zoom * 100)}%
                     </MDTypography>
                     <Tooltip title="Aumentar">
                       <IconButton
                         size="small"
                         onClick={() => reader.changeZoom(0.15)}
-                        sx={{ color: "rgba(255,255,255,.8)", "&:hover": { backgroundColor: "rgba(255,255,255,.15)" } }}
+                        sx={{
+                          color: "rgba(255,255,255,.8)",
+                          "&:hover": { backgroundColor: "rgba(255,255,255,.15)" },
+                        }}
                       >
                         <Icon sx={{ fontSize: 20 }}>add</Icon>
                       </IconButton>
@@ -481,7 +519,10 @@ function ViewEbook() {
                     <IconButton
                       size="small"
                       onClick={handleDownload}
-                      sx={{ color: "rgba(255,255,255,.8)", "&:hover": { backgroundColor: "rgba(255,255,255,.15)" } }}
+                      sx={{
+                        color: "rgba(255,255,255,.8)",
+                        "&:hover": { backgroundColor: "rgba(255,255,255,.15)" },
+                      }}
                     >
                       <Icon sx={{ fontSize: 20 }}>download</Icon>
                     </IconButton>
@@ -496,7 +537,10 @@ function ViewEbook() {
                       color: "#fff !important",
                       borderColor: "rgba(255,255,255,.45) !important",
                       ml: 0.5,
-                      "&:hover": { borderColor: "#fff !important", backgroundColor: "rgba(255,255,255,.1) !important" },
+                      "&:hover": {
+                        borderColor: "#fff !important",
+                        backgroundColor: "rgba(255,255,255,.1) !important",
+                      },
                     }}
                   >
                     Fechar
@@ -509,7 +553,11 @@ function ViewEbook() {
                 <LinearProgress
                   variant={reader.loadProgress > 0 ? "determinate" : "indeterminate"}
                   value={reader.loadProgress}
-                  sx={{ height: 3, backgroundColor: alpha(palette.green, 0.1), "& .MuiLinearProgress-bar": { backgroundColor: palette.gold } }}
+                  sx={{
+                    height: 3,
+                    backgroundColor: alpha(palette.green, 0.1),
+                    "& .MuiLinearProgress-bar": { backgroundColor: palette.gold },
+                  }}
                 />
               )}
 
@@ -579,7 +627,11 @@ function ViewEbook() {
                       >
                         Tentar novamente
                       </MDButton>
-                      <MDButton variant="outlined" onClick={handleDownload} sx={{ color: "#fff", borderColor: "rgba(255,255,255,.4)" }}>
+                      <MDButton
+                        variant="outlined"
+                        onClick={handleDownload}
+                        sx={{ color: "#fff", borderColor: "rgba(255,255,255,.4)" }}
+                      >
                         Baixar PDF
                       </MDButton>
                     </Stack>
@@ -646,7 +698,9 @@ function ViewEbook() {
                       "&.Mui-disabled": { opacity: 0.3 },
                     }}
                   >
-                    <MDBox component="span" sx={{ display: { xs: "none", sm: "inline" } }}>Anterior</MDBox>
+                    <MDBox component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                      Anterior
+                    </MDBox>
                   </MDButton>
 
                   <MDTypography variant="body2" sx={{ color: "rgba(255,255,255,.65)" }}>
@@ -666,7 +720,9 @@ function ViewEbook() {
                       "&.Mui-disabled": { opacity: 0.3 },
                     }}
                   >
-                    <MDBox component="span" sx={{ display: { xs: "none", sm: "inline" } }}>Próxima</MDBox>
+                    <MDBox component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                      Próxima
+                    </MDBox>
                   </MDButton>
                 </MDBox>
               )}
