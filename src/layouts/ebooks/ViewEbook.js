@@ -618,8 +618,7 @@ function ViewEbook() {
                       }}
                     />
                     <MDTypography variant="body2" sx={{ color: "rgba(255,255,255,.7)" }}>
-                      Carregando ebook...{" "}
-                      {reader.loadProgress > 0 ? `${reader.loadProgress}%` : ""}
+                      Carregando ebook...{reader.loadProgress > 0 ? ` ${reader.loadProgress}%` : ""}
                     </MDTypography>
                   </MDBox>
                 )}
