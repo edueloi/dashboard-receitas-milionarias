@@ -140,7 +140,6 @@ function usePdfReader(pdfUrl) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
       }
     });
-    // Força re-observação disparando IntersectionObserver
     if (ioRef.current) {
       ioRef.current.disconnect();
       Object.values(canvasRefs.current).forEach((c) => {
@@ -191,7 +190,9 @@ function ViewEbook() {
   const [ebook, setEbook] = useState(null);
   const [pageLoading, setPageLoading] = useState(true);
   const [showReader, setShowReader] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const readerSectionRef = useRef(null);
+  const readerCardRef = useRef(null);
   const pdfUrlRef = useRef(null);
 
   const reader = usePdfReader(showReader ? pdfUrlRef.current : null);
@@ -221,6 +222,32 @@ function ViewEbook() {
     }
   }, [showReader]); // eslint-disable-line
 
+  // Escuta mudanças no estado de fullscreen do browser
+  useEffect(() => {
+    const onFsChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
+
+  const handleToggleFullscreen = useCallback(async () => {
+    if (!document.fullscreenElement) {
+      const el = readerCardRef.current;
+      if (el?.requestFullscreen) {
+        try {
+          await el.requestFullscreen();
+        } catch {
+          // browser bloqueou fullscreen — sem ação
+        }
+      }
+    } else {
+      if (document.exitFullscreen) {
+        await document.exitFullscreen();
+      }
+    }
+  }, []);
+
   const apiBase = (() => {
     const b = api.defaults.baseURL || "";
     return b.endsWith("/") ? b : `${b}/`;
@@ -230,10 +257,11 @@ function ViewEbook() {
     pdfUrlRef.current = `${apiBase}ebooks/${id}/view?t=${Date.now()}`;
     setShowReader(true);
   };
-  const handleCloseReader = () => setShowReader(false);
-
-  const handleDownload = () => {
-    window.open(`${apiBase}ebooks/${id}/download`, "_blank", "noopener");
+  const handleCloseReader = async () => {
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+    }
+    setShowReader(false);
   };
 
   if (pageLoading) return <PageWrapper title="Carregando..." />;
@@ -294,56 +322,34 @@ function ViewEbook() {
 
                   {/* CTA desktop */}
                   <MDBox display={{ xs: "none", md: "block" }} mt={2}>
-                    <Stack spacing={1.5}>
-                      {ebook.arquivo_url ? (
-                        <>
-                          <MDButton
-                            variant="gradient"
-                            fullWidth
-                            onClick={handleOpenReader}
-                            startIcon={<Icon>menu_book</Icon>}
-                            size="large"
-                            sx={{
-                              background: `linear-gradient(195deg, ${palette.green}, #2d6b56)`,
-                              "&:hover": {
-                                background: `linear-gradient(195deg, #255045, ${palette.green})`,
-                              },
-                            }}
-                          >
-                            Começar a Ler
-                          </MDButton>
-                          <MDButton
-                            variant="outlined"
-                            fullWidth
-                            onClick={handleDownload}
-                            startIcon={<Icon>download</Icon>}
-                            sx={{
-                              borderColor: alpha(palette.green, 0.4),
-                              color: palette.green,
-                              "&:hover": {
-                                borderColor: palette.green,
-                                backgroundColor: alpha(palette.green, 0.05),
-                              },
-                            }}
-                          >
-                            Baixar PDF
-                          </MDButton>
-                        </>
-                      ) : (
-                        <MDBox
-                          p={2}
-                          textAlign="center"
-                          sx={{ borderRadius: 2, backgroundColor: alpha(palette.green, 0.05) }}
-                        >
-                          <Icon sx={{ color: "text.secondary", fontSize: 32 }}>
-                            hourglass_empty
-                          </Icon>
-                          <MDTypography variant="body2" color="text.secondary" mt={0.5}>
-                            Arquivo ainda não disponível
-                          </MDTypography>
-                        </MDBox>
-                      )}
-                    </Stack>
+                    {ebook.arquivo_url ? (
+                      <MDButton
+                        variant="gradient"
+                        fullWidth
+                        onClick={handleOpenReader}
+                        startIcon={<Icon>menu_book</Icon>}
+                        size="large"
+                        sx={{
+                          background: `linear-gradient(195deg, ${palette.green}, #2d6b56)`,
+                          "&:hover": {
+                            background: `linear-gradient(195deg, #255045, ${palette.green})`,
+                          },
+                        }}
+                      >
+                        Começar a Ler
+                      </MDButton>
+                    ) : (
+                      <MDBox
+                        p={2}
+                        textAlign="center"
+                        sx={{ borderRadius: 2, backgroundColor: alpha(palette.green, 0.05) }}
+                      >
+                        <Icon sx={{ color: "text.secondary", fontSize: 32 }}>hourglass_empty</Icon>
+                        <MDTypography variant="body2" color="text.secondary" mt={0.5}>
+                          Arquivo ainda não disponível
+                        </MDTypography>
+                      </MDBox>
+                    )}
                   </MDBox>
                 </Grid>
 
@@ -411,7 +417,7 @@ function ViewEbook() {
 
               {/* CTA mobile */}
               {ebook.arquivo_url && (
-                <Stack direction="row" spacing={1} sx={{ display: { xs: "flex", md: "none" } }}>
+                <MDBox sx={{ display: { xs: "flex", md: "none" } }}>
                   <MDButton
                     variant="contained"
                     onClick={handleOpenReader}
@@ -425,17 +431,7 @@ function ViewEbook() {
                   >
                     Ler agora
                   </MDButton>
-                  <MDButton
-                    variant="outlined"
-                    onClick={handleDownload}
-                    sx={{
-                      borderColor: alpha(palette.green, 0.4),
-                      color: palette.green,
-                    }}
-                  >
-                    <Icon>download</Icon>
-                  </MDButton>
-                </Stack>
+                </MDBox>
               )}
             </MDBox>
           </Card>
@@ -445,10 +441,24 @@ function ViewEbook() {
         {showReader && ebook.arquivo_url && (
           <Grid item xs={12} ref={readerSectionRef}>
             <Card
+              ref={readerCardRef}
               sx={{
                 border: `2px solid ${palette.green}`,
                 borderRadius: 3,
                 overflow: "hidden",
+                // Estilos quando o card está em fullscreen
+                "&:fullscreen": {
+                  borderRadius: 0,
+                  border: "none",
+                  display: "flex",
+                  flexDirection: "column",
+                },
+                "&:-webkit-full-screen": {
+                  borderRadius: 0,
+                  border: "none",
+                  display: "flex",
+                  flexDirection: "column",
+                },
               }}
             >
               {/* Header leitor */}
@@ -462,6 +472,7 @@ function ViewEbook() {
                 sx={{
                   background: `linear-gradient(135deg, ${palette.green} 0%, #2d6b56 100%)`,
                   flexWrap: "wrap",
+                  flexShrink: 0,
                 }}
               >
                 {/* Título + página */}
@@ -491,7 +502,7 @@ function ViewEbook() {
                   <MDBox
                     sx={{ display: { xs: "none", sm: "flex" }, alignItems: "center", gap: 0.5 }}
                   >
-                    <Tooltip title="Diminuir">
+                    <Tooltip title="Diminuir zoom">
                       <IconButton
                         size="small"
                         onClick={() => reader.changeZoom(-0.15)}
@@ -509,7 +520,7 @@ function ViewEbook() {
                     >
                       {Math.round(reader.zoom * 100)}%
                     </MDTypography>
-                    <Tooltip title="Aumentar">
+                    <Tooltip title="Aumentar zoom">
                       <IconButton
                         size="small"
                         onClick={() => reader.changeZoom(0.15)}
@@ -523,16 +534,19 @@ function ViewEbook() {
                     </Tooltip>
                   </MDBox>
 
-                  <Tooltip title="Baixar">
+                  {/* Botão tela cheia */}
+                  <Tooltip title={isFullscreen ? "Sair da tela cheia" : "Tela cheia"}>
                     <IconButton
                       size="small"
-                      onClick={handleDownload}
+                      onClick={handleToggleFullscreen}
                       sx={{
                         color: "rgba(255,255,255,.8)",
                         "&:hover": { backgroundColor: "rgba(255,255,255,.15)" },
                       }}
                     >
-                      <Icon sx={{ fontSize: 20 }}>download</Icon>
+                      <Icon sx={{ fontSize: 20 }}>
+                        {isFullscreen ? "fullscreen_exit" : "fullscreen"}
+                      </Icon>
                     </IconButton>
                   </Tooltip>
 
@@ -556,7 +570,7 @@ function ViewEbook() {
                 </Stack>
               </MDBox>
 
-              {/* Progress bar de download */}
+              {/* Progress bar de carregamento */}
               {reader.status === "loading" && (
                 <LinearProgress
                   variant={reader.loadProgress > 0 ? "determinate" : "indeterminate"}
@@ -573,7 +587,8 @@ function ViewEbook() {
               <MDBox
                 ref={reader.containerRef}
                 sx={{
-                  height: { xs: "80vh", md: "88vh" },
+                  height: isFullscreen ? "calc(100vh - 100px)" : { xs: "80vh", md: "88vh" },
+                  flex: isFullscreen ? 1 : undefined,
                   overflowY: "auto",
                   overflowX: "auto",
                   backgroundColor: "#2a2a2a",
@@ -603,7 +618,8 @@ function ViewEbook() {
                       }}
                     />
                     <MDTypography variant="body2" sx={{ color: "rgba(255,255,255,.7)" }}>
-                      Carregando ebook... {reader.loadProgress > 0 ? `${reader.loadProgress}%` : ""}
+                      Carregando ebook...{" "}
+                      {reader.loadProgress > 0 ? `${reader.loadProgress}%` : ""}
                     </MDTypography>
                   </MDBox>
                 )}
@@ -625,24 +641,15 @@ function ViewEbook() {
                       Erro ao carregar o ebook
                     </MDTypography>
                     <MDTypography variant="body2" sx={{ color: "rgba(255,255,255,.6)" }}>
-                      Não foi possível abrir o PDF. Tente baixar o arquivo.
+                      Não foi possível abrir o PDF. Tente novamente.
                     </MDTypography>
-                    <Stack direction="row" spacing={2} mt={1}>
-                      <MDButton
-                        variant="contained"
-                        onClick={reader.load}
-                        sx={{ backgroundColor: palette.gold, color: palette.green }}
-                      >
-                        Tentar novamente
-                      </MDButton>
-                      <MDButton
-                        variant="outlined"
-                        onClick={handleDownload}
-                        sx={{ color: "#fff", borderColor: "rgba(255,255,255,.4)" }}
-                      >
-                        Baixar PDF
-                      </MDButton>
-                    </Stack>
+                    <MDButton
+                      variant="contained"
+                      onClick={reader.load}
+                      sx={{ backgroundColor: palette.gold, color: palette.green }}
+                    >
+                      Tentar novamente
+                    </MDButton>
                   </MDBox>
                 )}
 
@@ -691,6 +698,7 @@ function ViewEbook() {
                     borderTop: "1px solid rgba(255,255,255,.08)",
                     gap: 1,
                     flexWrap: "wrap",
+                    flexShrink: 0,
                   }}
                 >
                   <MDButton
