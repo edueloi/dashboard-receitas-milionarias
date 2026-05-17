@@ -1,7 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import {
+  Autocomplete,
+  Avatar,
   Box,
   Card,
+  Chip,
   CircularProgress,
   FormControlLabel,
   Grid,
@@ -65,6 +68,12 @@ function AffiliateCommissionSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  // Assinantes selecionados
+  const [allUsers, setAllUsers] = useState([]);
+  const [selectedSubscribers, setSelectedSubscribers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [savingSubscribers, setSavingSubscribers] = useState(false);
+
   const roles = useMemo(() => ["afiliado", "afiliado pro"], []);
 
   useEffect(() => {
@@ -87,35 +96,45 @@ function AffiliateCommissionSettings() {
         });
         setSettings(merged);
       } catch (error) {
-        toast.error("Não foi possível carregar as comissões.", {
-          duration: 4000,
-          style: {
-            background: `linear-gradient(135deg, #f44336 0%, ${alpha("#f44336", 0.9)} 100%)`,
-            color: "#fff",
-            padding: "16px 20px",
-            borderRadius: "12px",
-            fontSize: "0.95rem",
-            fontWeight: 600,
-            boxShadow: `0 8px 24px ${alpha("#f44336", 0.35)}`,
-            maxWidth: "500px",
-          },
-          icon: "âš ï¸",
-        });
+        toast.error("Não foi possível carregar as comissões.", { duration: 4000 });
       } finally {
         setLoading(false);
       }
     };
-
     fetchSettings();
   }, [roles]);
+
+  const fetchUsersAndSubscribers = useCallback(async () => {
+    setLoadingUsers(true);
+    try {
+      const [usersRes, subscribersRes] = await Promise.all([
+        api.get("/users"),
+        api.get("/affiliate-commission-settings/subscribers").catch(() => ({ data: [] })),
+      ]);
+      const users = (usersRes.data || []).map((u) => ({
+        id: u.id,
+        label: `${u.nome || ""} ${u.sobrenome || ""}`.trim() || u.email,
+        email: u.email,
+        role: String(u.roleName || "").toLowerCase() === "afiliado pro" ? "Produtor" : u.roleName,
+      }));
+      setAllUsers(users);
+      const saved = (subscribersRes.data || []).map((s) => s.id_usuario || s.id);
+      setSelectedSubscribers(users.filter((u) => saved.includes(u.id)));
+    } catch (error) {
+      toast.error("Não foi possível carregar os usuários.", { duration: 4000 });
+    } finally {
+      setLoadingUsers(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchUsersAndSubscribers();
+  }, [fetchUsersAndSubscribers]);
 
   const updateField = (role, field, value) => {
     setSettings((prev) => ({
       ...prev,
-      [role]: {
-        ...prev[role],
-        [field]: value,
-      },
+      [role]: { ...prev[role], [field]: value },
     }));
   };
 
@@ -140,7 +159,6 @@ function AffiliateCommissionSettings() {
           });
         })
       );
-
       toast.success("Comissões salvas com sucesso!", {
         duration: 4000,
         style: {
@@ -160,29 +178,46 @@ function AffiliateCommissionSettings() {
     } catch (error) {
       const message =
         error?.message === "invalid"
-          ? "Informe valores vÃ¡lidos para as comissÃµes."
-          : "Erro ao salvar comissÃµes. Tente novamente.";
-      toast.error(message, {
-        duration: 4000,
-        style: {
-          background: `linear-gradient(135deg, #f44336 0%, ${alpha("#f44336", 0.9)} 100%)`,
-          color: "#fff",
-          padding: "16px 20px",
-          borderRadius: "12px",
-          fontSize: "0.95rem",
-          fontWeight: 600,
-          boxShadow: `0 8px 24px ${alpha("#f44336", 0.35)}`,
-          maxWidth: "500px",
-        },
-        icon: "âŒ",
-      });
+          ? "Informe valores válidos para as comissões."
+          : "Erro ao salvar comissões. Tente novamente.";
+      toast.error(message, { duration: 4000 });
     } finally {
       setSaving(false);
     }
   };
 
+  const handleSaveSubscribers = async () => {
+    setSavingSubscribers(true);
+    try {
+      await api.post("/affiliate-commission-settings/subscribers", {
+        ids: selectedSubscribers.map((u) => u.id),
+      });
+      toast.success("Assinantes selecionados salvos com sucesso!", {
+        duration: 4000,
+        style: {
+          background: `linear-gradient(135deg, ${palette.green} 0%, ${alpha(
+            palette.green,
+            0.9
+          )} 100%)`,
+          color: "#fff",
+          padding: "16px 20px",
+          borderRadius: "12px",
+          fontSize: "0.95rem",
+          fontWeight: 600,
+          boxShadow: `0 8px 24px ${alpha(palette.green, 0.35)}`,
+          maxWidth: "500px",
+        },
+      });
+    } catch (error) {
+      toast.error("Erro ao salvar assinantes. Tente novamente.", { duration: 4000 });
+    } finally {
+      setSavingSubscribers(false);
+    }
+  };
+
   return (
     <MDBox>
+      {/* Header comissões */}
       <MDBox
         mb={3}
         p={2.5}
@@ -404,6 +439,204 @@ function AffiliateCommissionSettings() {
           )}
         </MDButton>
       </MDBox>
+
+      {/* Seção: Assinantes que recebem comissão */}
+      <MDBox
+        mt={5}
+        mb={3}
+        p={2.5}
+        sx={{
+          background: `linear-gradient(135deg, ${palette.gold} 0%, ${alpha(
+            palette.gold,
+            0.85
+          )} 100%)`,
+          borderRadius: 3,
+        }}
+      >
+        <MDTypography variant="h5" color="white" fontWeight="bold">
+          Assinantes Selecionados para Comissão
+        </MDTypography>
+        <MDTypography variant="body2" sx={{ color: "#fff", opacity: 0.9, mt: 0.5 }}>
+          Escolha quais usuários (afiliados e produtores) receberão a comissão de assinante. Somente
+          os selecionados aqui receberão esse repasse.
+        </MDTypography>
+      </MDBox>
+
+      <Card
+        sx={{
+          borderRadius: 3,
+          border: `1px solid ${alpha(palette.gold, 0.2)}`,
+          boxShadow: `0 4px 24px ${alpha(palette.gold, 0.08)}`,
+          p: 3,
+        }}
+      >
+        {loadingUsers ? (
+          <MDBox display="flex" justifyContent="center" p={4}>
+            <CircularProgress size={36} sx={{ color: palette.gold }} />
+          </MDBox>
+        ) : (
+          <>
+            <Autocomplete
+              multiple
+              options={allUsers}
+              value={selectedSubscribers}
+              onChange={(_e, newValue) => setSelectedSubscribers(newValue)}
+              getOptionLabel={(option) => option.label}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              filterSelectedOptions
+              renderTags={(value, getTagProps) =>
+                value.map((option, index) => (
+                  <Chip
+                    key={option.id}
+                    avatar={
+                      <Avatar sx={{ bgcolor: palette.green, fontSize: "0.75rem" }}>
+                        {option.label.charAt(0).toUpperCase()}
+                      </Avatar>
+                    }
+                    label={
+                      <MDBox>
+                        <MDTypography
+                          variant="caption"
+                          fontWeight="bold"
+                          sx={{ display: "block", lineHeight: 1.2 }}
+                        >
+                          {option.label}
+                        </MDTypography>
+                        <MDTypography
+                          variant="caption"
+                          sx={{ fontSize: "0.65rem", opacity: 0.75, display: "block" }}
+                        >
+                          {option.role} · {option.email}
+                        </MDTypography>
+                      </MDBox>
+                    }
+                    sx={{
+                      backgroundColor: alpha(palette.green, 0.08),
+                      border: `1px solid ${alpha(palette.green, 0.2)}`,
+                      height: "auto",
+                      py: 0.5,
+                      "& .MuiChip-deleteIcon": { color: palette.green },
+                    }}
+                    {...getTagProps({ index })}
+                  />
+                ))
+              }
+              renderOption={(props, option) => (
+                <Box component="li" {...props} key={option.id}>
+                  <Avatar
+                    sx={{
+                      bgcolor: palette.gold,
+                      width: 32,
+                      height: 32,
+                      fontSize: "0.8rem",
+                      mr: 1.5,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {option.label.charAt(0).toUpperCase()}
+                  </Avatar>
+                  <MDBox>
+                    <MDTypography variant="button" fontWeight="medium" sx={{ display: "block" }}>
+                      {option.label}
+                    </MDTypography>
+                    <MDTypography variant="caption" color="text" sx={{ opacity: 0.7 }}>
+                      {option.role} · {option.email}
+                    </MDTypography>
+                  </MDBox>
+                </Box>
+              )}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Buscar e selecionar usuários"
+                  placeholder={
+                    selectedSubscribers.length === 0 ? "Digite o nome ou e-mail do usuário..." : ""
+                  }
+                  InputProps={{
+                    ...params.InputProps,
+                    startAdornment: (
+                      <>
+                        <Icon sx={{ mr: 1, color: palette.gold }}>person_search</Icon>
+                        {params.InputProps.startAdornment}
+                      </>
+                    ),
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root": {
+                      borderRadius: 2,
+                      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                        borderColor: palette.gold,
+                        borderWidth: 2,
+                      },
+                    },
+                  }}
+                />
+              )}
+            />
+
+            {selectedSubscribers.length > 0 && (
+              <MDBox
+                mt={2}
+                p={1.5}
+                sx={{
+                  backgroundColor: alpha(palette.green, 0.04),
+                  borderRadius: 2,
+                  border: `1px solid ${alpha(palette.green, 0.12)}`,
+                }}
+              >
+                <MDTypography variant="caption" color="text" sx={{ opacity: 0.7 }}>
+                  {selectedSubscribers.length} usuário{selectedSubscribers.length !== 1 ? "s" : ""}{" "}
+                  selecionado{selectedSubscribers.length !== 1 ? "s" : ""} para receber comissão de
+                  assinante
+                </MDTypography>
+              </MDBox>
+            )}
+
+            <MDBox mt={3} display="flex" justifyContent="flex-end">
+              <MDButton
+                onClick={handleSaveSubscribers}
+                disabled={savingSubscribers}
+                sx={{
+                  py: 1.2,
+                  px: { xs: 3, sm: 4 },
+                  borderRadius: 2,
+                  textTransform: "none",
+                  fontWeight: 600,
+                  fontSize: { xs: "0.875rem", sm: "0.95rem" },
+                  background: `linear-gradient(135deg, ${palette.gold} 0%, ${alpha(
+                    palette.gold,
+                    0.85
+                  )} 100%)`,
+                  color: "#fff",
+                  boxShadow: `0 4px 12px ${alpha(palette.gold, 0.3)}`,
+                  minWidth: { xs: 140, sm: 200 },
+                  "&:hover": {
+                    background: `linear-gradient(135deg, ${palette.green} 0%, ${alpha(
+                      palette.green,
+                      0.85
+                    )} 100%)`,
+                    boxShadow: `0 6px 16px ${alpha(palette.green, 0.4)}`,
+                    transform: "translateY(-2px)",
+                  },
+                  "&:disabled": {
+                    background: alpha(palette.gold, 0.3),
+                    color: alpha("#fff", 0.6),
+                  },
+                }}
+              >
+                {savingSubscribers ? (
+                  <>
+                    <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
+                    Salvando...
+                  </>
+                ) : (
+                  "Salvar Assinantes Selecionados"
+                )}
+              </MDButton>
+            </MDBox>
+          </>
+        )}
+      </Card>
     </MDBox>
   );
 }
