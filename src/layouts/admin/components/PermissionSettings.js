@@ -104,7 +104,8 @@ function PermissionSettings() {
     setSaving(true);
     try {
       await api.post(`/permissions/${selectedRole}`, permissions);
-      toast.success(`Permissões para ${capitalize(selectedRole)} salvas com sucesso!`, {
+      const roleLabel = selectedRole === "afiliado pro" ? "Produtor" : capitalize(selectedRole);
+      toast.success(`Permissões para ${roleLabel} salvas com sucesso!`, {
         duration: 4000,
         style: {
           background: `linear-gradient(135deg, ${palette.green} 0%, ${alpha(
@@ -216,7 +217,7 @@ function PermissionSettings() {
                     },
                   }}
                 >
-                  {capitalize(role)}
+                  {role === "afiliado pro" ? "Produtor" : capitalize(role)}
                 </MenuItem>
               ))}
           </Select>

@@ -19,8 +19,20 @@ import api from "services/api";
 const palette = { gold: "#C9A635", green: "#1C3B32" };
 
 const defaultSettings = {
-  afiliado: { level1: "R$ 9,90", level2Enabled: false, level2: "R$ 0,00" },
-  "afiliado pro": { level1: "R$ 9,90", level2Enabled: true, level2: "R$ 3,00" },
+  afiliado: {
+    level1: "R$ 9,90",
+    level2Enabled: false,
+    level2: "R$ 0,00",
+    subscriberEnabled: false,
+    subscriber: "R$ 0,00",
+  },
+  "afiliado pro": {
+    level1: "R$ 9,90",
+    level2Enabled: true,
+    level2: "R$ 3,00",
+    subscriberEnabled: false,
+    subscriber: "R$ 0,00",
+  },
 };
 
 const brlFormatter = new Intl.NumberFormat("pt-BR", {
@@ -68,6 +80,8 @@ function AffiliateCommissionSettings() {
               level1: formatCents(remote[role].level1_cents),
               level2Enabled: Number(remote[role].level2_enabled) === 1,
               level2: formatCents(remote[role].level2_cents),
+              subscriberEnabled: Number(remote[role].subscriber_enabled) === 1,
+              subscriber: formatCents(remote[role].subscriber_cents),
             };
           }
         });
@@ -113,13 +127,16 @@ function AffiliateCommissionSettings() {
           const roleSettings = settings[role];
           const level1 = parseCents(roleSettings.level1);
           const level2 = parseCents(roleSettings.level2);
-          if (level1 === null || level2 === null) {
+          const subscriber = parseCents(roleSettings.subscriber);
+          if (level1 === null || level2 === null || subscriber === null) {
             throw new Error("invalid");
           }
           return api.put(`/affiliate-commission-settings/${encodeURIComponent(role)}`, {
             level1_cents: level1,
             level2_enabled: roleSettings.level2Enabled ? 1 : 0,
             level2_cents: level2,
+            subscriber_enabled: roleSettings.subscriberEnabled ? 1 : 0,
+            subscriber_cents: subscriber,
           });
         })
       );
@@ -182,8 +199,8 @@ function AffiliateCommissionSettings() {
           Comissões de Afiliados
         </MDTypography>
         <MDTypography variant="body2" sx={{ color: "#fff", opacity: 0.9, mt: 0.5 }}>
-          Defina os valores de comissão para afiliados comuns e afiliados pro, incluindo o segundo
-          nível.
+          Defina os valores de comissão para afiliados comuns e produtores, incluindo o segundo
+          nível e o nível para assinantes.
         </MDTypography>
       </MDBox>
 
@@ -248,7 +265,7 @@ function AffiliateCommissionSettings() {
                     </Box>
                     <MDBox>
                       <MDTypography variant="h6" color="white" fontWeight="bold">
-                        {isPro ? "Afiliado Pro" : "Afiliado"}
+                        {isPro ? "Produtor" : "Afiliado"}
                       </MDTypography>
                       <MDTypography variant="caption" color="white" sx={{ opacity: 0.85 }}>
                         {isPro ? "Recebe comissão de 2º nível" : "Comissão direta"}
@@ -300,6 +317,40 @@ function AffiliateCommissionSettings() {
                           borderRadius: 2,
                           "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
                             borderColor: palette.green,
+                            borderWidth: 2,
+                          },
+                        },
+                      }}
+                    />
+
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={roleSettings.subscriberEnabled}
+                          onChange={(e) =>
+                            updateField(role, "subscriberEnabled", e.target.checked)
+                          }
+                          disabled={saving}
+                        />
+                      }
+                      label="Ativar comissão para Assinantes"
+                    />
+
+                    <TextField
+                      label="Comissão Assinantes (R$)"
+                      value={roleSettings.subscriber}
+                      onChange={(e) => updateField(role, "subscriber", e.target.value)}
+                      onBlur={(e) =>
+                        updateField(role, "subscriber", formatBRLInput(e.target.value))
+                      }
+                      disabled={!roleSettings.subscriberEnabled || saving}
+                      fullWidth
+                      inputProps={{ inputMode: "decimal" }}
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: 2,
+                          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                            borderColor: palette.gold,
                             borderWidth: 2,
                           },
                         },

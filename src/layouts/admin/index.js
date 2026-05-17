@@ -361,7 +361,13 @@ function AdminPanel() {
             {row.email || "-"}
           </MDTypography>
         ),
-        roleName: <MDTypography variant="caption">{capitalize(row.roleName || "-")}</MDTypography>,
+        roleName: (
+          <MDTypography variant="caption">
+            {row.roleName === "afiliado pro"
+              ? "Produtor"
+              : capitalize(row.roleName || "-")}
+          </MDTypography>
+        ),
         statusName: (
           <MDBadge
             badgeContent={row.statusName || "-"}
@@ -473,7 +479,7 @@ function AdminPanel() {
         <Tab icon={<Icon>group</Icon>} iconPosition="start" label="Gerenciar Usuários" />
         <Tab icon={<Icon>tune</Icon>} iconPosition="start" label="Gerenciar Permissões" />
         <Tab icon={<Icon>paid</Icon>} iconPosition="start" label="Comissões" />
-        <Tab icon={<Icon>link</Icon>} iconPosition="start" label="Cadastro Afiliado Pro" />
+        <Tab icon={<Icon>link</Icon>} iconPosition="start" label="Cadastro Produtor" />
       </Tabs>
 
       {activeTab === 0 && (
@@ -709,7 +715,7 @@ function AdminPanel() {
                       Link de cadastro externo
                     </MDTypography>
                     <MDTypography variant="body2" color="text">
-                      Gere um link de cadastro para Afiliado Pro com expiração de 4 horas. O
+                      Gere um link de cadastro para Produtor com expiração de 4 horas. O
                       cadastro é externo e não passa pelo Stripe.
                     </MDTypography>
                   </Grid>
@@ -1026,7 +1032,9 @@ function AdminPanel() {
                               },
                             }}
                           >
-                            {capitalize(permission)}
+                            {permission === "afiliado pro"
+                              ? "Produtor"
+                              : capitalize(permission)}
                           </MenuItem>
                         ))}
                       </Select>
@@ -1248,7 +1256,11 @@ function AdminPanel() {
                         </MDTypography>
                         <Stack direction="row" spacing={1} mt={0.5}>
                           <MDBadge
-                            badgeContent={capitalize(userToDelete.roleName || "-")}
+                            badgeContent={
+                              userToDelete.roleName === "afiliado pro"
+                                ? "Produtor"
+                                : capitalize(userToDelete.roleName || "-")
+                            }
                             color="info"
                             variant="gradient"
                             size="xs"

@@ -75,6 +75,7 @@ function AdicionarReceita() {
     ingredients: [{ groupTitle: "Ingredientes", items: [{ itemText: "" }] }],
     instructions: [{ stepText: "" }],
     status: "pendente",
+    visibilidade: "publico",
   });
 
   useEffect(() => {
@@ -242,6 +243,13 @@ function AdicionarReceita() {
     setFormData((prev) => ({ ...prev, status: e.target.checked ? "ativo" : "pendente" }));
   };
 
+  const handleVisibilidadeChange = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      visibilidade: e.target.checked ? "assinantes" : "publico",
+    }));
+  };
+
   const handleSubmit = async () => {
     // Validações básicas
     if (!formData.title.trim()) {
@@ -276,6 +284,7 @@ function AdicionarReceita() {
       })),
       tags: formData.tags.map((tag) => tag.id),
       status: formData.status,
+      visibilidade: formData.visibilidade,
     };
 
     form.append("data", JSON.stringify(payload));
@@ -1120,6 +1129,44 @@ function AdicionarReceita() {
                             {formData.status === "ativo"
                               ? "A receita ficará visível no site após salvar"
                               : "A receita ficará aguardando aprovação"}
+                          </MDTypography>
+                        </MDBox>
+                      </MDBox>
+                    </Grid>
+
+                    <Grid item xs={12}>
+                      <MDBox
+                        p={2}
+                        display="flex"
+                        alignItems="center"
+                        sx={{
+                          background: alpha(palette.green, 0.07),
+                          borderRadius: 2,
+                          border: `1px solid ${alpha(palette.green, 0.25)}`,
+                        }}
+                      >
+                        <Switch
+                          checked={formData.visibilidade === "assinantes"}
+                          onChange={handleVisibilidadeChange}
+                          sx={{
+                            "& .MuiSwitch-switchBase.Mui-checked": {
+                              color: palette.gold,
+                            },
+                            "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                              backgroundColor: palette.gold,
+                            },
+                          }}
+                        />
+                        <MDBox ml={2}>
+                          <MDTypography variant="button" fontWeight="bold">
+                            {formData.visibilidade === "assinantes"
+                              ? "🔒 Somente para Assinantes"
+                              : "🌐 Visível para o Público"}
+                          </MDTypography>
+                          <MDTypography variant="caption" color="text" display="block">
+                            {formData.visibilidade === "assinantes"
+                              ? "Apenas assinantes cadastrados poderão ver esta receita"
+                              : "Qualquer visitante do site poderá visualizar esta receita"}
                           </MDTypography>
                         </MDBox>
                       </MDBox>
