@@ -327,9 +327,7 @@ function AffiliateCommissionSettings() {
                       control={
                         <Switch
                           checked={roleSettings.subscriberEnabled}
-                          onChange={(e) =>
-                            updateField(role, "subscriberEnabled", e.target.checked)
-                          }
+                          onChange={(e) => updateField(role, "subscriberEnabled", e.target.checked)}
                           disabled={saving}
                         />
                       }
