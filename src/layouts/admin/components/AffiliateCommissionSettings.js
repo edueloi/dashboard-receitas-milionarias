@@ -484,43 +484,7 @@ function AffiliateCommissionSettings() {
               getOptionLabel={(option) => option.label}
               isOptionEqualToValue={(option, value) => option.id === value.id}
               filterSelectedOptions
-              renderTags={(value, getTagProps) =>
-                value.map((option, index) => (
-                  <Chip
-                    key={option.id}
-                    avatar={
-                      <Avatar sx={{ bgcolor: palette.green, fontSize: "0.75rem" }}>
-                        {option.label.charAt(0).toUpperCase()}
-                      </Avatar>
-                    }
-                    label={
-                      <MDBox>
-                        <MDTypography
-                          variant="caption"
-                          fontWeight="bold"
-                          sx={{ display: "block", lineHeight: 1.2 }}
-                        >
-                          {option.label}
-                        </MDTypography>
-                        <MDTypography
-                          variant="caption"
-                          sx={{ fontSize: "0.65rem", opacity: 0.75, display: "block" }}
-                        >
-                          {option.role} · {option.email}
-                        </MDTypography>
-                      </MDBox>
-                    }
-                    sx={{
-                      backgroundColor: alpha(palette.green, 0.08),
-                      border: `1px solid ${alpha(palette.green, 0.2)}`,
-                      height: "auto",
-                      py: 0.5,
-                      "& .MuiChip-deleteIcon": { color: palette.green },
-                    }}
-                    {...getTagProps({ index })}
-                  />
-                ))
-              }
+              renderTags={() => null}
               renderOption={(props, option) => (
                 <Box component="li" {...props} key={option.id}>
                   <Avatar
@@ -549,17 +513,10 @@ function AffiliateCommissionSettings() {
                 <TextField
                   {...params}
                   label="Buscar e selecionar usuários"
-                  placeholder={
-                    selectedSubscribers.length === 0 ? "Digite o nome ou e-mail do usuário..." : ""
-                  }
+                  placeholder="Digite o nome ou e-mail do usuário..."
                   InputProps={{
                     ...params.InputProps,
-                    startAdornment: (
-                      <>
-                        <Icon sx={{ mr: 1, color: palette.gold }}>person_search</Icon>
-                        {params.InputProps.startAdornment}
-                      </>
-                    ),
+                    startAdornment: <Icon sx={{ mr: 1, color: palette.gold }}>person_search</Icon>,
                   }}
                   sx={{
                     "& .MuiOutlinedInput-root": {
@@ -577,18 +534,61 @@ function AffiliateCommissionSettings() {
             {selectedSubscribers.length > 0 && (
               <MDBox
                 mt={2}
-                p={1.5}
+                p={2}
                 sx={{
                   backgroundColor: alpha(palette.green, 0.04),
                   borderRadius: 2,
                   border: `1px solid ${alpha(palette.green, 0.12)}`,
                 }}
               >
-                <MDTypography variant="caption" color="text" sx={{ opacity: 0.7 }}>
-                  {selectedSubscribers.length} usuário{selectedSubscribers.length !== 1 ? "s" : ""}{" "}
-                  selecionado{selectedSubscribers.length !== 1 ? "s" : ""} para receber comissão de
-                  assinante
+                <MDTypography
+                  variant="caption"
+                  fontWeight="bold"
+                  sx={{ color: palette.green, display: "block", mb: 1.5 }}
+                >
+                  {selectedSubscribers.length} usuário
+                  {selectedSubscribers.length !== 1 ? "s" : ""} selecionado
+                  {selectedSubscribers.length !== 1 ? "s" : ""}:
                 </MDTypography>
+                <MDBox display="flex" flexWrap="wrap" gap={1}>
+                  {selectedSubscribers.map((option) => (
+                    <Chip
+                      key={option.id}
+                      avatar={
+                        <Avatar sx={{ bgcolor: palette.green, fontSize: "0.7rem" }}>
+                          {option.label.charAt(0).toUpperCase()}
+                        </Avatar>
+                      }
+                      label={
+                        <MDBox>
+                          <MDTypography
+                            variant="caption"
+                            fontWeight="bold"
+                            sx={{ display: "block", lineHeight: 1.3 }}
+                          >
+                            {option.label}
+                          </MDTypography>
+                          <MDTypography
+                            variant="caption"
+                            sx={{ fontSize: "0.65rem", opacity: 0.7, display: "block" }}
+                          >
+                            {option.role} · {option.email}
+                          </MDTypography>
+                        </MDBox>
+                      }
+                      onDelete={() =>
+                        setSelectedSubscribers((prev) => prev.filter((u) => u.id !== option.id))
+                      }
+                      sx={{
+                        backgroundColor: alpha(palette.green, 0.08),
+                        border: `1px solid ${alpha(palette.green, 0.2)}`,
+                        height: "auto",
+                        py: 0.75,
+                        "& .MuiChip-deleteIcon": { color: palette.green },
+                      }}
+                    />
+                  ))}
+                </MDBox>
               </MDBox>
             )}
 
