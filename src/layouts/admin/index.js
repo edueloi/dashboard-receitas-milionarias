@@ -363,9 +363,7 @@ function AdminPanel() {
         ),
         roleName: (
           <MDTypography variant="caption">
-            {row.roleName === "afiliado pro"
-              ? "Produtor"
-              : capitalize(row.roleName || "-")}
+            {row.roleName === "afiliado pro" ? "Produtor" : capitalize(row.roleName || "-")}
           </MDTypography>
         ),
         statusName: (
@@ -715,8 +713,8 @@ function AdminPanel() {
                       Link de cadastro externo
                     </MDTypography>
                     <MDTypography variant="body2" color="text">
-                      Gere um link de cadastro para Produtor com expiração de 4 horas. O
-                      cadastro é externo e não passa pelo Stripe.
+                      Gere um link de cadastro para Produtor com expiração de 4 horas. O cadastro é
+                      externo e não passa pelo Stripe.
                     </MDTypography>
                   </Grid>
                   <Grid item xs={12} md={5}>
@@ -1032,9 +1030,7 @@ function AdminPanel() {
                               },
                             }}
                           >
-                            {permission === "afiliado pro"
-                              ? "Produtor"
-                              : capitalize(permission)}
+                            {permission === "afiliado pro" ? "Produtor" : capitalize(permission)}
                           </MenuItem>
                         ))}
                       </Select>
