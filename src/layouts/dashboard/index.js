@@ -228,7 +228,9 @@ function Dashboard() {
         ),
         permissao: (
           <MDTypography variant="caption" color="text">
-            {c.permission}
+            {String(c.permission || "").toLowerCase() === "afiliado pro"
+              ? "Produtor"
+              : c.permission}
           </MDTypography>
         ),
         validade: (
@@ -614,7 +616,11 @@ function Dashboard() {
                     color="info"
                     icon="person"
                     title="Tipo de Permissão"
-                    count={user?.permissao?.toUpperCase()}
+                    count={
+                      String(user?.permissao || "").toLowerCase() === "afiliado pro"
+                        ? "PRODUTOR"
+                        : user?.permissao?.toUpperCase()
+                    }
                     percentage={{ color: "info", amount: "", label: "Sua permissão atual" }}
                   />
                 </MDBox>

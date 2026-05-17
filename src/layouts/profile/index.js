@@ -272,7 +272,14 @@ function Overview() {
                     <InfoLine label="Telefone" value={userData.telefone} />
                   </Grid>
                   <Grid item xs={12} sm={6}>
-                    <InfoLine label="Função" value={userData.permissao} />
+                    <InfoLine
+                      label="Função"
+                      value={
+                        String(userData.permissao || "").toLowerCase() === "afiliado pro"
+                          ? "Produtor"
+                          : userData.permissao
+                      }
+                    />
                   </Grid>
                   <Grid item xs={12} sm={6}>
                     <InfoLine

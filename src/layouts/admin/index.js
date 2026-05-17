@@ -363,7 +363,9 @@ function AdminPanel() {
         ),
         roleName: (
           <MDTypography variant="caption">
-            {row.roleName === "afiliado pro" ? "Produtor" : capitalize(row.roleName || "-")}
+            {String(row.roleName || "").toLowerCase() === "afiliado pro"
+              ? "Produtor"
+              : capitalize(row.roleName || "-")}
           </MDTypography>
         ),
         statusName: (
@@ -1253,7 +1255,7 @@ function AdminPanel() {
                         <Stack direction="row" spacing={1} mt={0.5}>
                           <MDBadge
                             badgeContent={
-                              userToDelete.roleName === "afiliado pro"
+                              String(userToDelete.roleName || "").toLowerCase() === "afiliado pro"
                                 ? "Produtor"
                                 : capitalize(userToDelete.roleName || "-")
                             }

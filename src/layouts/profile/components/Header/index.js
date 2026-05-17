@@ -25,7 +25,8 @@ function Header({ children, userData }) {
 
   const fullName =
     userData?.nome && userData?.sobrenome ? `${userData.nome} ${userData.sobrenome}` : "Usuário";
-  const userRole = userData?.permissao || "Função não informada";
+  const rawRole = userData?.permissao || "Função não informada";
+  const userRole = String(rawRole).toLowerCase() === "afiliado pro" ? "Produtor" : rawRole;
   const initials =
     userData?.nome && userData?.sobrenome
       ? `${userData.nome[0]}${userData.sobrenome[0]}`.toUpperCase()
