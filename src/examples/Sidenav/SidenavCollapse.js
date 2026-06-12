@@ -25,7 +25,7 @@ function SidenavCollapse({ icon, name, active }) {
       : icon;
 
   return (
-    <ListItem disablePadding sx={{ mb: "2px" }}>
+    <ListItem disablePadding sx={{ mb: "6px" }}>
       <Box
         role="button"
         tabIndex={0}
@@ -33,11 +33,11 @@ function SidenavCollapse({ icon, name, active }) {
         sx={{
           display: "flex",
           alignItems: "center",
-          gap: "12px",
+          gap: "14px",
           width: "100%",
-          px: "12px",
-          py: "9px",
-          borderRadius: "8px",
+          px: "14px",
+          py: "11px",
+          borderRadius: "10px",
           cursor: "pointer",
           userSelect: "none",
           background: active ? GOLD : "transparent",

@@ -14,8 +14,6 @@ import SidenavRoot from "examples/Sidenav/SidenavRoot";
 import { useMaterialUIController, setMiniSidenav } from "context";
 import { useAuth } from "context/AuthContext";
 
-const GOLD = "#C9A635";
-
 function Sidenav({ color, brand, brandName, routes, ...rest }) {
   const [controller, dispatch] = useMaterialUIController();
   const { miniSidenav, transparentSidenav, whiteSidenav, darkMode } = controller;
@@ -135,78 +133,46 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
       {/* ── LOGO ── */}
       <Box
         sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
+          position: "relative",
           px: "16px",
-          pt: "22px",
-          pb: "20px",
+          pt: "16px",
+          pb: "12px",
         }}
       >
         <Box
           component={NavLink}
           to="/"
-          sx={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "10px" }}
+          sx={{
+            textDecoration: "none",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
         >
           {brand && (
             <Box
+              component="img"
+              src={brand}
+              alt={brandName}
               sx={{
-                width: 48,
-                height: 48,
-                borderRadius: "12px",
-                flexShrink: 0,
-                background: "#1C3B32",
-                border: "1.5px solid rgba(201,166,53,0.4)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 3px 10px rgba(0,0,0,0.3)",
+                width: "100%",
+                maxWidth: 165,
+                height: "auto",
+                objectFit: "contain",
+                display: "block",
+                filter: "drop-shadow(0 3px 10px rgba(0,0,0,0.3))",
               }}
-            >
-              <Box
-                component="img"
-                src={brand}
-                alt={brandName}
-                sx={{ width: 36, height: 36, objectFit: "contain", display: "block" }}
-              />
-            </Box>
+            />
           )}
-          <Box>
-            <Box
-              component="span"
-              sx={{
-                display: "block",
-                color: "#fff",
-                fontSize: "1rem",
-                fontWeight: 700,
-                lineHeight: 1.25,
-                letterSpacing: "-0.01em",
-                fontFamily: "inherit",
-              }}
-            >
-              {brandName}
-            </Box>
-            <Box
-              component="span"
-              sx={{
-                display: "block",
-                color: GOLD,
-                fontSize: "0.6rem",
-                fontWeight: 600,
-                letterSpacing: "1.5px",
-                textTransform: "uppercase",
-                fontFamily: "inherit",
-              }}
-            >
-              Dashboard
-            </Box>
-          </Box>
         </Box>
 
         {isMobile && (
           <Box
             onClick={closeSidenav}
             sx={{
+              position: "absolute",
+              top: "12px",
+              right: "12px",
               width: 28,
               height: 28,
               borderRadius: "7px",
@@ -230,7 +196,7 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
       <Box sx={{ mx: "16px", height: "1px", background: "rgba(201,166,53,0.18)", mb: "6px" }} />
 
       {/* ── MENU ── */}
-      <List sx={{ px: "8px", py: 0, flex: 1, overflowY: "auto" }}>{renderRoutes}</List>
+      <List sx={{ px: "10px", pt: "4px", pb: 0, flex: 1, overflowY: "auto" }}>{renderRoutes}</List>
 
       {/* ── FOOTER: Sair + copyright ── */}
       <Box
