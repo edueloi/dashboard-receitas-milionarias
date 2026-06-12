@@ -3,20 +3,14 @@ import { useEffect, useMemo } from "react";
 import { useLocation, NavLink, useNavigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import List from "@mui/material/List";
-import Divider from "@mui/material/Divider";
 import Link from "@mui/material/Link";
 import Icon from "@mui/material/Icon";
 import Box from "@mui/material/Box";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import { useTheme, alpha } from "@mui/material/styles";
-
-import MDBox from "components/MDBox";
-import MDTypography from "components/MDTypography";
+import { useTheme } from "@mui/material/styles";
 
 import SidenavCollapse from "examples/Sidenav/SidenavCollapse";
 import SidenavRoot from "examples/Sidenav/SidenavRoot";
-import sidenavLogoLabel from "examples/Sidenav/styles/sidenav";
-
 import { useMaterialUIController, setMiniSidenav } from "context";
 import { useAuth } from "context/AuthContext";
 
@@ -29,21 +23,17 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
   const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("lg"));
-
   const { logout, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    setMiniSidenav(dispatch, isMobile);
+    if (isMobile) setMiniSidenav(dispatch, true);
+    else setMiniSidenav(dispatch, false);
   }, [isMobile, dispatch]);
 
   useEffect(() => {
     if (isMobile) setMiniSidenav(dispatch, true);
   }, [location.pathname, isMobile, dispatch]);
-
-  let textColor = "white";
-  if (transparentSidenav || (whiteSidenav && !darkMode)) textColor = "dark";
-  else if (whiteSidenav && darkMode) textColor = "inherit";
 
   const closeSidenav = () => setMiniSidenav(dispatch, true);
 
@@ -57,34 +47,38 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
       ? location.pathname === routePath || location.pathname.startsWith(`${routePath}/`)
       : false;
 
+  // Separa o item de logout dos demais
+  const logoutRoute = useMemo(() => routes.find(({ key }) => key === "logout"), [routes]);
+
   const renderRoutes = useMemo(
     () =>
       routes
-        .filter(({ visibleFor }) => {
+        .filter(({ visibleFor, key }) => {
+          if (key === "logout") return false; // renderizado separado no footer
           if (!visibleFor) return true;
           return user && visibleFor.includes(user.permissao);
         })
-        .map(({ type, name, icon, title, noCollapse, key, href, route }) => {
+        .map(({ type, name, icon, title, key, href, route }) => {
           if (type === "title") {
             return (
-              <MDTypography
+              <Box
                 key={key}
-                display="block"
-                variant="caption"
-                fontWeight="bold"
-                textTransform="uppercase"
+                component="span"
                 sx={{
-                  color: "rgba(255,255,255,0.4)",
-                  fontSize: "0.65rem",
+                  display: "block",
+                  px: "10px",
+                  pt: "16px",
+                  pb: "2px",
+                  fontSize: "0.58rem",
+                  fontWeight: 700,
                   letterSpacing: "1.2px",
-                  px: 2,
-                  mt: 2.5,
-                  mb: 0.5,
-                  ml: 0.5,
+                  textTransform: "uppercase",
+                  color: "rgba(255,255,255,0.28)",
+                  fontFamily: "inherit",
                 }}
               >
                 {title}
-              </MDTypography>
+              </Box>
             );
           }
 
@@ -92,34 +86,12 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
             return (
               <Box
                 key={key}
-                sx={{
-                  my: 1.5,
-                  mx: 2,
-                  height: "1px",
-                  background:
-                    "linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)",
-                }}
+                sx={{ my: "6px", mx: "10px", height: "1px", background: "rgba(255,255,255,0.07)" }}
               />
             );
           }
 
           if (type === "collapse") {
-            if (key === "logout") {
-              return (
-                <MDBox
-                  key={key}
-                  onClick={handleLogout}
-                  role="button"
-                  aria-label="Sair da conta"
-                  tabIndex={0}
-                  onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleLogout()}
-                  sx={{ cursor: "pointer", outline: "none" }}
-                >
-                  <SidenavCollapse name={name} icon={icon} />
-                </MDBox>
-              );
-            }
-
             if (href) {
               return (
                 <Link
@@ -129,7 +101,7 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
                   rel="noreferrer"
                   sx={{ textDecoration: "none" }}
                 >
-                  <SidenavCollapse name={name} icon={icon} active={isActive(route)} />
+                  <SidenavCollapse name={name} icon={icon} active={false} />
                 </Link>
               );
             }
@@ -148,16 +120,7 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
 
           return null;
         }),
-    [
-      routes,
-      textColor,
-      darkMode,
-      whiteSidenav,
-      transparentSidenav,
-      isMobile,
-      location.pathname,
-      user,
-    ]
+    [routes, darkMode, whiteSidenav, transparentSidenav, isMobile, location.pathname, user]
   );
 
   return (
@@ -169,233 +132,141 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
       ownerState={{ transparentSidenav, whiteSidenav, miniSidenav, darkMode, isMobile }}
       ModalProps={{ keepMounted: true }}
     >
-      {/* Header / Logo */}
-      <MDBox
+      {/* ── LOGO ── */}
+      <Box
         sx={{
-          position: "relative",
-          pt: { xs: 2.5, sm: 3 },
-          pb: 2,
-          px: 2.5,
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+          px: "16px",
+          pt: "22px",
+          pb: "20px",
         }}
       >
-        {/* Logo + nome */}
-        <MDBox
+        <Box
           component={NavLink}
           to="/"
-          sx={{
-            textDecoration: "none",
-            display: "flex",
-            alignItems: "center",
-            gap: 1.5,
-            flex: 1,
-          }}
+          sx={{ textDecoration: "none", display: "flex", alignItems: "center", gap: "10px" }}
         >
           {brand && (
-            <MDBox
+            <Box
               sx={{
-                width: 44,
-                height: 44,
+                width: 48,
+                height: 48,
                 borderRadius: "12px",
-                overflow: "hidden",
                 flexShrink: 0,
-                border: `2px solid rgba(201,166,53,0.35)`,
-                boxShadow: `0 4px 16px rgba(201,166,53,0.2)`,
+                background: "#1C3B32",
+                border: "1.5px solid rgba(201,166,53,0.4)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                background: "rgba(255,255,255,0.05)",
+                boxShadow: "0 3px 10px rgba(0,0,0,0.3)",
               }}
             >
-              <MDBox
+              <Box
                 component="img"
                 src={brand}
-                alt="Brand"
-                sx={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "contain",
-                  p: 0.5,
-                }}
+                alt={brandName}
+                sx={{ width: 36, height: 36, objectFit: "contain", display: "block" }}
               />
-            </MDBox>
+            </Box>
           )}
-          <MDBox sx={(t) => sidenavLogoLabel(t, { miniSidenav })}>
-            <MDTypography
-              component="h6"
-              variant="button"
-              fontWeight="bold"
-              noWrap
+          <Box>
+            <Box
+              component="span"
               sx={{
+                display: "block",
                 color: "#fff",
                 fontSize: "1rem",
-                lineHeight: 1.2,
+                fontWeight: 700,
+                lineHeight: 1.25,
                 letterSpacing: "-0.01em",
+                fontFamily: "inherit",
               }}
             >
               {brandName}
-            </MDTypography>
-            <MDTypography
-              variant="caption"
+            </Box>
+            <Box
+              component="span"
               sx={{
+                display: "block",
                 color: GOLD,
-                fontSize: "0.65rem",
-                fontWeight: 500,
-                letterSpacing: "0.05em",
+                fontSize: "0.6rem",
+                fontWeight: 600,
+                letterSpacing: "1.5px",
                 textTransform: "uppercase",
+                fontFamily: "inherit",
               }}
             >
               Dashboard
-            </MDTypography>
-          </MDBox>
-        </MDBox>
+            </Box>
+          </Box>
+        </Box>
 
-        {/* Botão fechar mobile */}
         {isMobile && (
-          <MDBox
+          <Box
             onClick={closeSidenav}
             sx={{
-              cursor: "pointer",
-              width: 32,
-              height: 32,
-              borderRadius: "10px",
+              width: 28,
+              height: 28,
+              borderRadius: "7px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              cursor: "pointer",
               background: "rgba(255,255,255,0.08)",
-              border: "1px solid rgba(255,255,255,0.1)",
-              transition: "all 0.2s ease",
               flexShrink: 0,
-              "&:hover": {
-                background: "rgba(255,255,255,0.15)",
-              },
+              "&:hover": { background: "rgba(255,255,255,0.14)" },
             }}
           >
-            <Icon sx={{ fontSize: "1.1rem !important", color: "rgba(255,255,255,0.7)" }}>
+            <Icon sx={{ fontSize: "0.95rem !important", color: "rgba(255,255,255,0.6)" }}>
               close
             </Icon>
-          </MDBox>
+          </Box>
         )}
-      </MDBox>
+      </Box>
 
-      {/* Divisor decorativo */}
+      {/* Divisor */}
+      <Box sx={{ mx: "16px", height: "1px", background: "rgba(201,166,53,0.18)", mb: "6px" }} />
+
+      {/* ── MENU ── */}
+      <List sx={{ px: "8px", py: 0, flex: 1, overflowY: "auto" }}>{renderRoutes}</List>
+
+      {/* ── FOOTER: Sair + copyright ── */}
       <Box
         sx={{
-          mx: 2,
-          mb: 1,
-          height: "1px",
-          background: "linear-gradient(90deg, transparent, rgba(201,166,53,0.4), transparent)",
+          mt: "auto",
+          borderTop: "1px solid rgba(255,255,255,0.07)",
+          px: "8px",
+          pt: "8px",
+          pb: "12px",
         }}
-      />
-
-      {/* User info mini */}
-      {user && (
-        <MDBox
-          sx={{
-            mx: 2,
-            mb: 1.5,
-            px: 1.5,
-            py: 1,
-            borderRadius: "12px",
-            background: "rgba(255,255,255,0.05)",
-            border: "1px solid rgba(255,255,255,0.07)",
-            display: "flex",
-            alignItems: "center",
-            gap: 1.2,
-          }}
-        >
+      >
+        {logoutRoute && (
           <Box
-            sx={{
-              width: 32,
-              height: 32,
-              borderRadius: "50%",
-              background: `linear-gradient(135deg, ${GOLD} 0%, #E8C547 100%)`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}
+            onClick={handleLogout}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleLogout()}
+            sx={{ outline: "none", cursor: "pointer" }}
           >
-            <MDTypography
-              sx={{ color: "#fff", fontSize: "0.8rem", fontWeight: 700, lineHeight: 1 }}
-            >
-              {user?.nome ? user.nome[0].toUpperCase() : "U"}
-            </MDTypography>
+            <SidenavCollapse name={logoutRoute.name} icon={logoutRoute.icon} active={false} />
           </Box>
-          <Box sx={{ flex: 1, overflow: "hidden" }}>
-            <MDTypography
-              noWrap
-              sx={{
-                color: "rgba(255,255,255,0.9)",
-                fontSize: "0.78rem",
-                fontWeight: 600,
-                lineHeight: 1.3,
-              }}
-            >
-              {user?.nome || "Usuário"}
-            </MDTypography>
-            <MDTypography
-              noWrap
-              sx={{
-                color: "rgba(255,255,255,0.4)",
-                fontSize: "0.65rem",
-                lineHeight: 1.2,
-                textTransform: "capitalize",
-              }}
-            >
-              {user?.permissao || "membro"}
-            </MDTypography>
-          </Box>
-        </MDBox>
-      )}
+        )}
 
-      {/* Menu list */}
-      <List
-        sx={{
-          px: 1.5,
-          py: 0.5,
-          overflowY: "auto",
-          overflowX: "hidden",
-          flex: 1,
-          height: {
-            xs: "calc(100dvh - 200px)",
-            sm: "calc(100vh - 200px)",
-          },
-          paddingBottom: "env(safe-area-inset-bottom, 16px)",
-          "&::-webkit-scrollbar": { width: "4px" },
-          "&::-webkit-scrollbar-track": { background: "transparent" },
-          "&::-webkit-scrollbar-thumb": {
-            background: "rgba(201,166,53,0.4)",
-            borderRadius: "4px",
-          },
-          "&::-webkit-scrollbar-thumb:hover": {
-            background: "rgba(201,166,53,0.6)",
-          },
-        }}
-      >
-        {renderRoutes}
-      </List>
-
-      {/* Footer decorativo */}
-      <Box
-        sx={{
-          px: 2,
-          py: 1.5,
-          borderTop: "1px solid rgba(255,255,255,0.06)",
-        }}
-      >
-        <MDTypography
+        <Box
+          component="span"
           sx={{
-            color: "rgba(255,255,255,0.2)",
-            fontSize: "0.6rem",
+            display: "block",
             textAlign: "center",
-            letterSpacing: "0.05em",
+            color: "rgba(255,255,255,0.13)",
+            fontSize: "0.57rem",
+            fontFamily: "inherit",
+            mt: "8px",
           }}
         >
-          Receitas Milionárias © 2024
-        </MDTypography>
+          Receitas Milionárias © {new Date().getFullYear()}
+        </Box>
       </Box>
     </SidenavRoot>
   );

@@ -1,101 +1,86 @@
 import PropTypes from "prop-types";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
+import Box from "@mui/material/Box";
 
-import Card from "@mui/material/Card";
-import Divider from "@mui/material/Divider";
-
-import MDBox from "components/MDBox";
-import MDTypography from "components/MDTypography";
+const GREEN = "#1C3B32";
+const GOLD = "#C9A635";
 
 function PageWrapper({ title, subtitle, actions, children }) {
-  const BRAND_GREEN = "#1C3B32";
-  const BRAND_GOLD = "#C9A635";
-
   return (
     <DashboardLayout>
       <DashboardNavbar />
 
-      {/* Header centralizado */}
-      <MDBox px={{ xs: 2, md: 3 }} mt={{ xs: 3, md: 4 }}>
-        <Card
-          elevation={0}
+      <Box sx={{ pt: { xs: 1.5, sm: 2 }, pb: { xs: 2, sm: 2.5 } }}>
+        <Box
           sx={{
-            borderRadius: 3,
-            overflow: "hidden",
-            "& .rm-header-top": {
-              background: `linear-gradient(100deg, ${BRAND_GREEN} 0%, ${BRAND_GREEN} 70%, ${BRAND_GOLD} 140%)`,
-            },
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            alignItems: { xs: "flex-start", sm: "center" },
+            justifyContent: "space-between",
+            gap: { xs: 1.5, sm: 1 },
+            pb: 1.5,
+            borderBottom: `2px solid ${GOLD}`,
+            borderImage: `linear-gradient(90deg, ${GREEN}, ${GOLD}) 1`,
           }}
         >
-          <MDBox className="rm-header-top" sx={{ height: 6 }} />
-
-          {/* Conteúdo do header no centro */}
-          <MDBox
-            py={{ xs: 2.5, md: 3 }}
-            px={{ xs: 2, md: 3 }}
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-            textAlign="center"
-            gap={1} // espaço entre título/subtítulo/ações
-          >
-            {/* Título */}
-            <MDTypography
-              variant="h4"
-              fontWeight="bold"
+          <Box>
+            <Box
+              component="h1"
               sx={{
-                color: BRAND_GREEN,
-                letterSpacing: ".2px",
-                lineHeight: 1.2,
-                maxWidth: "100%",
+                m: 0,
+                fontSize: { xs: "1.25rem", sm: "1.4rem" },
+                fontWeight: 700,
+                color: GREEN,
+                lineHeight: 1.25,
+                letterSpacing: "-0.02em",
+                fontFamily: "inherit",
               }}
             >
               {title}
-            </MDTypography>
-
-            {/* Subtítulo */}
-            {subtitle ? (
-              <MDTypography
-                variant="button"
-                color="text"
+            </Box>
+            {subtitle && (
+              <Box
+                component="p"
                 sx={{
-                  opacity: 0.9,
-                  maxWidth: 920, // limita largura para leitura
-                  width: "100%",
+                  m: 0,
+                  mt: "3px",
+                  fontSize: "0.78rem",
+                  color: "rgba(0,0,0,0.45)",
+                  fontFamily: "inherit",
+                  lineHeight: 1.4,
                 }}
               >
                 {subtitle}
-              </MDTypography>
-            ) : null}
+              </Box>
+            )}
+          </Box>
 
-            {/* Ações (ficam abaixo, centralizadas e responsivas) */}
-            {actions ? (
-              <MDBox
-                mt={{ xs: 1, md: 1.5 }}
-                display="flex"
-                flexWrap="wrap"
-                justifyContent="center"
-                alignItems="center"
-                gap={1.25}
-                sx={{ width: "100%" }}
-              >
-                {actions}
-              </MDBox>
-            ) : null}
-          </MDBox>
+          {actions && (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+                flexShrink: 0,
+                flexWrap: "wrap",
+              }}
+            >
+              {actions}
+            </Box>
+          )}
+        </Box>
+      </Box>
 
-          <Divider sx={{ mx: { xs: 2, md: 3 } }} />
-        </Card>
-      </MDBox>
-
-      {/* Conteúdo da página */}
-      <MDBox px={{ xs: 2, md: 3 }} py={{ xs: 2, md: 3 }}>
-        {children}
-      </MDBox>
+      <Box>{children}</Box>
     </DashboardLayout>
   );
 }
+
+PageWrapper.defaultProps = {
+  subtitle: "",
+  actions: null,
+};
 
 PageWrapper.propTypes = {
   title: PropTypes.string.isRequired,

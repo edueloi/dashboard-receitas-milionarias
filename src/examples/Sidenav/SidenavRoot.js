@@ -1,93 +1,41 @@
 import Drawer from "@mui/material/Drawer";
 import { styled } from "@mui/material/styles";
 
-const SIDEBAR_WIDTH = 260;
-const SIDEBAR_MOBILE_WIDTH = "82vw";
-const SIDEBAR_MAX_MOBILE = 320;
-
-const BG_GRADIENT = "linear-gradient(175deg, #1C3B32 0%, #142D26 55%, #0E2018 100%)";
+const W = 250;
 
 export default styled(Drawer)(({ theme, ownerState }) => {
-  const { palette, boxShadows, transitions, breakpoints, zIndex } = theme;
+  const { transitions } = theme;
   const { transparentSidenav, whiteSidenav, darkMode, isMobile } = ownerState;
 
-  const { transparent, white } = palette;
-  const { xxl } = boxShadows;
-
-  let backgroundValue = BG_GRADIENT;
-  if (transparentSidenav) backgroundValue = transparent.main;
-  else if (whiteSidenav) backgroundValue = white.main;
-
-  const drawerOpenStyles = () => ({
-    background: backgroundValue,
-    transform: "translateX(0)",
-    transition: transitions.create("transform", {
-      easing: transitions.easing.sharp,
-      duration: transitions.duration.shorter,
-    }),
-    [breakpoints.up("lg")]: {
-      boxShadow: transparentSidenav ? "none" : "4px 0 24px rgba(0,0,0,0.18)",
-      left: 0,
-      width: SIDEBAR_WIDTH,
-      transform: "translateX(0)",
-      transition: transitions.create(["width", "background-color"], {
-        easing: transitions.easing.sharp,
-        duration: transitions.duration.enteringScreen,
-      }),
-    },
-  });
-
-  const mobilePaper = isMobile
-    ? {
-        backdropFilter: "saturate(200%) blur(12px)",
-        WebkitBackdropFilter: "saturate(200%) blur(12px)",
-        background: BG_GRADIENT,
-        width: SIDEBAR_MOBILE_WIDTH,
-        maxWidth: SIDEBAR_MAX_MOBILE,
-        zIndex: zIndex.drawer + 2,
-        borderTopRightRadius: "20px",
-        borderBottomRightRadius: "20px",
-        boxShadow: "8px 0 40px rgba(0,0,0,0.30)",
-        paddingBottom: "env(safe-area-inset-bottom, 0px)",
-        overflow: "hidden",
-        "&::after": {
-          content: '""',
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: "200px",
-          background:
-            "radial-gradient(ellipse at 20% 0%, rgba(201,166,53,0.12) 0%, transparent 70%)",
-          pointerEvents: "none",
-        },
-      }
-    : {};
-
-  const desktopPaper = !isMobile
-    ? {
-        "&::after": {
-          content: '""',
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: "280px",
-          background:
-            "radial-gradient(ellipse at 30% 0%, rgba(201,166,53,0.10) 0%, transparent 65%)",
-          pointerEvents: "none",
-        },
-      }
-    : {};
+  let bg = "linear-gradient(180deg, #1a3a2e 0%, #112218 100%)";
+  if (transparentSidenav) bg = "transparent";
+  else if (whiteSidenav) bg = "#ffffff";
+  else if (darkMode) bg = "#0f1e18";
 
   return {
     "& .MuiDrawer-paper": {
-      boxShadow: xxl,
+      width: isMobile ? "80vw" : W,
+      maxWidth: isMobile ? 290 : W,
+      minWidth: isMobile ? 220 : W,
+      height: "100vh",
+      margin: 0,
+      borderRadius: isMobile ? "0 20px 20px 0" : 0,
+      background: bg,
       border: "none",
       overflowX: "hidden",
-      ...drawerOpenStyles(),
-      ...mobilePaper,
-      ...desktopPaper,
+      overflowY: "auto",
+      display: "flex",
+      flexDirection: "column",
+      boxShadow: isMobile ? "8px 0 40px rgba(0,0,0,0.35)" : "none",
+      borderRight: isMobile ? "none" : "1px solid rgba(255,255,255,0.05)",
+      paddingBottom: "env(safe-area-inset-bottom, 0px)",
+      transition: transitions.create("transform", {
+        easing: transitions.easing.sharp,
+        duration: transitions.duration.enteringScreen,
+      }),
+      "&::-webkit-scrollbar": { width: 3 },
+      "&::-webkit-scrollbar-track": { background: "transparent" },
+      "&::-webkit-scrollbar-thumb": { background: "rgba(201,166,53,0.3)", borderRadius: 4 },
     },
     "& .MuiBackdrop-root": {
       backdropFilter: "blur(4px)",

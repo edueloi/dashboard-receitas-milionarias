@@ -1,25 +1,21 @@
-const GOLD = "#C9A635";
-const GREEN = "#1C3B32";
-
 function navbar(theme, ownerState) {
-  const { palette, boxShadows, functions, transitions, breakpoints, borders } = theme;
+  const { palette, functions } = theme;
   const { transparentNavbar, absolute, light, darkMode } = ownerState;
 
   const { dark, white, text, transparent, background } = palette;
   const { rgba, pxToRem } = functions;
-  const { borderRadius } = borders;
 
   return {
-    boxShadow: transparentNavbar || absolute ? "none" : "0 2px 20px rgba(0,0,0,0.06)",
-    backdropFilter: transparentNavbar || absolute ? "none" : `saturate(200%) blur(${pxToRem(20)})`,
+    boxShadow: transparentNavbar || absolute ? "none" : "0 1px 0 rgba(0,0,0,0.06)",
+    backdropFilter: transparentNavbar || absolute ? "none" : `saturate(180%) blur(${pxToRem(16)})`,
     backgroundColor:
       transparentNavbar || absolute
         ? `${transparent.main} !important`
-        : rgba(darkMode ? background.default : white.main, 0.92),
+        : rgba(darkMode ? background.default : white.main, 0.95),
     borderBottom:
       transparentNavbar || absolute
         ? "none"
-        : `1px solid ${rgba(darkMode ? white.main : dark.main, 0.06)}`,
+        : `1px solid ${rgba(darkMode ? white.main : dark.main, 0.07)}`,
 
     color: () => {
       if (light) return white.main;
@@ -27,36 +23,27 @@ function navbar(theme, ownerState) {
       return dark.main;
     },
 
-    top: absolute ? 0 : pxToRem(8),
-    minHeight: pxToRem(64),
+    top: 0,
+    minHeight: pxToRem(56),
     display: "grid",
     alignItems: "center",
-    borderRadius: borderRadius.xl,
-    paddingTop: pxToRem(6),
-    paddingBottom: pxToRem(6),
-    paddingRight: absolute ? pxToRem(8) : 0,
-    paddingLeft: absolute ? pxToRem(16) : 0,
-
-    "& > *": {
-      transition: transitions.create("all", {
-        easing: transitions.easing.easeInOut,
-        duration: transitions.duration.standard,
-      }),
-    },
+    borderRadius: 0,
+    paddingTop: 0,
+    paddingBottom: 0,
+    paddingRight: 0,
+    paddingLeft: 0,
 
     "& .MuiToolbar-root": {
       display: "flex",
       justifyContent: "space-between",
       alignItems: "center",
-      [breakpoints.up("sm")]: {
-        minHeight: "auto",
-        padding: `${pxToRem(4)} ${pxToRem(16)}`,
-      },
+      minHeight: `${pxToRem(56)} !important`,
+      padding: `0 ${pxToRem(16)}`,
     },
   };
 }
 
-const navbarContainer = ({ breakpoints }) => ({
+const navbarContainer = () => ({
   flexDirection: "row",
   alignItems: "center",
   justifyContent: "space-between",
@@ -65,46 +52,24 @@ const navbarContainer = ({ breakpoints }) => ({
   width: "100%",
 });
 
-const navbarRow = ({ breakpoints }, { isMini }) => ({
+const navbarRow = () => ({
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
   width: "100%",
-
-  [breakpoints.up("md")]: {
-    justifyContent: isMini ? "space-between" : "stretch",
-    width: isMini ? "100%" : "max-content",
-  },
-
-  [breakpoints.up("xl")]: {
-    justifyContent: "stretch !important",
-    width: "max-content !important",
-  },
 });
 
-const navbarIconButton = ({ typography: { size }, breakpoints }) => ({
+const navbarIconButton = ({ typography: { size } }) => ({
   px: 1,
-
   "& .material-icons, .material-icons-round": {
     fontSize: `${size.xl} !important`,
-  },
-
-  "& .MuiTypography-root": {
-    display: "none",
-    [breakpoints.up("sm")]: {
-      display: "inline-block",
-      lineHeight: 1.2,
-      ml: 0.5,
-    },
   },
 });
 
 const navbarMobileMenu = ({ breakpoints }) => ({
   display: "inline-block",
   lineHeight: 0,
-  [breakpoints.up("xl")]: {
-    display: "none",
-  },
+  [breakpoints.up("xl")]: { display: "none" },
 });
 
 export { navbar, navbarContainer, navbarRow, navbarIconButton, navbarMobileMenu };
