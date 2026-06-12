@@ -15,6 +15,24 @@ Coded by www.creative-tim.com
 
 import React from "react";
 import { createRoot } from "react-dom/client";
+
+/**
+ * Silencia o aviso benigno "ResizeObserver loop completed with undelivered
+ * notifications". É um warning do navegador (não um bug), comum em apps com
+ * MUI/charts/tabelas que se redimensionam. Em produção não aparece; aqui só
+ * impedimos que o overlay de erro do react-scripts mostre essa tela vermelha.
+ * Filtramos APENAS essa mensagem específica — qualquer outro erro passa normal.
+ */
+const RESIZE_OBSERVER_MSG = "ResizeObserver loop";
+window.addEventListener("error", (e) => {
+  if (e.message && e.message.includes(RESIZE_OBSERVER_MSG)) {
+    e.stopImmediatePropagation();
+    e.preventDefault();
+    // Remove o overlay do webpack-dev-server caso já tenha sido injetado
+    const overlay = document.getElementById("webpack-dev-server-client-overlay");
+    if (overlay) overlay.style.display = "none";
+  }
+});
 import { BrowserRouter } from "react-router-dom";
 import App from "App";
 import { AuthProvider } from "context/AuthContext"; // Importe o AuthProvider

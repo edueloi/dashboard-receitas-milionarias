@@ -32,6 +32,7 @@ import PageWrapper from "components/PageWrapper";
 // Components
 import ImageCarousel from "./components/ImageCarousel";
 import { useAuth } from "context/AuthContext";
+import { responsiveModalStyle } from "utils/responsive";
 
 const color = {
   gold: "#C9A635",
@@ -41,17 +42,7 @@ const color = {
 };
 
 // Estilo para os Modais
-const modalStyle = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: { xs: "90%", sm: 500 },
-  bgcolor: "background.paper",
-  borderRadius: 3,
-  boxShadow: 24,
-  p: 4,
-};
+const modalStyle = responsiveModalStyle({ maxWidth: 500 });
 
 function DetalhesReceita() {
   const { slug } = useParams();

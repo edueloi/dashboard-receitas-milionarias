@@ -4,6 +4,7 @@ import api from "services/api";
 import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
 import { useUserPreferences } from "../../context/UserPreferencesContext";
+import { responsiveModalStyle } from "utils/responsive";
 
 // @mui
 import Card from "@mui/material/Card";
@@ -50,17 +51,7 @@ const SORT_OPTIONS = [
   { value: "alfabetica-za", label: "Z ??? A" },
 ];
 
-const modalStyle = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: 440,
-  bgcolor: "background.paper",
-  borderRadius: 2,
-  boxShadow: 24,
-  p: 3,
-};
+const modalStyle = responsiveModalStyle({ maxWidth: 440 });
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
@@ -704,10 +695,16 @@ function MinhasReceitas() {
             Tem certeza que deseja excluir esta receita? Esta ação é irreversível e todos os dados
             serão perdidos permanentemente.
           </MDTypography>
-          <MDBox display="flex" justifyContent="flex-end" gap={1.5}>
+          <MDBox
+            display="flex"
+            flexDirection={{ xs: "column-reverse", sm: "row" }}
+            justifyContent="flex-end"
+            gap={1.5}
+          >
             <MDButton
               color="secondary"
               onClick={closeDeleteModal}
+              fullWidth={isMobile}
               sx={{
                 "&:hover": { backgroundColor: alpha(palette.green, 0.08) },
               }}
@@ -718,6 +715,7 @@ function MinhasReceitas() {
               variant="gradient"
               color="error"
               onClick={confirmDelete}
+              fullWidth={isMobile}
               startIcon={<Icon>delete</Icon>}
             >
               Excluir Receita

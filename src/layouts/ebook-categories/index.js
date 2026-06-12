@@ -15,18 +15,9 @@ import MDButton from "components/MDButton";
 
 // Layout & Components
 import PageWrapper from "components/PageWrapper";
+import { responsiveModalStyle } from "utils/responsive";
 
-const modalStyle = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: 400,
-  bgcolor: "background.paper",
-  borderRadius: 2,
-  boxShadow: 24,
-  p: 4,
-};
+const modalStyle = responsiveModalStyle({ maxWidth: 400 });
 
 function EbookCategories() {
   const [categories, setCategories] = useState([]);

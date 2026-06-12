@@ -30,6 +30,7 @@ import MDInput from "components/MDInput";
 import MDButton from "components/MDButton";
 import ImageUpload from "components/ImageUpload";
 import getFullImageUrl from "utils/imageUrlHelper";
+import { responsiveModalStyle } from "utils/responsive";
 
 // Material Dashboard 2 React example components
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
@@ -37,17 +38,7 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 
 const palette = { gold: "#C9A635", green: "#1C3B32" };
 
-const modalStyle = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: 440,
-  bgcolor: "background.paper",
-  borderRadius: 2,
-  boxShadow: 24,
-  p: 3,
-};
+const modalStyle = responsiveModalStyle({ maxWidth: 440 });
 
 const steps = ["Informações Básicas", "Ingredientes", "Modo de Preparo", "Finalizar"];
 

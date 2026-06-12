@@ -21,6 +21,7 @@ import MDInput from "components/MDInput";
 // Layout
 import PageWrapper from "components/PageWrapper";
 import ImageUpload from "components/ImageUpload";
+import { responsiveModalStyle } from "utils/responsive";
 
 const palette = {
   gold: "#C9A635",
@@ -31,18 +32,7 @@ const FileInput = styled("input")({
   display: "none",
 });
 
-const modalStyle = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: { xs: "85%", sm: 380, md: 420 },
-  maxWidth: 450,
-  bgcolor: "background.paper",
-  borderRadius: 2,
-  boxShadow: 24,
-  p: { xs: 2, sm: 2.5, md: 3 },
-};
+const modalStyle = responsiveModalStyle({ maxWidth: 420 });
 
 const MAX_TITULO = 100;
 const MAX_DESCRICAO_CURTA = 255;

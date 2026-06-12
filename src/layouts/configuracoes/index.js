@@ -16,6 +16,8 @@ import ThemeSettings from "./components/ThemeSettings";
 import PaymentSettings from "./components/PaymentSettings";
 import SecuritySettings from "./components/SecuritySettings";
 
+import { responsiveModalStyle } from "utils/responsive";
+
 const palette = {
   gold: "#C9A635",
   green: "#1C3B32",
@@ -60,16 +62,9 @@ const MENU = [
 ];
 
 const modalStyle = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: { xs: "90%", sm: "85%", md: "75%", lg: "65%" },
-  maxWidth: 900,
+  ...responsiveModalStyle({ maxWidth: 900 }),
+  // layout interno do modal de configurações (header fixo + corpo rolável)
   maxHeight: "90vh",
-  bgcolor: "background.paper",
-  borderRadius: 3,
-  boxShadow: 24,
   overflow: "hidden",
   display: "flex",
   flexDirection: "column",

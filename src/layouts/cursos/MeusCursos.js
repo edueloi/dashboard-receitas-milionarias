@@ -20,23 +20,14 @@ import PageWrapper from "components/PageWrapper";
 import ComplexStatisticsCard from "examples/Cards/StatisticsCards/ComplexStatisticsCard";
 import MeuCursoCard from "./components/MeuCursoCard";
 
+import { responsiveModalStyle } from "utils/responsive";
+
 const palette = {
   gold: "#C9A635",
   green: "#1C3B32",
 };
 
-const modalStyle = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: { xs: "85%", sm: 380, md: 420 },
-  maxWidth: 450,
-  bgcolor: "background.paper",
-  borderRadius: 2,
-  boxShadow: 24,
-  p: { xs: 2, sm: 2.5, md: 3 },
-};
+const modalStyle = responsiveModalStyle({ maxWidth: 420 });
 
 function MeusCursos() {
   const { user } = useAuth();

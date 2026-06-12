@@ -14,6 +14,8 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { useTheme } from "@mui/material/styles";
 
 import PropTypes from "prop-types";
 import MDBox from "components/MDBox";
@@ -69,6 +71,8 @@ SectionTitle.propTypes = {
 function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [connectedAccount, setConnectedAccount] = useState(null);
@@ -969,7 +973,8 @@ function Dashboard() {
           onClose={() => setShowStripeModal(false)}
           maxWidth="sm"
           fullWidth
-          PaperProps={{ sx: { borderRadius: "16px", overflow: "hidden" } }}
+          fullScreen={isMobile}
+          PaperProps={{ sx: { borderRadius: isMobile ? 0 : "16px", overflow: "hidden" } }}
         >
           {/* Header do modal */}
           <Box
