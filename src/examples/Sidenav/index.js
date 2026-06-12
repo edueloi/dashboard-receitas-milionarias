@@ -6,8 +6,9 @@ import List from "@mui/material/List";
 import Divider from "@mui/material/Divider";
 import Link from "@mui/material/Link";
 import Icon from "@mui/material/Icon";
+import Box from "@mui/material/Box";
 import useMediaQuery from "@mui/material/useMediaQuery";
-import { useTheme } from "@mui/material/styles";
+import { useTheme, alpha } from "@mui/material/styles";
 
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
@@ -19,13 +20,14 @@ import sidenavLogoLabel from "examples/Sidenav/styles/sidenav";
 import { useMaterialUIController, setMiniSidenav } from "context";
 import { useAuth } from "context/AuthContext";
 
+const GOLD = "#C9A635";
+
 function Sidenav({ color, brand, brandName, routes, ...rest }) {
   const [controller, dispatch] = useMaterialUIController();
   const { miniSidenav, transparentSidenav, whiteSidenav, darkMode } = controller;
 
   const location = useLocation();
   const theme = useTheme();
-  // mini no lg pra baixo (bom compromisso para desktop/tablet)
   const isMobile = useMediaQuery(theme.breakpoints.down("lg"));
 
   const { logout, user } = useAuth();
@@ -59,9 +61,7 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
     () =>
       routes
         .filter(({ visibleFor }) => {
-          // Se não tem restrição de visibilidade, mostra para todos
           if (!visibleFor) return true;
-          // Se tem restrição, verifica se a permissão do usuário está na lista
           return user && visibleFor.includes(user.permissao);
         })
         .map(({ type, name, icon, title, noCollapse, key, href, route }) => {
@@ -69,19 +69,18 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
             return (
               <MDTypography
                 key={key}
-                color={textColor}
                 display="block"
                 variant="caption"
                 fontWeight="bold"
                 textTransform="uppercase"
-                pl={{ xs: 2, sm: 3 }}
-                mt={2}
-                mb={1}
-                ml={1}
                 sx={{
-                  fontSize: { xs: "0.65rem", sm: "0.75rem" },
-                  letterSpacing: { xs: "0.5px", sm: "0.8px" },
-                  opacity: 0.7,
+                  color: "rgba(255,255,255,0.4)",
+                  fontSize: "0.65rem",
+                  letterSpacing: "1.2px",
+                  px: 2,
+                  mt: 2.5,
+                  mb: 0.5,
+                  ml: 0.5,
                 }}
               >
                 {title}
@@ -91,12 +90,15 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
 
           if (type === "divider") {
             return (
-              <Divider
+              <Box
                 key={key}
-                light={
-                  (!darkMode && !whiteSidenav && !transparentSidenav) ||
-                  (darkMode && !transparentSidenav && whiteSidenav)
-                }
+                sx={{
+                  my: 1.5,
+                  mx: 2,
+                  height: "1px",
+                  background:
+                    "linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)",
+                }}
               />
             );
           }
@@ -167,116 +169,234 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
       ownerState={{ transparentSidenav, whiteSidenav, miniSidenav, darkMode, isMobile }}
       ModalProps={{ keepMounted: true }}
     >
-      {/* Header / logo */}
+      {/* Header / Logo */}
       <MDBox
-        pt={{ xs: 2, sm: 3 }}
-        pb={{ xs: 1, sm: 1 }}
-        px={{ xs: 2, sm: 2 }}
-        textAlign="center"
-        position="relative"
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
+        sx={{
+          position: "relative",
+          pt: { xs: 2.5, sm: 3 },
+          pb: 2,
+          px: 2.5,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
       >
-        {isMobile && (
-          <MDBox
-            position="absolute"
-            top={8}
-            right={8}
-            p={1}
-            onClick={closeSidenav}
-            sx={{
-              cursor: "pointer",
-              backgroundColor: "rgba(0,0,0,0.05)",
-              borderRadius: "50%",
-              width: 36,
-              height: 36,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              transition: "all 0.2s ease",
-              "&:hover": {
-                backgroundColor: "rgba(0,0,0,0.1)",
-                transform: "scale(1.1)",
-              },
-            }}
-          >
-            <Icon sx={{ fontWeight: "bold", fontSize: 20 }}>close</Icon>
-          </MDBox>
-        )}
-
+        {/* Logo + nome */}
         <MDBox
           component={NavLink}
           to="/"
-          display="flex"
-          alignItems="center"
-          justifyContent="center"
-          gap={1}
-          sx={{ textDecoration: "none", width: "100%" }}
+          sx={{
+            textDecoration: "none",
+            display: "flex",
+            alignItems: "center",
+            gap: 1.5,
+            flex: 1,
+          }}
         >
-          {brand ? (
+          {brand && (
             <MDBox
-              component="img"
-              src={brand}
-              alt="Brand"
               sx={{
-                width: "auto",
-                height: { xs: 40, sm: 48 },
-                maxHeight: { xs: 50, sm: 60 },
-                borderRadius: "6px",
-                objectFit: "contain",
+                width: 44,
+                height: 44,
+                borderRadius: "12px",
+                overflow: "hidden",
+                flexShrink: 0,
+                border: `2px solid rgba(201,166,53,0.35)`,
+                boxShadow: `0 4px 16px rgba(201,166,53,0.2)`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "rgba(255,255,255,0.05)",
               }}
-            />
-          ) : null}
-          <MDBox width={!brandName && "100%"} sx={(t) => sidenavLogoLabel(t, { miniSidenav })}>
+            >
+              <MDBox
+                component="img"
+                src={brand}
+                alt="Brand"
+                sx={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "contain",
+                  p: 0.5,
+                }}
+              />
+            </MDBox>
+          )}
+          <MDBox sx={(t) => sidenavLogoLabel(t, { miniSidenav })}>
             <MDTypography
               component="h6"
               variant="button"
-              fontWeight="medium"
-              color={textColor}
+              fontWeight="bold"
               noWrap
-              sx={{ fontSize: { xs: "0.875rem", sm: "1rem" } }}
+              sx={{
+                color: "#fff",
+                fontSize: "1rem",
+                lineHeight: 1.2,
+                letterSpacing: "-0.01em",
+              }}
             >
               {brandName}
             </MDTypography>
+            <MDTypography
+              variant="caption"
+              sx={{
+                color: GOLD,
+                fontSize: "0.65rem",
+                fontWeight: 500,
+                letterSpacing: "0.05em",
+                textTransform: "uppercase",
+              }}
+            >
+              Dashboard
+            </MDTypography>
           </MDBox>
         </MDBox>
+
+        {/* Botão fechar mobile */}
+        {isMobile && (
+          <MDBox
+            onClick={closeSidenav}
+            sx={{
+              cursor: "pointer",
+              width: 32,
+              height: 32,
+              borderRadius: "10px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "rgba(255,255,255,0.08)",
+              border: "1px solid rgba(255,255,255,0.1)",
+              transition: "all 0.2s ease",
+              flexShrink: 0,
+              "&:hover": {
+                background: "rgba(255,255,255,0.15)",
+              },
+            }}
+          >
+            <Icon sx={{ fontSize: "1.1rem !important", color: "rgba(255,255,255,0.7)" }}>
+              close
+            </Icon>
+          </MDBox>
+        )}
       </MDBox>
 
-      <Divider
-        light={
-          (!darkMode && !whiteSidenav && !transparentSidenav) ||
-          (darkMode && !transparentSidenav && whiteSidenav)
-        }
+      {/* Divisor decorativo */}
+      <Box
+        sx={{
+          mx: 2,
+          mb: 1,
+          height: "1px",
+          background: "linear-gradient(90deg, transparent, rgba(201,166,53,0.4), transparent)",
+        }}
       />
 
+      {/* User info mini */}
+      {user && (
+        <MDBox
+          sx={{
+            mx: 2,
+            mb: 1.5,
+            px: 1.5,
+            py: 1,
+            borderRadius: "12px",
+            background: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.07)",
+            display: "flex",
+            alignItems: "center",
+            gap: 1.2,
+          }}
+        >
+          <Box
+            sx={{
+              width: 32,
+              height: 32,
+              borderRadius: "50%",
+              background: `linear-gradient(135deg, ${GOLD} 0%, #E8C547 100%)`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+            }}
+          >
+            <MDTypography
+              sx={{ color: "#fff", fontSize: "0.8rem", fontWeight: 700, lineHeight: 1 }}
+            >
+              {user?.nome ? user.nome[0].toUpperCase() : "U"}
+            </MDTypography>
+          </Box>
+          <Box sx={{ flex: 1, overflow: "hidden" }}>
+            <MDTypography
+              noWrap
+              sx={{
+                color: "rgba(255,255,255,0.9)",
+                fontSize: "0.78rem",
+                fontWeight: 600,
+                lineHeight: 1.3,
+              }}
+            >
+              {user?.nome || "Usuário"}
+            </MDTypography>
+            <MDTypography
+              noWrap
+              sx={{
+                color: "rgba(255,255,255,0.4)",
+                fontSize: "0.65rem",
+                lineHeight: 1.2,
+                textTransform: "capitalize",
+              }}
+            >
+              {user?.permissao || "membro"}
+            </MDTypography>
+          </Box>
+        </MDBox>
+      )}
+
+      {/* Menu list */}
       <List
         sx={{
-          px: { xs: 1.5, sm: 1.25 },
-          py: 1,
+          px: 1.5,
+          py: 0.5,
           overflowY: "auto",
+          overflowX: "hidden",
+          flex: 1,
           height: {
-            xs: "calc(100dvh - 120px)",
-            sm: "calc(100vh - 120px)",
+            xs: "calc(100dvh - 200px)",
+            sm: "calc(100vh - 200px)",
           },
-          paddingBottom: "env(safe-area-inset-bottom, 12px)",
-          "&::-webkit-scrollbar": {
-            width: "6px",
-          },
-          "&::-webkit-scrollbar-track": {
-            backgroundColor: "transparent",
-          },
+          paddingBottom: "env(safe-area-inset-bottom, 16px)",
+          "&::-webkit-scrollbar": { width: "4px" },
+          "&::-webkit-scrollbar-track": { background: "transparent" },
           "&::-webkit-scrollbar-thumb": {
-            backgroundColor: "#C9A635",
+            background: "rgba(201,166,53,0.4)",
             borderRadius: "4px",
           },
           "&::-webkit-scrollbar-thumb:hover": {
-            backgroundColor: "rgba(201, 166, 53, 0.8)",
+            background: "rgba(201,166,53,0.6)",
           },
         }}
       >
         {renderRoutes}
       </List>
+
+      {/* Footer decorativo */}
+      <Box
+        sx={{
+          px: 2,
+          py: 1.5,
+          borderTop: "1px solid rgba(255,255,255,0.06)",
+        }}
+      >
+        <MDTypography
+          sx={{
+            color: "rgba(255,255,255,0.2)",
+            fontSize: "0.6rem",
+            textAlign: "center",
+            letterSpacing: "0.05em",
+          }}
+        >
+          Receitas Milionárias © 2024
+        </MDTypography>
+      </Box>
     </SidenavRoot>
   );
 }

@@ -1,20 +1,23 @@
 import Drawer from "@mui/material/Drawer";
 import { styled } from "@mui/material/styles";
 
+const SIDEBAR_WIDTH = 260;
+const SIDEBAR_MOBILE_WIDTH = "82vw";
+const SIDEBAR_MAX_MOBILE = 320;
+
+const BG_GRADIENT = "linear-gradient(175deg, #1C3B32 0%, #142D26 55%, #0E2018 100%)";
+
 export default styled(Drawer)(({ theme, ownerState }) => {
   const { palette, boxShadows, transitions, breakpoints, zIndex } = theme;
   const { transparentSidenav, whiteSidenav, darkMode, isMobile } = ownerState;
 
-  const sidebarWidth = isMobile ? "88vw" : 250;
-  const { transparent, white, background, secondary } = palette;
+  const { transparent, white } = palette;
   const { xxl } = boxShadows;
 
-  // fundo base (dark → background.sidenav; claro → secondary.main)
-  let backgroundValue = darkMode ? background.sidenav : secondary.main;
+  let backgroundValue = BG_GRADIENT;
   if (transparentSidenav) backgroundValue = transparent.main;
   else if (whiteSidenav) backgroundValue = white.main;
 
-  // estilos quando ABERTO (desktop e mobile)
   const drawerOpenStyles = () => ({
     background: backgroundValue,
     transform: "translateX(0)",
@@ -23,10 +26,9 @@ export default styled(Drawer)(({ theme, ownerState }) => {
       duration: transitions.duration.shorter,
     }),
     [breakpoints.up("lg")]: {
-      boxShadow: transparentSidenav ? "none" : xxl,
-      marginBottom: transparentSidenav ? 0 : "inherit",
+      boxShadow: transparentSidenav ? "none" : "4px 0 24px rgba(0,0,0,0.18)",
       left: 0,
-      width: sidebarWidth,
+      width: SIDEBAR_WIDTH,
       transform: "translateX(0)",
       transition: transitions.create(["width", "background-color"], {
         easing: transitions.easing.sharp,
@@ -35,19 +37,46 @@ export default styled(Drawer)(({ theme, ownerState }) => {
     },
   });
 
-  // mobile (temporary): papel do Drawer ganha blur e zIndex alto
   const mobilePaper = isMobile
     ? {
-        backdropFilter: "saturate(180%) blur(8px)",
-        WebkitBackdropFilter: "saturate(180%) blur(8px)",
-        background: backgroundValue,
-        width: sidebarWidth,
-        maxWidth: 360,
+        backdropFilter: "saturate(200%) blur(12px)",
+        WebkitBackdropFilter: "saturate(200%) blur(12px)",
+        background: BG_GRADIENT,
+        width: SIDEBAR_MOBILE_WIDTH,
+        maxWidth: SIDEBAR_MAX_MOBILE,
         zIndex: zIndex.drawer + 2,
-        borderTopRightRadius: "16px",
-        borderBottomRightRadius: "16px",
-        boxShadow: "0 10px 40px rgba(0,0,0,0.2)",
+        borderTopRightRadius: "20px",
+        borderBottomRightRadius: "20px",
+        boxShadow: "8px 0 40px rgba(0,0,0,0.30)",
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
+        overflow: "hidden",
+        "&::after": {
+          content: '""',
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: "200px",
+          background:
+            "radial-gradient(ellipse at 20% 0%, rgba(201,166,53,0.12) 0%, transparent 70%)",
+          pointerEvents: "none",
+        },
+      }
+    : {};
+
+  const desktopPaper = !isMobile
+    ? {
+        "&::after": {
+          content: '""',
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: "280px",
+          background:
+            "radial-gradient(ellipse at 30% 0%, rgba(201,166,53,0.10) 0%, transparent 65%)",
+          pointerEvents: "none",
+        },
       }
     : {};
 
@@ -58,6 +87,11 @@ export default styled(Drawer)(({ theme, ownerState }) => {
       overflowX: "hidden",
       ...drawerOpenStyles(),
       ...mobilePaper,
+      ...desktopPaper,
+    },
+    "& .MuiBackdrop-root": {
+      backdropFilter: "blur(4px)",
+      backgroundColor: "rgba(0,0,0,0.45)",
     },
   };
 });

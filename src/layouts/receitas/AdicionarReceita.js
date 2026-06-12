@@ -76,6 +76,7 @@ function AdicionarReceita() {
     instructions: [{ stepText: "" }],
     status: "pendente",
     visibilidade: "publico",
+    aparece_no_site: true,
   });
 
   useEffect(() => {
@@ -250,6 +251,10 @@ function AdicionarReceita() {
     }));
   };
 
+  const handleApareceSiteChange = (e) => {
+    setFormData((prev) => ({ ...prev, aparece_no_site: e.target.checked }));
+  };
+
   const handleSubmit = async () => {
     // Validações básicas
     if (!formData.title.trim()) {
@@ -285,6 +290,7 @@ function AdicionarReceita() {
       tags: formData.tags.map((tag) => tag.id),
       status: formData.status,
       visibilidade: formData.visibilidade,
+      aparece_no_site: formData.aparece_no_site,
     };
 
     form.append("data", JSON.stringify(payload));
@@ -1167,6 +1173,42 @@ function AdicionarReceita() {
                             {formData.visibilidade === "assinantes"
                               ? "Apenas assinantes cadastrados poderão ver esta receita"
                               : "Qualquer visitante do site poderá visualizar esta receita"}
+                          </MDTypography>
+                        </MDBox>
+                      </MDBox>
+                    </Grid>
+
+                    <Grid item xs={12}>
+                      <MDBox
+                        p={2}
+                        display="flex"
+                        alignItems="center"
+                        sx={{
+                          background: alpha(palette.gold, 0.05),
+                          borderRadius: 2,
+                          border: `1px solid ${alpha(palette.gold, 0.2)}`,
+                        }}
+                      >
+                        <Switch
+                          checked={formData.aparece_no_site}
+                          onChange={handleApareceSiteChange}
+                          sx={{
+                            "& .MuiSwitch-switchBase.Mui-checked": {
+                              color: palette.green,
+                            },
+                            "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                              backgroundColor: palette.green,
+                            },
+                          }}
+                        />
+                        <MDBox ml={2}>
+                          <MDTypography variant="button" fontWeight="bold">
+                            {formData.aparece_no_site ? "🌍 Aparece no Site" : "🙈 Oculto no Site"}
+                          </MDTypography>
+                          <MDTypography variant="caption" color="text" display="block">
+                            {formData.aparece_no_site
+                              ? "A receita será listada nas páginas públicas do site"
+                              : "A receita não aparecerá nas listagens do site público"}
                           </MDTypography>
                         </MDBox>
                       </MDBox>

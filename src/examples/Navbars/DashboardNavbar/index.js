@@ -1,9 +1,7 @@
 /**
-=========================================================
-* Receitas Milionárias - Versão Customizada
-=========================================================
-* Componente DashboardNavbar limpo e focado.
-*/
+ * DashboardNavbar - Topbar moderna com glassmorphism
+ * Receitas Milionárias
+ */
 
 import { useState, useEffect } from "react";
 import { useLocation, Link, useNavigate } from "react-router-dom";
@@ -12,23 +10,16 @@ import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import IconButton from "@mui/material/IconButton";
 import Icon from "@mui/material/Icon";
-import { Avatar, Tooltip, Badge, alpha, useMediaQuery, useTheme } from "@mui/material";
+import Box from "@mui/material/Box";
+import Chip from "@mui/material/Chip";
+import { Avatar, Tooltip, alpha, useMediaQuery, useTheme } from "@mui/material";
 
-// Componentes do Material Dashboard 2 React
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import Breadcrumbs from "examples/Breadcrumbs";
 
-// Estilos customizados
-import {
-  navbar,
-  navbarContainer,
-  navbarRow,
-  navbarIconButton,
-  navbarMobileMenu,
-} from "examples/Navbars/DashboardNavbar/styles";
+import { navbar, navbarContainer, navbarRow } from "examples/Navbars/DashboardNavbar/styles";
 
-// Contexto do Material Dashboard 2 React
 import {
   useMaterialUIController,
   setTransparentNavbar,
@@ -41,14 +32,13 @@ import getFullImageUrl from "utils/imageUrlHelper";
 import iconUserBlack from "assets/images/icon_user_black.png";
 import NotificationDropdown from "components/NotificationDropdown";
 
-const palette = {
-  gold: "#C9A635",
-  green: "#1C3B32",
-};
+const GOLD = "#C9A635";
+const GREEN = "#1C3B32";
 
 function DashboardNavbar({ absolute, light }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isSmall = useMediaQuery(theme.breakpoints.down("sm"));
   const [navbarType, setNavbarType] = useState();
   const [controller, dispatch] = useMaterialUIController();
   const { miniSidenav, transparentNavbar, fixedNavbar, darkMode } = controller;
@@ -59,12 +49,7 @@ function DashboardNavbar({ absolute, light }) {
 
   useEffect(() => {
     setFixedNavbar(dispatch, preferences.fixedNavbar);
-
-    if (preferences.fixedNavbar) {
-      setNavbarType("sticky");
-    } else {
-      setNavbarType("static");
-    }
+    setNavbarType(preferences.fixedNavbar ? "sticky" : "static");
 
     function handleTransparentNavbar() {
       setTransparentNavbar(
@@ -75,7 +60,6 @@ function DashboardNavbar({ absolute, light }) {
 
     window.addEventListener("scroll", handleTransparentNavbar);
     handleTransparentNavbar();
-
     return () => window.removeEventListener("scroll", handleTransparentNavbar);
   }, [dispatch, preferences.fixedNavbar]);
 
@@ -88,137 +72,201 @@ function DashboardNavbar({ absolute, light }) {
   const userInitials =
     user?.nome && user?.sobrenome ? `${user.nome[0]}${user.sobrenome[0]}`.toUpperCase() : "U";
 
-  const iconsStyle = ({ palette: { dark, white, text }, functions: { rgba } }) => ({
-    color: () => {
-      let colorValue = light || darkMode ? white.main : dark.main;
-      if (transparentNavbar && !light) {
-        colorValue = darkMode ? rgba(text.main, 0.6) : text.main;
-      }
-      return colorValue;
-    },
-  });
+  const pageTitle = route[route.length - 1] || "Dashboard";
 
   return (
     <AppBar
       position={absolute ? "absolute" : navbarType}
       color="inherit"
-      sx={(theme) => navbar(theme, { transparentNavbar, absolute, light, darkMode })}
+      sx={(t) => navbar(t, { transparentNavbar, absolute, light, darkMode })}
     >
-      <Toolbar sx={(theme) => navbarContainer(theme)}>
-        <MDBox sx={(theme) => navbarRow(theme, { isMini: miniSidenav })}>
-          {/* Menu Mobile Button */}
-          <MDBox sx={{ display: { xs: "flex", md: "none" }, alignItems: "center", gap: 1 }}>
+      <Toolbar sx={(t) => navbarContainer(t)}>
+        <MDBox sx={(t) => navbarRow(t, { isMini: miniSidenav })}>
+          {/* === LADO ESQUERDO === */}
+          <MDBox sx={{ display: "flex", alignItems: "center", gap: { xs: 1, md: 1.5 } }}>
+            {/* Botão hamburger / toggle menu */}
             <Tooltip title={miniSidenav ? "Abrir Menu" : "Fechar Menu"} placement="bottom">
               <IconButton
                 size="small"
                 color="inherit"
                 onClick={handleMiniSidenav}
                 sx={{
-                  p: 1,
-                  borderRadius: 2,
-                  backgroundColor: alpha(palette.green, 0.08),
-                  transition: "all 0.3s ease",
+                  width: { xs: 38, md: 40 },
+                  height: { xs: 38, md: 40 },
+                  borderRadius: "12px",
+                  border: `1px solid ${alpha(GREEN, 0.12)}`,
+                  background: alpha(GREEN, 0.06),
+                  transition: "all 0.25s ease",
                   "&:hover": {
-                    backgroundColor: alpha(palette.green, 0.15),
-                    transform: "scale(1.1)",
+                    background: alpha(GREEN, 0.12),
+                    borderColor: alpha(GREEN, 0.25),
+                    transform: "scale(1.05)",
                   },
                 }}
               >
-                <Icon sx={{ ...iconsStyle, fontSize: "1.5rem !important", color: palette.green }}>
+                <Icon
+                  sx={{
+                    fontSize: "1.3rem !important",
+                    color: GREEN,
+                    transition: "all 0.3s ease",
+                  }}
+                >
                   {miniSidenav ? "menu" : "menu_open"}
                 </Icon>
               </IconButton>
             </Tooltip>
 
-            {/* Logo/Título Mobile */}
-            <MDBox sx={{ display: "flex", alignItems: "center" }}>
+            {/* Breadcrumbs (desktop) / Título da página (mobile) */}
+            {isMobile ? (
               <MDTypography
                 variant="h6"
                 fontWeight="bold"
+                noWrap
                 sx={{
-                  color: palette.green,
-                  fontSize: "1.125rem",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0.5,
+                  color: GREEN,
+                  fontSize: { xs: "0.95rem", sm: "1.05rem" },
+                  textTransform: "capitalize",
+                  maxWidth: { xs: 140, sm: 200 },
                 }}
               >
-                <Icon sx={{ fontSize: "1.5rem", color: palette.gold }}>restaurant_menu</Icon>
-                Receitas
+                {pageTitle}
               </MDTypography>
-            </MDBox>
+            ) : (
+              <MDBox sx={{ display: "flex", alignItems: "center" }}>
+                <Breadcrumbs
+                  icon="home"
+                  title={route[route.length - 1]}
+                  route={route}
+                  light={light}
+                />
+              </MDBox>
+            )}
           </MDBox>
 
-          {/* Desktop: Breadcrumbs / Mobile: Hidden */}
-          <MDBox sx={{ display: { xs: "none", md: "block" } }}>
-            <Breadcrumbs icon="home" title={route[route.length - 1]} route={route} light={light} />
-          </MDBox>
-
-          {/* Actions */}
+          {/* === LADO DIREITO === */}
           <MDBox
-            color={light ? "white" : "inherit"}
-            sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, md: 1 } }}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: { xs: 0.5, md: 1 },
+              ml: "auto",
+            }}
           >
-            {/* Settings Button */}
+            {/* Configurações */}
             <Tooltip title="Configurações" placement="bottom">
               <IconButton
                 size="small"
                 onClick={handleSettingsNavigation}
                 sx={{
-                  p: { xs: 0.75, md: 1 },
-                  borderRadius: 2,
-                  backgroundColor: "transparent",
-                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                  width: { xs: 34, md: 38 },
+                  height: { xs: 34, md: 38 },
+                  borderRadius: "10px",
+                  transition: "all 0.25s cubic-bezier(0.4, 0, 0.2, 1)",
                   "&:hover": {
-                    backgroundColor: alpha(palette.gold, 0.1),
-                    transform: "scale(1.1) rotate(45deg)",
+                    background: alpha(GOLD, 0.1),
+                    transform: "rotate(45deg) scale(1.1)",
                   },
                 }}
               >
-                <Icon sx={{ ...iconsStyle, fontSize: "1.25rem !important", color: palette.gold }}>
+                <Icon
+                  sx={{
+                    fontSize: "1.15rem !important",
+                    color: alpha(GREEN, 0.7),
+                    "&:hover": { color: GOLD },
+                  }}
+                >
                   settings
                 </Icon>
               </IconButton>
             </Tooltip>
 
-            {/* Notifications Dropdown */}
+            {/* Notificações */}
             <NotificationDropdown />
 
-            {/* Profile Avatar Button */}
+            {/* Divider vertical */}
+            <Box
+              sx={{
+                width: "1px",
+                height: 28,
+                background: alpha(GREEN, 0.12),
+                mx: { xs: 0.25, md: 0.5 },
+                display: { xs: "none", sm: "block" },
+              }}
+            />
+
+            {/* Avatar + nome do usuário */}
             <Tooltip title={`Perfil: ${userName}`} placement="bottom">
-              <IconButton
+              <Box
                 onClick={handleProfileNavigation}
                 sx={{
-                  p: 0.5,
-                  ml: { xs: 0.5, md: 1 },
-                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  cursor: "pointer",
+                  borderRadius: "12px",
+                  px: { xs: 0.5, md: 1 },
+                  py: 0.5,
+                  transition: "all 0.25s ease",
+                  border: "1px solid transparent",
                   "&:hover": {
-                    transform: "scale(1.1)",
-                    "& .avatar": {
-                      boxShadow: `0 4px 16px ${alpha(palette.gold, 0.4)}`,
-                      border: `2px solid ${palette.gold}`,
+                    background: alpha(GREEN, 0.06),
+                    borderColor: alpha(GREEN, 0.12),
+                    "& .user-avatar": {
+                      boxShadow: `0 0 0 3px ${alpha(GOLD, 0.3)}`,
                     },
                   },
                 }}
               >
                 <Avatar
-                  className="avatar"
+                  className="user-avatar"
                   src={avatarUrl}
                   alt={userName}
                   sx={{
-                    width: { xs: 36, md: 40 },
-                    height: { xs: 36, md: 40 },
-                    border: `2px solid ${alpha(palette.green, 0.3)}`,
-                    transition: "all 0.3s ease",
-                    fontSize: { xs: "0.875rem", md: "1rem" },
-                    fontWeight: "bold",
-                    backgroundColor: alpha(palette.green, 0.1),
-                    color: palette.green,
+                    width: { xs: 34, md: 36 },
+                    height: { xs: 34, md: 36 },
+                    border: `2px solid ${alpha(GOLD, 0.4)}`,
+                    background: `linear-gradient(135deg, ${alpha(GREEN, 0.15)}, ${alpha(
+                      GOLD,
+                      0.1
+                    )})`,
+                    color: GREEN,
+                    fontSize: "0.85rem",
+                    fontWeight: 700,
+                    transition: "box-shadow 0.25s ease",
                   }}
                 >
-                  {!avatarUrl && userInitials}
+                  {!user?.foto_perfil_url && userInitials}
                 </Avatar>
-              </IconButton>
+
+                {/* Nome só no desktop */}
+                {!isSmall && !isMobile && (
+                  <Box sx={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
+                    <MDTypography
+                      noWrap
+                      sx={{
+                        fontSize: "0.8rem",
+                        fontWeight: 600,
+                        color: GREEN,
+                        maxWidth: 120,
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      {user?.nome || "Usuário"}
+                    </MDTypography>
+                    <MDTypography
+                      noWrap
+                      sx={{
+                        fontSize: "0.68rem",
+                        color: alpha(GREEN, 0.55),
+                        textTransform: "capitalize",
+                        lineHeight: 1.2,
+                      }}
+                    >
+                      {user?.permissao || "membro"}
+                    </MDTypography>
+                  </Box>
+                )}
+              </Box>
             </Tooltip>
           </MDBox>
         </MDBox>

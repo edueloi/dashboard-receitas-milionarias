@@ -65,6 +65,7 @@ function TodasAsReceitas() {
   const [filteredRecipes, setFilteredRecipes] = useState([]);
   const [listaCategorias, setListaCategorias] = useState([]);
   const [listaTags, setListaTags] = useState([]);
+  const [listaProdutores, setListaProdutores] = useState([]);
   const [loading, setLoading] = useState(true);
   const view = preferences.recipeView;
 
@@ -72,6 +73,7 @@ function TodasAsReceitas() {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("Todos");
   const [tagsFilter, setTagsFilter] = useState([]);
+  const [produtorFilter, setProdutorFilter] = useState(null);
   const [sortOrder, setSortOrder] = useState("recentes");
 
   // Paginação para card view
@@ -85,13 +87,10 @@ function TodasAsReceitas() {
       try {
         setLoading(true);
         const [recipesRes, categoriesRes, tagsRes] = await Promise.all([
-          // Request only active recipes for the public listing
-          api.get("/recipes?populate=categoria,tags,criador&status=ativo"),
+          api.get("/recipes?populate=categoria,tags,criador&allStatus=true"),
           api.get("/categories"),
           api.get("/tags"),
         ]);
-
-        console.log("API Response for recipes:", recipesRes.data);
 
         const recipesData = Array.isArray(recipesRes.data)
           ? recipesRes.data
@@ -103,6 +102,17 @@ function TodasAsReceitas() {
         setFilteredRecipes(recipesData);
         setListaCategorias([{ id: "Todos", nome: "Todos" }, ...categoriesRes.data]);
         setListaTags(tagsRes.data);
+
+        // Extrair produtores únicos das receitas
+        const produtoresMap = new Map();
+        recipesData.forEach((r) => {
+          if (r.criador?.id) {
+            produtoresMap.set(r.criador.id, { id: r.criador.id, nome: r.criador.nome });
+          }
+        });
+        setListaProdutores(
+          Array.from(produtoresMap.values()).sort((a, b) => a.nome.localeCompare(b.nome))
+        );
 
         // Aplicar filtros via URL (sempre tem prioridade sobre preferências)
         const params = new URLSearchParams(location.search);
@@ -143,6 +153,10 @@ function TodasAsReceitas() {
       filtered = filtered.filter((r) => r.tags?.some((t) => names.includes(t.nome)));
     }
 
+    if (produtorFilter) {
+      filtered = filtered.filter((r) => r.criador?.id === produtorFilter.id);
+    }
+
     // Ordenação
     if (sortOrder === "alfabetica-az") {
       filtered = [...filtered].sort((a, b) => a.titulo.localeCompare(b.titulo));
@@ -155,7 +169,7 @@ function TodasAsReceitas() {
 
     setFilteredRecipes(filtered);
     setPage(1); // Reset para página 1 quando filtros mudarem
-  }, [searchTerm, categoryFilter, tagsFilter, sortOrder, allRecipes]);
+  }, [searchTerm, categoryFilter, tagsFilter, produtorFilter, sortOrder, allRecipes]);
 
   const mapRecipeData = (recipe) => {
     const imageUrl = getFullImageUrl(recipe.imagem_url) || "/static/images/default-recipe.jpg";
@@ -252,12 +266,14 @@ function TodasAsReceitas() {
     [view, updatePreference]
   );
 
-  const hasFilters = searchTerm || categoryFilter !== "Todos" || tagsFilter.length > 0;
+  const hasFilters =
+    searchTerm || categoryFilter !== "Todos" || tagsFilter.length > 0 || produtorFilter;
 
   const clearFilters = () => {
     setSearchTerm("");
     setCategoryFilter("Todos");
     setTagsFilter([]);
+    setProdutorFilter(null);
   };
 
   return (
@@ -436,6 +452,33 @@ function TodasAsReceitas() {
                     />
                   ))
                 }
+              />
+
+              {/* Produtor */}
+              <Autocomplete
+                disablePortal
+                size="small"
+                options={listaProdutores}
+                getOptionLabel={(o) => o.nome}
+                value={produtorFilter}
+                isOptionEqualToValue={(option, value) => option.id === value.id}
+                onChange={(_e, v) => setProdutorFilter(v)}
+                sx={{ width: { xs: "100%", md: 220 } }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Produtor"
+                    InputProps={{
+                      ...params.InputProps,
+                      startAdornment: (
+                        <>
+                          <Icon sx={{ ml: 1, mr: 0.5, color: palette.green }}>person</Icon>
+                          {params.InputProps.startAdornment}
+                        </>
+                      ),
+                    }}
+                  />
+                )}
               />
 
               {/* Ordenação */}

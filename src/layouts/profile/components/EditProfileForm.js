@@ -41,6 +41,12 @@ function EditProfileForm({ userData, onSave, onCancel }) {
         cep: userData.cep || "",
         profissao: userData.profissao || "",
         escolaridade: userData.escolaridade || "",
+        link_site: userData.link_site || "",
+        link_instagram: userData.link_instagram || "",
+        link_facebook: userData.link_facebook || "",
+        link_youtube: userData.link_youtube || "",
+        link_linkedin: userData.link_linkedin || "",
+        link_tiktok: userData.link_tiktok || "",
       });
       if (userData.foto_perfil_url) {
         setPreviewUrl(getFullImageUrl(userData.foto_perfil_url));
@@ -574,6 +580,68 @@ function EditProfileForm({ userData, onSave, onCancel }) {
                 }}
               />
             </Grid>
+          </Grid>
+        </MDBox>
+
+        {/* Seção: Redes Sociais */}
+        <MDBox
+          sx={{
+            p: { xs: 2, md: 2.5 },
+            backgroundColor: alpha(palette.green, 0.02),
+            borderRadius: 2,
+            border: `1px solid ${alpha(palette.green, 0.08)}`,
+            mb: 3,
+          }}
+        >
+          <MDBox sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2.5 }}>
+            <Icon sx={{ fontSize: 20, color: palette.green }}>share</Icon>
+            <MDTypography
+              variant="h6"
+              fontWeight="bold"
+              sx={{ color: palette.green, fontSize: { xs: "0.9375rem", md: "1rem" } }}
+            >
+              Redes Sociais
+            </MDTypography>
+          </MDBox>
+
+          <Grid container spacing={{ xs: 2, md: 2.5 }}>
+            {[
+              { name: "link_site", label: "Site / Blog", icon: "language" },
+              { name: "link_instagram", label: "Instagram", icon: "photo_camera" },
+              { name: "link_facebook", label: "Facebook", icon: "facebook" },
+              { name: "link_youtube", label: "YouTube", icon: "play_circle" },
+              { name: "link_linkedin", label: "LinkedIn", icon: "work" },
+              { name: "link_tiktok", label: "TikTok", icon: "music_note" },
+            ].map(({ name, label, icon }) => (
+              <Grid item xs={12} sm={6} key={name}>
+                <MDInput
+                  name={name}
+                  label={label}
+                  placeholder={`https://`}
+                  value={formData[name]}
+                  onChange={handleChange}
+                  fullWidth
+                  InputProps={{
+                    startAdornment: (
+                      <Icon sx={{ mr: 1, color: "text.secondary", fontSize: 20 }}>{icon}</Icon>
+                    ),
+                    sx: {
+                      fontSize: { xs: "0.875rem", md: "0.9375rem" },
+                      "& .MuiOutlinedInput-notchedOutline": {
+                        borderColor: alpha(palette.green, 0.2),
+                      },
+                      "&:hover .MuiOutlinedInput-notchedOutline": {
+                        borderColor: alpha(palette.green, 0.4),
+                      },
+                      "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                        borderColor: palette.gold,
+                        borderWidth: 2,
+                      },
+                    },
+                  }}
+                />
+              </Grid>
+            ))}
           </Grid>
         </MDBox>
 

@@ -1,54 +1,39 @@
-/**
-=========================================================
-* Material Dashboard 2 React - v2.2.0
-=========================================================
+const GOLD = "#C9A635";
+const GREEN = "#1C3B32";
 
-* Product Page: https://www.creative-tim.com/product/material-dashboard-react
-* Copyright 2023 Creative Tim (https://www.creative-tim.com)
-
-Coded by www.creative-tim.com
-
- =========================================================
-
-* The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*/
 function navbar(theme, ownerState) {
   const { palette, boxShadows, functions, transitions, breakpoints, borders } = theme;
   const { transparentNavbar, absolute, light, darkMode } = ownerState;
 
   const { dark, white, text, transparent, background } = palette;
-  const { navbarBoxShadow } = boxShadows;
   const { rgba, pxToRem } = functions;
   const { borderRadius } = borders;
 
   return {
-    boxShadow: transparentNavbar || absolute ? "none" : navbarBoxShadow,
-    backdropFilter: transparentNavbar || absolute ? "none" : `saturate(200%) blur(${pxToRem(30)})`,
+    boxShadow: transparentNavbar || absolute ? "none" : "0 2px 20px rgba(0,0,0,0.06)",
+    backdropFilter: transparentNavbar || absolute ? "none" : `saturate(200%) blur(${pxToRem(20)})`,
     backgroundColor:
       transparentNavbar || absolute
         ? `${transparent.main} !important`
-        : rgba(darkMode ? background.default : white.main, 0.8),
+        : rgba(darkMode ? background.default : white.main, 0.92),
+    borderBottom:
+      transparentNavbar || absolute
+        ? "none"
+        : `1px solid ${rgba(darkMode ? white.main : dark.main, 0.06)}`,
 
     color: () => {
-      let color;
-
-      if (light) {
-        color = white.main;
-      } else if (transparentNavbar) {
-        color = text.main;
-      } else {
-        color = dark.main;
-      }
-
-      return color;
+      if (light) return white.main;
+      if (transparentNavbar) return text.main;
+      return dark.main;
     },
-    top: absolute ? 0 : pxToRem(12),
-    minHeight: pxToRem(75),
+
+    top: absolute ? 0 : pxToRem(8),
+    minHeight: pxToRem(64),
     display: "grid",
     alignItems: "center",
     borderRadius: borderRadius.xl,
-    paddingTop: pxToRem(8),
-    paddingBottom: pxToRem(8),
+    paddingTop: pxToRem(6),
+    paddingBottom: pxToRem(6),
     paddingRight: absolute ? pxToRem(8) : 0,
     paddingLeft: absolute ? pxToRem(16) : 0,
 
@@ -63,7 +48,6 @@ function navbar(theme, ownerState) {
       display: "flex",
       justifyContent: "space-between",
       alignItems: "center",
-
       [breakpoints.up("sm")]: {
         minHeight: "auto",
         padding: `${pxToRem(4)} ${pxToRem(16)}`,
@@ -73,18 +57,12 @@ function navbar(theme, ownerState) {
 }
 
 const navbarContainer = ({ breakpoints }) => ({
-  flexDirection: "column",
-  alignItems: "flex-start",
+  flexDirection: "row",
+  alignItems: "center",
   justifyContent: "space-between",
-  pt: 0.5,
-  pb: 0.5,
-
-  [breakpoints.up("md")]: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingTop: "0",
-    paddingBottom: "0",
-  },
+  pt: 0,
+  pb: 0,
+  width: "100%",
 });
 
 const navbarRow = ({ breakpoints }, { isMini }) => ({
@@ -113,7 +91,6 @@ const navbarIconButton = ({ typography: { size }, breakpoints }) => ({
 
   "& .MuiTypography-root": {
     display: "none",
-
     [breakpoints.up("sm")]: {
       display: "inline-block",
       lineHeight: 1.2,
@@ -125,7 +102,6 @@ const navbarIconButton = ({ typography: { size }, breakpoints }) => ({
 const navbarMobileMenu = ({ breakpoints }) => ({
   display: "inline-block",
   lineHeight: 0,
-
   [breakpoints.up("xl")]: {
     display: "none",
   },
