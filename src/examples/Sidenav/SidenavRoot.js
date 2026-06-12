@@ -14,10 +14,12 @@ export default styled(Drawer)(({ theme, ownerState }) => {
 
   return {
     "& .MuiDrawer-paper": {
-      width: isMobile ? "80vw" : W,
-      maxWidth: isMobile ? 290 : W,
-      minWidth: isMobile ? 220 : W,
-      height: "100vh",
+      width: isMobile ? "82vw" : W,
+      maxWidth: isMobile ? 300 : W,
+      minWidth: isMobile ? 240 : W,
+      // 100dvh = altura real visível no mobile (desconta a barra do navegador),
+      // evitando que o "Sair" no rodapé fique cortado.
+      height: "100dvh",
       margin: 0,
       borderRadius: isMobile ? "0 20px 20px 0" : 0,
       background: bg,

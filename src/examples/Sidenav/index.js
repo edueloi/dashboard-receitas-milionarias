@@ -202,10 +202,12 @@ function Sidenav({ color, brand, brandName, routes, ...rest }) {
       <Box
         sx={{
           mt: "auto",
+          flexShrink: 0,
           borderTop: "1px solid rgba(255,255,255,0.07)",
           px: "8px",
           pt: "8px",
-          pb: "12px",
+          // respeita a barra de gestos do celular (notch inferior)
+          pb: "calc(12px + env(safe-area-inset-bottom, 0px))",
         }}
       >
         {logoutRoute && (
