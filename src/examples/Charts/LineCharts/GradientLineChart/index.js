@@ -1,5 +1,4 @@
-// GradientLineChart — gráfico limpo e funcional
-import { useRef, useEffect, useState, useMemo } from "react";
+import { useMemo } from "react";
 import PropTypes from "prop-types";
 import { Line } from "react-chartjs-2";
 import {
@@ -16,8 +15,6 @@ import {
 import Card from "@mui/material/Card";
 import Box from "@mui/material/Box";
 import Icon from "@mui/material/Icon";
-import gradientChartLine from "assets/theme/functions/gradientChartLine";
-import configs from "examples/Charts/LineCharts/GradientLineChart/configs";
 import colors from "assets/theme/base/colors";
 
 ChartJS.register(
@@ -31,13 +28,12 @@ ChartJS.register(
   Filler
 );
 
-// Resolve cor mesmo quando colors[name] não existe
 function resolveColor(name) {
   const fallbacks = {
     primary: "#C9A635",
     secondary: "#1C3B32",
     info: "#1A73E8",
-    success: "#2ECC71",
+    success: "#27ae60",
     warning: "#F39C12",
     error: "#E74C3C",
     dark: "#344767",
@@ -46,16 +42,51 @@ function resolveColor(name) {
   return (colors[name] && colors[name].main) || fallbacks[name] || fallbacks.dark;
 }
 
+// Plugin inline para criar gradiente no canvas no momento do render
+function makeGradientPlugin(datasetColors) {
+  return {
+    id: "gradient-fill",
+    beforeUpdate(chart) {
+      chart.data.datasets.forEach((dataset, i) => {
+        const color = datasetColors[i] || "#1A73E8";
+        const ctx = chart.ctx;
+        const chartArea = chart.chartArea;
+        if (!chartArea) return;
+        const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+        gradient.addColorStop(0, `${color}40`);
+        gradient.addColorStop(1, `${color}08`);
+        dataset.backgroundColor = gradient;
+      });
+    },
+  };
+}
+
+const ICON_BG = {
+  success: "rgba(39,174,96,0.12)",
+  primary: "rgba(201,166,53,0.12)",
+  warning: "rgba(243,156,18,0.12)",
+  error: "rgba(231,76,60,0.12)",
+  info: "rgba(26,115,232,0.12)",
+  dark: "rgba(52,71,103,0.10)",
+};
+const ICON_COLOR = {
+  success: "#27ae60",
+  primary: "#C9A635",
+  warning: "#F39C12",
+  error: "#E74C3C",
+  info: "#1A73E8",
+  dark: "#344767",
+};
+
 function GradientLineChart({ icon, title, description, height, chart }) {
-  const chartRef = useRef(null);
-  const [chartData, setChartData] = useState({});
+  const datasetColors = useMemo(
+    () => (chart.datasets || []).map((d) => resolveColor(d.color)),
+    [chart.datasets]
+  );
 
-  useEffect(() => {
-    const el = chartRef.current;
-    if (!el) return;
-
-    const datasets = (chart.datasets || []).map((dataset) => {
-      const color = resolveColor(dataset.color);
+  const chartData = useMemo(() => {
+    const datasets = (chart.datasets || []).map((dataset, i) => {
+      const color = datasetColors[i];
       return {
         ...dataset,
         tension: 0.4,
@@ -64,17 +95,56 @@ function GradientLineChart({ icon, title, description, height, chart }) {
         borderWidth: 2.5,
         borderColor: color,
         fill: true,
-        backgroundColor: gradientChartLine(el.canvas, color, 0.15),
+        backgroundColor: `${color}20`,
         pointBackgroundColor: color,
         pointBorderColor: "#fff",
         pointBorderWidth: 2,
       };
     });
+    return { labels: chart.labels || [], datasets };
+  }, [chart, datasetColors]);
 
-    setChartData(configs(chart.labels || [], datasets));
-  }, [chart]);
+  const gradientPlugin = useMemo(() => makeGradientPlugin(datasetColors), [datasetColors]);
 
-  const { data, options } = useMemo(() => chartData, [chartData]);
+  const options = useMemo(
+    () => ({
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: (chart.datasets || []).length > 1,
+          position: "bottom",
+          labels: {
+            boxWidth: 12,
+            padding: 16,
+            font: { size: 11 },
+            color: "rgba(0,0,0,0.55)",
+          },
+        },
+        tooltip: {
+          mode: "index",
+          intersect: false,
+          backgroundColor: "#fff",
+          titleColor: "#344767",
+          bodyColor: "#344767",
+          borderColor: "#e9ecef",
+          borderWidth: 1,
+          padding: 10,
+        },
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { font: { size: 11 }, color: "rgba(0,0,0,0.4)", maxRotation: 0 },
+        },
+        y: {
+          grid: { color: "rgba(0,0,0,0.05)", drawBorder: false },
+          ticks: { font: { size: 11 }, color: "rgba(0,0,0,0.4)" },
+        },
+      },
+    }),
+    [chart.datasets]
+  );
 
   return (
     <Card
@@ -85,7 +155,6 @@ function GradientLineChart({ icon, title, description, height, chart }) {
         overflow: "hidden",
       }}
     >
-      {/* Header do card */}
       {(title || description) && (
         <Box
           sx={{
@@ -103,16 +172,7 @@ function GradientLineChart({ icon, title, description, height, chart }) {
                 width: 40,
                 height: 40,
                 borderRadius: "10px",
-                background:
-                  icon.color === "success"
-                    ? "rgba(46,204,113,0.12)"
-                    : icon.color === "primary"
-                    ? "rgba(201,166,53,0.12)"
-                    : icon.color === "warning"
-                    ? "rgba(243,156,18,0.12)"
-                    : icon.color === "error"
-                    ? "rgba(231,76,60,0.12)"
-                    : "rgba(26,115,232,0.12)",
+                background: ICON_BG[icon.color] || ICON_BG.info,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -122,16 +182,7 @@ function GradientLineChart({ icon, title, description, height, chart }) {
               <Icon
                 sx={{
                   fontSize: "1.25rem !important",
-                  color:
-                    icon.color === "success"
-                      ? "#2ECC71"
-                      : icon.color === "primary"
-                      ? "#C9A635"
-                      : icon.color === "warning"
-                      ? "#F39C12"
-                      : icon.color === "error"
-                      ? "#E74C3C"
-                      : "#1A73E8",
+                  color: ICON_COLOR[icon.color] || ICON_COLOR.info,
                 }}
               >
                 {icon.component}
@@ -172,80 +223,8 @@ function GradientLineChart({ icon, title, description, height, chart }) {
         </Box>
       )}
 
-      {/* Gráfico */}
       <Box sx={{ px: { xs: 1, sm: 2 }, pb: 2, pt: 1, height }}>
-        {data && options ? (
-          <Line
-            ref={chartRef}
-            data={{ labels: data?.labels || [], datasets: data?.datasets || [] }}
-            options={{
-              ...options,
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                ...options?.plugins,
-                legend: {
-                  display: true,
-                  position: "bottom",
-                  labels: {
-                    boxWidth: 12,
-                    padding: 16,
-                    font: { size: 11, family: "inherit" },
-                    color: "rgba(0,0,0,0.55)",
-                  },
-                },
-                tooltip: {
-                  mode: "index",
-                  intersect: false,
-                  callbacks: {
-                    label: (ctx) => {
-                      const val = ctx.raw;
-                      if (typeof val === "number" && val > 100) {
-                        return ` ${ctx.dataset.label}: R$ ${(val / 100).toLocaleString("pt-BR", {
-                          minimumFractionDigits: 2,
-                        })}`;
-                      }
-                      return ` ${ctx.dataset.label}: ${val}`;
-                    },
-                  },
-                },
-              },
-              scales: {
-                ...options?.scales,
-                x: {
-                  ...options?.scales?.x,
-                  grid: { display: false },
-                  ticks: { font: { size: 11 }, color: "rgba(0,0,0,0.4)", maxRotation: 0 },
-                },
-                y: {
-                  ...options?.scales?.y,
-                  grid: { color: "rgba(0,0,0,0.05)", drawBorder: false },
-                  ticks: {
-                    font: { size: 11 },
-                    color: "rgba(0,0,0,0.4)",
-                    callback: (v) =>
-                      v > 100
-                        ? `R$ ${(v / 100).toLocaleString("pt-BR", { minimumFractionDigits: 0 })}`
-                        : v,
-                  },
-                },
-              },
-            }}
-          />
-        ) : (
-          <Box
-            sx={{
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "rgba(0,0,0,0.3)",
-              fontSize: "0.8rem",
-            }}
-          >
-            Carregando dados...
-          </Box>
-        )}
+        <Line data={chartData} options={options} plugins={[gradientPlugin]} />
       </Box>
     </Card>
   );
