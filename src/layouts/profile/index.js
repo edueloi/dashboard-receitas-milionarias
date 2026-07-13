@@ -298,6 +298,72 @@ function Overview() {
                 </Grid>
               </MDBox>
 
+              {/* Redes Sociais */}
+              {[
+                { key: "link_instagram", label: "Instagram", icon: "fab fa-instagram", color: "#E1306C" },
+                { key: "link_youtube",   label: "YouTube",   icon: "fab fa-youtube",   color: "#FF0000" },
+                { key: "link_tiktok",    label: "TikTok",    icon: "fab fa-tiktok",    color: "#010101" },
+                { key: "link_facebook",  label: "Facebook",  icon: "fab fa-facebook-f",color: "#1877F2" },
+                { key: "link_linkedin",  label: "LinkedIn",  icon: "fab fa-linkedin-in",color: "#0A66C2"},
+                { key: "link_site",      label: "Site",      icon: "fas fa-globe",     color: "#1C3B32" },
+              ].some(s => userData[s.key]) && (
+                <MDBox
+                  sx={{
+                    mt: 3,
+                    p: { xs: 2, md: 2.5 },
+                    backgroundColor: alpha(palette.green, 0.03),
+                    borderRadius: 2,
+                    border: `1px solid ${alpha(palette.green, 0.09)}`,
+                  }}
+                >
+                  <MDTypography
+                    variant="button"
+                    fontWeight="bold"
+                    sx={{ color: palette.green, fontSize: { xs: "0.75rem", md: "0.8125rem" }, display: "block", mb: 1.5 }}
+                  >
+                    Redes Sociais
+                  </MDTypography>
+                  <MDBox sx={{ display: "flex", flexWrap: "wrap", gap: 1.5 }}>
+                    {[
+                      { key: "link_instagram", label: "Instagram", icon: "fab fa-instagram", color: "#E1306C" },
+                      { key: "link_youtube",   label: "YouTube",   icon: "fab fa-youtube",   color: "#FF0000" },
+                      { key: "link_tiktok",    label: "TikTok",    icon: "fab fa-tiktok",    color: "#010101" },
+                      { key: "link_facebook",  label: "Facebook",  icon: "fab fa-facebook-f",color: "#1877F2" },
+                      { key: "link_linkedin",  label: "LinkedIn",  icon: "fab fa-linkedin-in",color: "#0A66C2"},
+                      { key: "link_site",      label: "Site",      icon: "fas fa-globe",     color: "#1C3B32" },
+                    ].filter(s => userData[s.key]).map(s => (
+                      <MDBox
+                        key={s.key}
+                        component="a"
+                        href={userData[s.key]}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={s.label}
+                        sx={{
+                          display: "inline-flex", alignItems: "center", gap: 0.75,
+                          px: 1.5, py: 0.75,
+                          borderRadius: 2,
+                          border: `1px solid ${alpha(s.color, 0.25)}`,
+                          backgroundColor: alpha(s.color, 0.06),
+                          color: s.color,
+                          textDecoration: "none",
+                          fontSize: "0.78rem", fontWeight: 600,
+                          transition: "all .2s ease",
+                          "&:hover": {
+                            backgroundColor: alpha(s.color, 0.14),
+                            transform: "translateY(-2px)",
+                            boxShadow: `0 4px 12px ${alpha(s.color, 0.2)}`,
+                          },
+                        }}
+                      >
+                        <i className={s.icon} style={{ fontSize: "1rem" }}></i>
+                        {s.label}
+                      </MDBox>
+                    ))}
+                  </MDBox>
+                </MDBox>
+              )}
+
               <MDBox
                 sx={{
                   mt: 3,
